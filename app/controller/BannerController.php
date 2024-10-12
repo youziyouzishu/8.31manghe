@@ -8,7 +8,7 @@ class BannerController
 {
     public function index(Request $request)
     {
-        
+
     }
 
 }
