@@ -56,6 +56,9 @@ class NotifyController extends BaseController
                         if ($prizes->isEmpty()) {
                             BoxPrize::query()->update(['num' => DB::raw('total')]);
                             $prizes = BoxPrize::where([['num','>',0],['box_id' => $order->box_id]])->get(); // 重新获取奖品列表
+                            if ($prizes->isEmpty()){
+                                return $this->fail('没有设置奖池');
+                            }
                         }
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
@@ -75,7 +78,7 @@ class NotifyController extends BaseController
                     DB::commit();
                 }catch (\Throwable $e){
                     DB::rollBack();
-                    return "抽奖过程中发生错误: " . $e->getMessage();
+                    return $this->fail($e->getMessage());
                 }
 
                 $api = new Api(
@@ -83,13 +86,10 @@ class NotifyController extends BaseController
                     config('plugin.webman.push.app.app_key'),
                     config('plugin.webman.push.app.app_secret')
                 );
-
                 // 给客户端推送私有 prize_draw 事件的消息
                 $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
                     'winner_prize' => $winnerPrize
                 ]);
-
-
                 break;
             default:
                 return $this->fail('回调错误');

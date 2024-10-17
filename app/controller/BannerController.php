@@ -2,13 +2,8 @@
 
 namespace app\controller;
 
-use Firebase\JWT\JWT;
 use plugin\admin\app\model\Banner;
-use plugin\admin\app\model\User;
-use support\exception\BusinessException;
 use support\Request;
-use Tinywan\Jwt\JwtToken;
-use Webman\RedisQueue\Client;
 
 class BannerController extends BaseController
 {
