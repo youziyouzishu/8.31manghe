@@ -13,14 +13,14 @@ namespace plugin\admin\app\model;
  * @property int|null $user_id 用户
  * @property int|null $coupon_id 优惠券
  * @property int $status 状态:1=未使用,2=已使用,3=已过期
- * @method static \Illuminate\Database\Eloquent\Builder|UserCoupon newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UserCoupon newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UserCoupon query()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersCoupon newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersCoupon newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersCoupon query()
  * @property-read \plugin\admin\app\model\Coupon $coupon
  * @property-read mixed $status_text
  * @mixin \Eloquent
  */
-class UserCoupon extends Base
+class UsersCoupon extends Base
 {
     /**
      * The table associated with the model.

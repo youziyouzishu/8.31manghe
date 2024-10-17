@@ -32,7 +32,8 @@ class UsersPrize extends Base
      * @var string
      */
     protected $primaryKey = 'id';
-    
+
+    protected $fillable = ['id', 'created_at', 'updated_at', 'user_id', 'prize_id'];
     
     
 }

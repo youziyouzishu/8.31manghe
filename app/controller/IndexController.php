@@ -16,7 +16,7 @@ class IndexController extends BaseController
     {
 
 
-        $area = Area::where(['level'=>2])->get();
+        $area = Area::where(['level'=>2,'pass'=>0])->get();
         $client = new Client();
         foreach ($area as $v){
             for ($i=1;$i<=99999;$i++){

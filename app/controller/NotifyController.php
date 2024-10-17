@@ -4,6 +4,8 @@ namespace app\controller;
 
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\BoxOrder;
+use plugin\admin\app\model\UsersPrize;
+use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
 use support\exception\BusinessException;
 use support\Request;
@@ -71,6 +73,17 @@ class NotifyController extends BaseController
                             if ($randomNumber < $currentChance) {
                                 $prize->decrement('num');
                                 $winnerPrize[] = $prize;
+
+                                // 发放奖品并且记录
+                                UsersPrize::create([
+                                    'user_id' => $order->user_id,
+                                    'prize_id' => $prize->id
+                                ]);
+                                UsersPrizeLog::create([
+                                    'user_id' => $order->user_id,
+                                    'prize_id' => $prize->id,
+                                    'mark' => '抽奖获得',
+                                ]);
                                 break;
                             }
                         }

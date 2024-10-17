@@ -72,7 +72,7 @@ class User extends Base
                 //更新会员信息
                 $user->save(['money' => $after]);
                 //写入日志
-                UserMoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
+                UsersMoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
             }
             Db::commit();
         } catch (\Throwable $e) {

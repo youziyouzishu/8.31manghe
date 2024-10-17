@@ -13,12 +13,12 @@ namespace plugin\admin\app\model;
  * @property string $before 变更前余额
  * @property string $after 变更后余额
  * @property string|null $memo 备注
- * @method static \Illuminate\Database\Eloquent\Builder|UserMoneyLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UserMoneyLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UserMoneyLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog query()
  * @mixin \Eloquent
  */
-class UserMoneyLog extends Base
+class UsersMoneyLog extends Base
 {
     /**
      * The table associated with the model.

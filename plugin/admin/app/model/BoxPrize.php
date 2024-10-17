@@ -23,6 +23,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize query()
  * @property-read mixed $level_text
  * @property int $total 总数量
+ * @property int $ticket 通关票:1=是,2=否
  * @mixin \Eloquent
  */
 class BoxPrize extends Base

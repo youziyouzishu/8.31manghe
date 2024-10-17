@@ -22,7 +22,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder query()
- * @property-read \plugin\admin\app\model\UserCoupon|null $coupon
+ * @property-read \plugin\admin\app\model\UsersCoupon|null $coupon
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property int $times 抽奖次数
  * @mixin \Eloquent
@@ -62,7 +62,7 @@ class BoxOrder extends Base
 
     function coupon()
     {
-        return $this->hasOne(UserCoupon::class, 'id', 'coupon_id');
+        return $this->hasOne(UsersCoupon::class, 'id', 'coupon_id');
     }
 
     function box()

@@ -25,6 +25,7 @@ Route::group('/box', function () {
     Route::get('/canusecoupon',[\app\controller\BoxController::class,'canusecoupon']);
     Route::get('/get_price',[\app\controller\BoxController::class,'get_price']);
     Route::post('/pay',[\app\controller\BoxController::class,'pay']);
+    Route::get('/checkpoint',[\app\controller\BoxController::class,'checkpoint']); //闯关赏查看关卡
 });
 
 Route::group('/coupon', function () {

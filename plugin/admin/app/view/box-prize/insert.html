@@ -24,7 +24,14 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">评级</label>
                         <div class="layui-input-block">
-                            <div name="level"  id="level" value="1" ></div>
+                            <div name="level" lay-verify="required" id="level" value="1" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">通关票</label>
+                        <div class="layui-input-block">
+                            <div name="ticket" lay-verify="required" id="ticket" value="2" ></div>
                         </div>
                     </div>
 
@@ -117,6 +124,23 @@
                     filterable: true,
                     initValue: initValue,
                     data: [{"value":"1","name":"普通"},{"value":"2","name":"S级"},{"value":"3","name":"SS级"},{"value":"3","name":"SSS级"}],
+                    value: "1",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
+
+            // 字段 通关票 ticket
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#ticket").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#ticket",
+                    name: "ticket",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"1","name":"是"},{"value":"2","name":"否"}],
                     value: "1",
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,

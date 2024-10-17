@@ -3,7 +3,7 @@
 namespace app\queue\redis;
 
 use plugin\admin\app\model\User;
-use plugin\admin\app\model\UserCoupon;
+use plugin\admin\app\model\UsersCoupon;
 use Webman\RedisQueue\Consumer;
 
 class CouponExpire implements Consumer
@@ -18,7 +18,7 @@ class CouponExpire implements Consumer
     public function consume($data)
     {
         #优惠券过期
-        $events = UserCoupon::where(['coupon_id' => $data['id'], 'status' => 1])->get();
+        $events = UsersCoupon::where(['coupon_id' => $data['id'], 'status' => 1])->get();
         foreach ($events as $event) {
             $event->status = 3;
             $event->save();

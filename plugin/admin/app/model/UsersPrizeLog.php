@@ -15,6 +15,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog query()
+ * @property string $mark 备注
  * @mixin \Eloquent
  */
 class UsersPrizeLog extends Base
@@ -32,6 +33,8 @@ class UsersPrizeLog extends Base
      * @var string
      */
     protected $primaryKey = 'id';
+
+    protected $fillable = ['user_id','prize_id','mark'];
     
     
     

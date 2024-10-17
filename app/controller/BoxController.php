@@ -8,7 +8,8 @@ use app\tool\Random;
 use plugin\admin\app\model\Box;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\BoxOrder;
-use plugin\admin\app\model\UserCoupon;
+use plugin\admin\app\model\UsersCheckpoint;
+use plugin\admin\app\model\UsersCoupon;
 
 
 use support\Db;
@@ -38,19 +39,61 @@ class BoxController extends BaseController
     {
         $id = $request->get('id');
         $box = Box::find($id);
-        $level = BoxPrize::where(['box_id' => $id])->distinct()->pluck('level')->toArray();
-        rsort($level);
+        if (empty($box)) {
+            return $this->fail('盲盒不存在');
+        }
+        $level = $box
+            ->prize()
+            ->orderByDesc('level')
+            ->distinct()
+            ->pluck('level')
+            ->values();
         $data = [];
         $data['box'] = $box;
         foreach ($level as $le) {
             $row = BoxPrize::where(['box_id' => $id, 'level' => $le])->get();
-            $data['list'][] = [
+            $data['prize'][] = [
                 'name' => (new BoxPrize())->getLevelList()[$le],
                 'chance' => $row->sum('chance'),
                 'row' => $row,
             ];
         }
         return $this->success('成功', $data);
+    }
+
+
+    /**  todo 重新修改数据库 每个关卡有对应图片 */
+    function checkpoint(Request $request)
+    {
+        $id = $request->get('id');
+        $box = Box::find($id);
+        if (empty($box)) {
+            return $this->fail('盲盒不存在');
+        }
+
+        if ($box->type != 4) {
+            return $this->fail('不属于闯关盲盒');
+        }
+
+        $checkpoint = $box->prize()->where([['num','>',0]])
+            ->orderBy('checkpoint')
+            ->distinct()
+            ->pluck('checkpoint')
+            ->values();
+
+        $data = [];
+        foreach ($checkpoint as $cp){
+            if (UsersCheckpoint::where(['user_id'=>$request->uid, 'box_id' => $id,'checkpoint'=>$cp])->exists()){
+
+                $data['checkpoint'][] = [
+
+                ];
+            }else{
+
+            }
+        }
+
+
     }
 
     #满足条件优惠券
@@ -61,9 +104,9 @@ class BoxController extends BaseController
         $box = Box::find($id);
         $pay_amount = $box->price * $num; #需要支付金额
 
-        $rows = UserCoupon::where(['user_id' => $request->uid, 'status' => 1])
+        $rows = UsersCoupon::where(['user_id' => $request->uid, 'status' => 1])
             ->get()
-            ->reject(function (UserCoupon $item) use ($pay_amount) {
+            ->reject(function (UsersCoupon $item) use ($pay_amount) {
                 if ($item->coupon->type == 2 && $item->coupon->with_amount > $pay_amount) {
                     return true;
                 }

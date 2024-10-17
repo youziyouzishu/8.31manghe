@@ -131,6 +131,18 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "通关票",align: "center",
+                        field: "ticket",
+                        templet: function (d) {
+                            let field = "ticket";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "所属盲盒",align: "center",
 						field: "box_id",
 						templet: function (d) {
@@ -210,6 +222,7 @@
 				apis.push(["box_id", "/app/admin/box/select?format=select"]);
 				let apiResults = {};
 				apiResults["level"] = {"1":"普通","2":"S级","3":"SSS级"};
+				apiResults["ticket"] = {"1":"是","2":"否"};
 				apiResults["box_id"] = [];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {

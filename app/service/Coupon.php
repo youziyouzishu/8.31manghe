@@ -2,7 +2,7 @@
 
 namespace app\service;
 
-use plugin\admin\app\model\UserCoupon;
+use plugin\admin\app\model\UsersCoupon;
 use support\exception\BusinessException;
 use Tinywan\Jwt\JwtToken;
 
@@ -15,7 +15,7 @@ class Coupon
     {
         $coupon_amount = 0;
         if (!empty($coupon_id)) {
-            $usercoupon = UserCoupon::where(['id' => $coupon_id])->first();
+            $usercoupon = UsersCoupon::where(['id' => $coupon_id])->first();
             if (empty($usercoupon)) {
                 throw new BusinessException('优惠券不存在', 1);
             }

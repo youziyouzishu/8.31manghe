@@ -4,7 +4,7 @@ namespace app\controller;
 
 use Carbon\Carbon;
 use plugin\admin\app\model\Coupon;
-use plugin\admin\app\model\UserCoupon;
+use plugin\admin\app\model\UsersCoupon;
 use support\Request;
 
 class CouponController extends BaseController
@@ -15,7 +15,7 @@ class CouponController extends BaseController
 
     function index(Request $request)
     {
-        $coupon_id = UserCoupon::where(['user_id' => $request->uid])->distinct()->pluck('coupon_id');
+        $coupon_id = UsersCoupon::where(['user_id' => $request->uid])->distinct()->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
@@ -27,7 +27,7 @@ class CouponController extends BaseController
 
     function receive(Request $request)
     {
-        $coupon_id = UserCoupon::where(['user_id' => $request->uid])->distinct()->pluck('coupon_id');
+        $coupon_id = UsersCoupon::where(['user_id' => $request->uid])->distinct()->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
@@ -37,7 +37,7 @@ class CouponController extends BaseController
             $row->num -= 1;
             $row->save();
 
-            UserCoupon::create([
+            UsersCoupon::create([
                 'user_id' => $request->uid,
                 'coupon_id' => $row->id,
             ]);
