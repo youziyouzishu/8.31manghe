@@ -5,6 +5,8 @@ namespace plugin\admin\app\model;
 use plugin\admin\app\model\Base;
 
 /**
+ * 
+ *
  * @property integer $id 主键(主键)
  * @property string $name 名称
  * @property string $url url
@@ -19,6 +21,10 @@ use plugin\admin\app\model\Base;
  * @property string $created_at 上传时间
  * @property string $category 类别
  * @property string $updated_at 更新时间
+ * @method static \Illuminate\Database\Eloquent\Builder|Upload newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Upload newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Upload query()
+ * @mixin \Eloquent
  */
 class Upload extends Base
 {

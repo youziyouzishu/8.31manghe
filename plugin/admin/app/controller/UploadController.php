@@ -18,6 +18,7 @@ use Throwable;
  */
 class UploadController extends Crud
 {
+
     /**
      * @var Upload
      */
@@ -138,6 +139,7 @@ class UploadController extends Crud
     public function file(Request $request): Response
     {
         $file = current($request->file());
+
         if (!$file || !$file->isValid()) {
             return $this->json(1, '未找到文件');
         }

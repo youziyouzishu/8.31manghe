@@ -10,7 +10,7 @@ return [
         'access_secret_key' => '2022d3d3LmJq',
 
         /** access令牌过期时间，单位：秒。默认 2 小时 */
-        'access_exp' => 7200,
+        'access_exp' => 60*60*24,
 
         /** refresh令牌秘钥 */
         'refresh_secret_key' => '2022KTxigxc9o50c',
@@ -46,7 +46,7 @@ return [
         'user_model' => function ($uid) {
             // 返回一个对象
             return \plugin\admin\app\model\User::where('id', $uid)
-                ->select('id','email','mobile','create_at')
+                ->select('id', 'mobile', 'openid', 'created_at')
                 ->first();
         },
 

@@ -5,6 +5,8 @@ namespace plugin\admin\app\model;
 use plugin\admin\app\model\Base;
 
 /**
+ * 
+ *
  * @property integer $id ID(主键)
  * @property string $username 用户名
  * @property string $nickname 昵称
@@ -17,11 +19,16 @@ use plugin\admin\app\model\Base;
  * @property string $login_at 登录时间
  * @property string $roles 角色
  * @property integer $status 状态 0正常 1禁用
+ * @method static \Illuminate\Database\Eloquent\Builder|Admin newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Admin newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Admin query()
+ * @mixin \Eloquent
  */
 class Admin extends Base
 {
     /**
      * The table associated with the model.
+     *
      *
      * @var string
      */

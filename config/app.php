@@ -19,8 +19,9 @@ return [
     'error_reporting' => E_ALL,
     'default_timezone' => 'Asia/Shanghai',
     'request_class' => Request::class,
-    'public_path' => base_path() . DIRECTORY_SEPARATOR . 'public',
+    'public_path' =>     base_path(false) . DIRECTORY_SEPARATOR . 'public',
     'runtime_path' => base_path(false) . DIRECTORY_SEPARATOR . 'runtime',
     'controller_suffix' => 'Controller',
-    'controller_reuse' => false,
+    'controller_reuse' => true,
+    'host' =>'https://0831manghe.62.hzgqapp.com'
 ];

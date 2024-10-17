@@ -5,6 +5,8 @@ namespace plugin\admin\app\model;
 use plugin\admin\app\model\Base;
 
 /**
+ * 
+ *
  * @property integer $id 主键(主键)
  * @property string $title 标题
  * @property string $icon 图标
@@ -15,6 +17,10 @@ use plugin\admin\app\model\Base;
  * @property string $href url
  * @property integer $type 类型
  * @property integer $weight 排序
+ * @method static \Illuminate\Database\Eloquent\Builder|Rule newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Rule newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Rule query()
+ * @mixin \Eloquent
  */
 class Rule extends Base
 {

@@ -2,9 +2,12 @@
 
 namespace plugin\admin\app\model;
 
+use Illuminate\Support\Facades\DB;
 use plugin\admin\app\model\Base;
 
 /**
+ * 
+ *
  * @property integer $id 主键(主键)
  * @property string $username 用户名
  * @property string $nickname 昵称
@@ -15,7 +18,7 @@ use plugin\admin\app\model\Base;
  * @property string $mobile 手机
  * @property integer $level 等级
  * @property string $birthday 生日
- * @property integer $money 余额
+ * @property string $money 余额(元)
  * @property integer $score 积分
  * @property string $last_time 登录时间
  * @property string $last_ip 登录ip
@@ -27,6 +30,12 @@ use plugin\admin\app\model\Base;
  * @property integer $role 角色
  * @property integer $status 禁用
  * @property string $openid 微信公众标识
+ * @property integer $official 官方
+ * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|User query()
+ * @property int $coupon_num 优惠券展示次数
+ * @mixin \Eloquent
  */
 class User extends Base
 {
@@ -43,8 +52,59 @@ class User extends Base
      * @var string
      */
     protected $primaryKey = 'id';
-    
-    
+
+
+    /**
+     * 变更会员余额
+     * @param int    $money   余额
+     * @param int    $user_id 会员ID
+     * @param string $memo    备注
+     */
+    public static function money($money, $user_id, $memo)
+    {
+        DB::beginTransaction();
+        try {
+            $user = self::lock()->find($user_id);
+            if ($user && $money != 0) {
+                $before = $user->money;
+                //$after = $user->money + $money;
+                $after = function_exists('bcadd') ? bcadd($user->money, $money, 2) : $user->money + $money;
+                //更新会员信息
+                $user->save(['money' => $after]);
+                //写入日志
+                UserMoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
+            }
+            Db::commit();
+        } catch (\Throwable $e) {
+            Db::rollback();
+        }
+    }
+
+    /**
+     * 变更会员积分
+     * @param int    $score   积分
+     * @param int    $user_id 会员ID
+     * @param string $memo    备注
+     */
+    public static function score($score, $user_id, $memo)
+    {
+        Db::beginTransaction();
+        try {
+            $user = self::lock(true)->find($user_id);
+            if ($user && $score != 0) {
+                $before = $user->score;
+                $after = $user->score + $score;
+                $level = self::nextlevel($after);
+                //更新会员信息
+                $user->save(['score' => $after, 'level' => $level]);
+                //写入日志
+                ScoreLog::create(['user_id' => $user_id, 'score' => $score, 'before' => $before, 'after' => $after, 'memo' => $memo]);
+            }
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+        }
+    }
     
     
 }

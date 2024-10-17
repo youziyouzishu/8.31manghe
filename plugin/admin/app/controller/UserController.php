@@ -2,16 +2,14 @@
 
 namespace plugin\admin\app\controller;
 
-use plugin\admin\app\controller\Base;
-use plugin\admin\app\controller\Crud;
-use plugin\admin\app\model\User;
-use support\exception\BusinessException;
 use support\Request;
 use support\Response;
-use Throwable;
+use plugin\admin\app\model\User;
+use plugin\admin\app\controller\Crud;
+use support\exception\BusinessException;
 
 /**
- * 用户管理 
+ * 用户 
  */
 class UserController extends Crud
 {
@@ -29,43 +27,42 @@ class UserController extends Crud
     {
         $this->model = new User;
     }
-
+    
     /**
      * 浏览
      * @return Response
-     * @throws Throwable
      */
     public function index(): Response
     {
-        return raw_view('user/index');
+        return view('user/index');
     }
 
     /**
      * 插入
      * @param Request $request
      * @return Response
-     * @throws BusinessException|Throwable
+     * @throws BusinessException
      */
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
             return parent::insert($request);
         }
-        return raw_view('user/insert');
+        return view('user/insert');
     }
 
     /**
      * 更新
      * @param Request $request
      * @return Response
-     * @throws BusinessException|Throwable
-     */
+     * @throws BusinessException
+    */
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
             return parent::update($request);
         }
-        return raw_view('user/update');
+        return view('user/update');
     }
 
 }
