@@ -25,6 +25,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\UsersCoupon|null $coupon
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property int $times 抽奖次数
+ * @property int $level_id 所属关卡
  * @mixin \Eloquent
  */
 class BoxOrder extends Base

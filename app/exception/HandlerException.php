@@ -2,6 +2,8 @@
 
 namespace app\exception;
 
+use Next\VarDumper\Dumper;
+use Next\VarDumper\DumperHandler;
 use support\exception\BusinessException;
 use Tinywan\Jwt\Exception\JwtRefreshTokenExpiredException;
 use Tinywan\Jwt\Exception\JwtTokenException;
@@ -13,7 +15,7 @@ use Throwable;
 
 class HandlerException extends ExceptionHandler
 {
-
+    use DumperHandler;
     public $dontReport = [
         BusinessException::class,
     ];
@@ -44,6 +46,10 @@ class HandlerException extends ExceptionHandler
 
         if (($exception instanceof BusinessException) && ($response = $exception->render($request))) {
             return $response;
+        }
+
+        if ($exception instanceof Dumper) {
+            return \response(self::convertToHtml($exception));
         }
 
         return parent::render($request, $exception);

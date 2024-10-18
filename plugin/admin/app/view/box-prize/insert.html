@@ -15,35 +15,36 @@
                 <div class="main-container mr-5">
 
                     <div class="layui-form-item">
-                        <label class="layui-form-label">名称</label>
+                        <label class="layui-form-label required">名称</label>
                         <div class="layui-input-block">
                             <input type="text" lay-verify="required" name="name" value="" class="layui-input">
                         </div>
                     </div>
 
                     <div class="layui-form-item">
-                        <label class="layui-form-label">评级</label>
+                        <label class="layui-form-label required">评级</label>
                         <div class="layui-input-block">
-                            <div name="level" lay-verify="required" id="level" value="1" ></div>
+                            <div name="grade"  id="grade" value="2" ></div>
+                        </div>
+                    </div>
+
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required">所属盲盒</label>
+                        <div class="layui-input-block">
+                            <div name="box_id"  id="box_id" value="0" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item level_id">
+                        <label class="layui-form-label">所属关卡</label>
+                        <div class="layui-input-block">
+                            <div  name="level_id" id="level_id" value="0" ></div>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
-                        <label class="layui-form-label">通关票</label>
-                        <div class="layui-input-block">
-                            <div name="ticket" lay-verify="required" id="ticket" value="2" ></div>
-                        </div>
-                    </div>
-
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">所属盲盒</label>
-                        <div class="layui-input-block">
-                            <div name="box_id" id="box_id" value="" ></div>
-                        </div>
-                    </div>
-
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">概率</label>
+                        <label class="layui-form-label required">概率</label>
                         <div class="layui-input-block layui-input-wrap">
                             <input type="number" lay-verify="required" name="chance" min="0.01" step="0.01" value="0.00" class="layui-input">
                             <div class="layui-input-suffix layui-input-split">
@@ -54,18 +55,13 @@
                     </div>
 
                     <div class="layui-form-item">
-                        <label class="layui-form-label">数量</label>
+                        <label class="layui-form-label required">数量</label>
                         <div class="layui-input-block">
                             <input type="number" lay-verify="required"  name="num" value="1" class="layui-input">
                         </div>
                     </div>
 
-                    <div class="layui-form-item checkpoint">
-                        <label class="layui-form-label">关卡</label>
-                        <div class="layui-input-block">
-                            <input type="number" name="checkpoint" min="1" step="1" value="1" class="layui-input">
-                        </div>
-                    </div>
+
 
                         <div class="layui-form-item">
                             <label class="layui-form-label">上传图片</label>
@@ -108,40 +104,23 @@
 
             // 相关接口
             const INSERT_API = "/app/admin/box-prize/insert";
-            var box_id = layui.url().search['box_id'];
-            var type = layui.url().search['type'];
+            const box_id = layui.url().search['box_id'];
+            const type = layui.url().search['type'];
             if (type !== "4"){
-                layui.$(".checkpoint").hide();
+                layui.$(".level_id").hide();
             }
 
-            // 字段 评级 level
+            // 字段 评级 grade
             layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#level").attr("value");
+                let value = layui.$("#grade").attr("value");
                 let initValue = value ? value.split(",") : [];
                 layui.xmSelect.render({
-                    el: "#level",
-                    name: "level",
+                    el: "#grade",
+                    name: "grade",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"普通"},{"value":"2","name":"S级"},{"value":"3","name":"SS级"},{"value":"3","name":"SSS级"}],
-                    value: "1",
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
-                })
-            });
-
-            // 字段 通关票 ticket
-            layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#ticket").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#ticket",
-                    name: "ticket",
-                    filterable: true,
-                    initValue: initValue,
-                    data: [{"value":"1","name":"是"},{"value":"2","name":"否"}],
-                    value: "1",
+                    data: [{"value":"1","name":"通关赏"},{"value":"2","name":"N"},{"value":"3","name":"S级"},{"value":"4","name":"SS级"},{"value":"5","name":"SSS级"}],
+                    value: "2",
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,
                     radio: true,
@@ -173,6 +152,36 @@
                     }
                 });
             });
+
+            // 字段 所属盲盒 level_id
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                layui.$.ajax({
+                    url: "/app/admin/box-level/select?format=select&box_id="+box_id,
+                    dataType: "json",
+                    success: function (res) {
+                        layui.each(res.data, function (k , v) {
+                            v.name = '关卡 ' + v.name;
+                        });
+                        let value = layui.$("#level_id").attr("value");
+                        let initValue = value ? value.split(",") : [];
+                        layui.xmSelect.render({
+                            el: "#level_id",
+                            name: "level_id",
+                            initValue: initValue,
+                            filterable: true,
+                            data: res.data,
+                            model: {"icon":"hidden","label":{"type":"text"}},
+                            clickClose: true,
+                            radio: true,
+                            value: value,
+                        });
+                        if (res.code) {
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            });
+
 
             layui.use(["form","upload"], function(){
                 var form = layui.form;
@@ -222,6 +231,12 @@
                     identity: [/(^$)|(^\d{15}$)|(^\d{17}(x|X|\d)$)/, "请输入正确的身份证号"]
                 });
                 layui.form.on("submit(save)", function (data) {
+                    // 检查是否有level_id字段
+                    if (!data.field.level_id) {
+                        // 如果没有选择任何值，可以在这里进行其他处理
+                        data.field.level_id = 0;
+                    }
+
                     layui.$.ajax({
                         url: INSERT_API,
                         type: "POST",

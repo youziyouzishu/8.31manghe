@@ -20,6 +20,7 @@ use plugin\admin\app\model\Base;
  * @property-read mixed $images_text
  * @property-read mixed $type_text
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $prize
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxLevel> $level
  * @mixin \Eloquent
  */
 class Box extends Base
@@ -61,6 +62,11 @@ class Box extends Base
     public function getTypeList()
     {
         return ['1' => '福利赏', '2' => '高爆赏', '3' => '无限赏', '4' => '闯关赏'];
+    }
+
+    function level()
+    {
+        return $this->hasMany(BoxLevel::class,'box_id');
     }
 
 

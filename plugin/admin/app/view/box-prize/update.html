@@ -25,14 +25,7 @@
             <div class="layui-form-item">
                 <label class="layui-form-label">评级</label>
                 <div class="layui-input-block">
-                    <div name="level" lay-verify="required" id="level" value="1"></div>
-                </div>
-            </div>
-
-            <div class="layui-form-item">
-                <label class="layui-form-label">通关票</label>
-                <div class="layui-input-block">
-                    <div name="ticket" lay-verify="required" id="ticket" value="2"></div>
+                    <div name="grade" id="grade" value="2"></div>
                 </div>
             </div>
 
@@ -40,6 +33,13 @@
                 <label class="layui-form-label">所属盲盒</label>
                 <div class="layui-input-block">
                     <div name="box_id" id="box_id" value=""></div>
+                </div>
+            </div>
+
+            <div class="layui-form-item level_id">
+                <label class="layui-form-label">所属关卡</label>
+                <div class="layui-input-block">
+                    <div name="level_id" id="level_id" value=""></div>
                 </div>
             </div>
 
@@ -60,12 +60,6 @@
                 </div>
             </div>
 
-            <div class="layui-form-item checkpoint">
-                <label class="layui-form-label">关卡</label>
-                <div class="layui-input-block">
-                    <input type="number" name="checkpoint" value="" class="layui-input">
-                </div>
-            </div>
 
             <div class="layui-form-item">
                 <label class="layui-form-label">图片</label>
@@ -108,10 +102,10 @@
     const PRIMARY_KEY = "id";
     const SELECT_API = "/app/admin/box-prize/select" + location.search;
     const UPDATE_API = "/app/admin/box-prize/update";
-    var box_id = layui.url().search['box_id'];
-    var type = layui.url().search['type'];
+    const box_id = layui.url().search['box_id'];
+    const type = layui.url().search['type'];
     if (type !== "4"){
-        layui.$(".checkpoint").hide();
+        layui.$(".level_id").hide();
     }
 
     // 获取数据库记录
@@ -138,36 +132,16 @@
                     }
                 });
 
-                // 字段 评级 level
+                // 字段 评级 grade
                 layui.use(["jquery", "xmSelect"], function () {
-                    let value = layui.$("#level").attr("value");
+                    let value = layui.$("#grade").attr("value");
                     let initValue = value ? value.split(",") : [];
                     layui.xmSelect.render({
-                        el: "#level",
-                        name: "level",
+                        el: "#grade",
+                        name: "grade",
                         filterable: true,
                         initValue: initValue,
-                        data: [{"value": "1", "name": "普通"}, {"value": "2", "name": "S级"}, {
-                            "value": "3",
-                            "name": "SS级"
-                        }, {"value": "3", "name": "SSS级"}],
-                        value: "1",
-                        model: {"icon": "hidden", "label": {"type": "text"}},
-                        clickClose: true,
-                        radio: true,
-                    })
-                });
-
-                // 字段 通关票 ticket
-                layui.use(["jquery", "xmSelect"], function () {
-                    let value = layui.$("#ticket").attr("value");
-                    let initValue = value ? value.split(",") : [];
-                    layui.xmSelect.render({
-                        el: "#ticket",
-                        name: "ticket",
-                        filterable: true,
-                        initValue: initValue,
-                        data: [{"value": "1", "name": "是"}, {"value": "2", "name": "否"}],
+                        data: [{"value": "1", "name": "通关赏"}, {"value": "2", "name": "N"}, {"value": "3", "name": "S级"}, {"value": "4", "name": "SS级"}, {"value": "5", "name": "SSS级"}],
                         value: "2",
                         model: {"icon": "hidden", "label": {"type": "text"}},
                         clickClose: true,
@@ -186,6 +160,34 @@
                             layui.xmSelect.render({
                                 el: "#box_id",
                                 name: "box_id",
+                                initValue: initValue,
+                                filterable: true,
+                                data: res.data,
+                                model: {"icon": "hidden", "label": {"type": "text"}},
+                                clickClose: true,
+                                radio: true,
+                            });
+                            if (res.code) {
+                                layui.popup.failure(res.msg);
+                            }
+                        }
+                    });
+                });
+
+                // 字段 所属关卡 level_id
+                layui.use(["jquery", "xmSelect", "popup"], function () {
+                    layui.$.ajax({
+                        url: "/app/admin/box-level/select?format=select&box_id=" + box_id,
+                        dataType: "json",
+                        success: function (res) {
+                            layui.each(res.data, function (k , v) {
+                                v.name = '关卡 ' + v.name;
+                            });
+                            let value = layui.$("#level_id").attr("value");
+                            let initValue = value ? value.split(",") : [];
+                            layui.xmSelect.render({
+                                el: "#level_id",
+                                name: "level_id",
                                 initValue: initValue,
                                 filterable: true,
                                 data: res.data,
@@ -253,6 +255,11 @@
         });
         layui.form.on("submit(save)", function (data) {
             data.field[PRIMARY_KEY] = layui.url().search[PRIMARY_KEY];
+            // 检查是否有level_id字段
+            if (!data.field.level_id) {
+                // 如果没有选择任何值，可以在这里进行其他处理
+                data.field.level_id = 0;
+            }
             layui.$.ajax({
                 url: UPDATE_API,
                 type: "POST",

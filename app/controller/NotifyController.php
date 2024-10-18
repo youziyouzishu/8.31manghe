@@ -49,8 +49,9 @@ class NotifyController extends BaseController
                         $order->coupon->status = 2;
                         $order->coupon->save();
                     }
-                    $winnerPrize = [];
+
                     //开始执行抽奖操作
+                    $winnerPrize = [];
                     for ($i = 0; $i < $order->times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                         $prizes = BoxPrize::where([['num','>',0],['box_id' => $order->box_id]])->get();

@@ -10,20 +10,21 @@ use plugin\admin\app\model\Base;
  * @property integer $id 主键(主键)
  * @property string $created_at 创建时间
  * @property string $updated_at 更新时间
- * @property string $level 评级
+ * @property string $grade 评级
  * @property integer $box_id 所属盲盒
  * @property float $chance 概率
  * @property integer $num 数量
  * @property string $image 图片
  * @property string $name 名称
- * @property int $checkpoint 关卡
  * @property-read \plugin\admin\app\model\Box|null $box
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize query()
- * @property-read mixed $level_text
+ * @property-read mixed $grade_text
  * @property int $total 总数量
- * @property int $ticket 通关票:1=是,2=否
+ * @property int $level_id 所属关卡
+ * @property-read \plugin\admin\app\model\BoxLevel|null $level
+ * @property string $price 市场价
  * @mixin \Eloquent
  */
 class BoxPrize extends Base
@@ -42,23 +43,28 @@ class BoxPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $appends = ['level_text'];
+    protected $appends = ['grade_text'];
 
     function box()
     {
         return $this->belongsTo(Box::class);
     }
 
-    function getLevelTextAttribute($value)
+    function getGradeTextAttribute($value)
     {
-        $value = $value ?: ($this->level ?? '');
-        $list = $this->getLevelList();
+        $value = $value ?: ($this->grade ?? '');
+        $list = $this->getGradeList();
         return $list[$value] ?? '';
     }
 
-    public function getLevelList()
+    public function getGradeList()
     {
-        return ['1' => '普通', '2' => 'S级', '3' => 'SS级', '4' => 'SSS级'];
+        return ['1' => '通关赏', '2' => 'N', '3' => 'S级', '4' => 'SS级', '5' => 'SSS级'];
+    }
+
+    function level()
+    {
+        return $this->belongsTo(BoxLevel::class,'level_id');
     }
     
     

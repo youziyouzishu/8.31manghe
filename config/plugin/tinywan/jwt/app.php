@@ -10,7 +10,7 @@ return [
         'access_secret_key' => '2022d3d3LmJq',
 
         /** access令牌过期时间，单位：秒。默认 2 小时 */
-        'access_exp' => 60*60*24,
+        'access_exp' => 60*60*24*7,
 
         /** refresh令牌秘钥 */
         'refresh_secret_key' => '2022KTxigxc9o50c',

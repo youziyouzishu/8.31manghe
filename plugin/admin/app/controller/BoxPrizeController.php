@@ -49,9 +49,9 @@ class BoxPrizeController extends Crud
         if ($request->method() === 'POST') {
             $params = $request->post();
             $box = Box::with(['prize'])->find($params['box_id']);
-            $row = BoxPrize::where(['box_id' => $params['box_id']])
-                ->when($box->type == 4, function (Builder $query) use($params){
-                    $query->where('level' , $params['level']);
+            $row = $this->model->where(['box_id' => $params['box_id']])
+                ->when($box->type == 4, function (Builder $query) use ($params) {
+                    $query->where('level_id', $params['level_id']);
                 })
                 ->sum('chance');
 
@@ -73,6 +73,19 @@ class BoxPrizeController extends Crud
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            $param = $request->post();
+            $row = $this->model->find($param['id']);
+            if ($row->box->type == 4) {
+                $chance = $this->model->where(['level_id' => $param['level_id'],'box_id' => $param['box_id'],['id','<>',$row->id]])->sum('chance');
+                if ($row->chance != $param['chance'] && $chance + $param['chance'] > 100) {
+                    return $this->fail('概率不能超过100%');
+                }
+            } else {
+                $chance = $this->model->where(['box_id' => $param['box_id'],['id','<>',$row->id]])->sum('chance');
+                if ($row->chance != $param['chance'] && $chance + $param['chance'] > 100) {
+                    return $this->fail('概率不能超过100%');
+                }
+            }
             return parent::update($request);
         }
         return view('box-prize/update');

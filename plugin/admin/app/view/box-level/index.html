@@ -8,19 +8,19 @@
         <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
     </head>
     <body class="pear-container">
-
+    
         <!-- 顶部查询表单 -->
         <div class="layui-card">
             <div class="layui-card-body">
                 <form class="layui-form top-search-from">
-
+                    
                     <div class="layui-form-item">
                         <label class="layui-form-label">主键</label>
                         <div class="layui-input-block">
                             <input type="number" name="id" value="" class="layui-input">
                         </div>
                     </div>
-
+                    
                     <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
                         <div class="layui-input-block">
@@ -31,7 +31,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="layui-form-item layui-inline">
                         <label class="layui-form-label"></label>
                         <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
@@ -48,7 +48,7 @@
                 </form>
             </div>
         </div>
-
+        
         <!-- 数据表格 -->
         <div class="layui-card">
             <div class="layui-card-body">
@@ -58,40 +58,36 @@
 
         <!-- 表格顶部工具栏 -->
         <script type="text/html" id="table-toolbar">
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.box.insert">
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.boxlevel.insert">
                 <i class="layui-icon layui-icon-add-1"></i>新增
             </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.box.delete">
+            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.boxlevel.delete">
                 <i class="layui-icon layui-icon-delete"></i>删除
             </button>
         </script>
 
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn {{ d.type == 4 ? '' : 'layui-hide' }}" lay-event="level" permission="app.admin.box.level">关卡</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="prize" permission="app.admin.box.prize">奖品</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.box.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.box.delete">删除</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.boxlevel.update">编辑</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.boxlevel.delete">删除</button>
         </script>
-
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
         <script src="/app/admin/component/pear/pear.js"></script>
         <script src="/app/admin/admin/js/permission.js"></script>
         <script src="/app/admin/admin/js/common.js"></script>
-
+        
         <script>
 
+            const box_id = layui.url().search['box_id'];
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/box/select";
-            const UPDATE_API = "/app/admin/box/update";
-            const DELETE_API = "/app/admin/box/delete";
-            const INSERT_URL = "/app/admin/box/insert";
-            const UPDATE_URL = "/app/admin/box/update";
-            const PRIZE_URL = "/app/admin/box-prize/index";
-            const LEVEL_URL = "/app/admin/box-level/index";
-
+            const SELECT_API = "/app/admin/box-level/select"+'?box_id='+box_id;
+            const UPDATE_API = "/app/admin/box-level/update";
+            const DELETE_API = "/app/admin/box-level/delete";
+            const INSERT_URL = "/app/admin/box-level/insert"+'?box_id='+box_id;
+            const UPDATE_URL = "/app/admin/box-level/update"+'?box_id='+box_id;
+            
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
                 layui.laydate.render({
@@ -100,7 +96,7 @@
                     type: "datetime",
                 });
             })
-
+            
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
                 let table = layui.table;
@@ -108,7 +104,7 @@
                 let $ = layui.$;
                 let common = layui.common;
                 let util = layui.util;
-
+                
 				// 表头参数
 				let cols = [
 					{
@@ -119,29 +115,6 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "分类",align: "center",
-						field: "type",
-						templet: function (d) {
-							let field = "type";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
-					},{
-						title: "图片",align: "center",
-						field: "images",
-						templet: function (d) {
-                            const images = d['images'].split(',');
-                            let html = '';
-                            for (let img of images) {
-                                html += '<img src="' + encodeURI(img.trim()) + '" style="max-width:32px;max-height:32px;" alt="" />';
-                            }
-                            return html;
-						}
-					},{
 						title: "创建时间",align: "center",
 						field: "created_at",
 						sort: true,
@@ -149,58 +122,105 @@
 						title: "更新时间",align: "center",
 						field: "updated_at",
 					},{
-						title: "名称",align: "center",
+                        title: "所属盲盒",align: "center",
+                        field: "box_id",
+                        templet: function (d) {
+                            let field = "box_id";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
+                        title: "图片",align: "center",
+                        field: "image",
+                        templet: function (d) {
+                            return '<img src="'+encodeURI(d['image'])+'" style="max-width:32px;max-height:32px;" alt="" />'
+                        }
+                    },{
+						title: "关卡",align: "center",
 						field: "name",
-					},{
-						title: "单价",align: "center",
-						field: "price",
+                        templet: function (d) {
+                            return "关卡 "+d['name']
+                        }
 					},{
 						title: "操作",
 						toolbar: "#table-bar",
 						align: "center",
 						fixed: "right",
-					},
+						width: 120,
+					}
 				];
 
-				// 渲染表格
-				table.render({
-				    elem: "#data-table",
-				    url: SELECT_API,
-				    page: true,
-				    cols: [cols],
-				    skin: "line",
-				    size: "lg",
-				    toolbar: "#table-toolbar",
-				    autoSort: false,
-				    defaultToolbar: [{
-				        title: "刷新",
-				        layEvent: "refresh",
-				        icon: "layui-icon-refresh",
-				    }, "filter", "print", "exports"],
-				    done: function (res, curr, count, origin) {
-				        layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
-				    }
-				});
+                // 渲染表格
+                function render()
+                {
+                    table.render({
+                        elem: "#data-table",
+                        url: SELECT_API,
+                        page: true,
+                        cols: [cols],
+                        skin: "line",
+                        size: "lg",
+                        toolbar: "#table-toolbar",
+                        autoSort: false,
+                        defaultToolbar: [{
+                            title: "刷新",
+                            layEvent: "refresh",
+                            icon: "layui-icon-refresh",
+                        }, "filter", "print", "exports"],
+                        done: function (res,curr,count) {
+                            layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
+                        }
+                    });
+                }
 
-
-
-
-
-
-
+				
 				// 获取表格中下拉或树形组件数据
+                let apis = [];
+                apis.push(["box_id", "/app/admin/box/select?format=select"]);
 				let apiResults = {};
-				apiResults["type"] = {"1":"福利赏","2":"高爆赏","3":"无限赏","4":"闯关赏"};
+				apiResults["box_id"] = [];
+                let count = apis.length;
+                layui.each(apis, function (k, item) {
+                    let [field, url] = item;
+                    $.ajax({
+                        url: url,
+                        dateType: "json",
+                        success: function (res) {
+                            if (res.code) {
+                                return layui.popup.failure(res.msg);
+                            }
+                            function travel(items) {
+                                for (let k in items) {
+                                    let item = items[k];
+                                    apiResults[field][item.value] = item.name;
+                                    if (item.children) {
+                                        travel(item.children);
+                                    }
+                                }
+                            }
+                            travel(res.data);
+                        },
+                        complete: function () {
+                            if (--count === 0) {
+                                render();
+                            }
+                        }
+                    });
+                });
+                if (!count) {
+                    render();
+                }
+
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {
                     if (obj.event === "remove") {
                         remove(obj);
                     } else if (obj.event === "edit") {
                         edit(obj);
-                    }else if (obj.event === "prize") {
-                        prize(obj);
-                    }else if (obj.event === "level") {
-                        level(obj)
                     }
                 });
 
@@ -225,14 +245,14 @@
                     })
                     return false;
                 });
-
+                
                 // 表格顶部搜索重置事件
                 form.on("submit(table-reset)", function(data) {
                     table.reload("data-table", {
                         where: []
                     })
                 });
-
+                
                 // 字段允许为空
                 form.verify({
                     phone: [/(^$)|^1\d{10}$/, "请输入正确的手机号"],
@@ -276,33 +296,7 @@
                         shade: 0.1,
                         maxmin: true,
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
-                        content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
-                    });
-                }
-
-                // 表格奖品数据
-                let prize = function(obj) {
-                    let value = obj.data[PRIMARY_KEY];
-                    layer.open({
-                        type: 2,
-                        title: "奖品",
-                        shade: 0.1,
-                        maxmin: true,
-                        area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
-                        content: PRIZE_URL + "?" + "box_id" + "=" + value + "&type=" + obj.data['type']
-                    });
-                }
-
-                // 表格关卡数据
-                let level = function(obj) {
-                    let value = obj.data[PRIMARY_KEY];
-                    layer.open({
-                        type: 2,
-                        title: "关卡",
-                        shade: 0.1,
-                        maxmin: true,
-                        area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
-                        content: LEVEL_URL + "?" + "box_id" + "=" + value
+                        content: UPDATE_URL + "&" + PRIMARY_KEY + "=" + value
                     });
                 }
 
