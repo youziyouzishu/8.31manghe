@@ -52,7 +52,6 @@ class BoxController extends BaseController
         if ($box->type == 4) {
             return $this->fail('不属于普通盲盒');
         }
-
         $grades = $box
             ->prize()
             ->whereNot('grade', 1)
@@ -60,16 +59,15 @@ class BoxController extends BaseController
             ->distinct()
             ->pluck('grade')
             ->values();
-
-        $prizeData = $grades->map(function ($grade) use ($box_id) {
+        $prizeData = [];
+        $grades->each(function ($grade) use ($box_id, &$prizeData) {
             $prizes = BoxPrize::where(['box_id' => $box_id, 'grade' => $grade])->get();
-            return [
+            $prizeData[] = [
                 'name' => (new BoxPrize())->getGradeList()[$grade],
                 'chance' => $prizes->sum('chance'),
                 'prize' => $prizes,
             ];
         });
-
         // 将 prize 数据嵌套在 box 对象中
         $box->grade = $prizeData;
         return $this->success('成功', $box);
@@ -121,6 +119,7 @@ class BoxController extends BaseController
             return $this->fail('关卡不存在');
         }
 
+
         $grades = $level
             ->prize()
             ->orderByDesc('grade')
@@ -128,15 +127,18 @@ class BoxController extends BaseController
             ->pluck('grade')
             ->values();
 
-        $prizeData = $grades->map(function ($grade) use ($level_id) {
+        $prizeData = []; // 初始化 prizeData 数组
+
+        $grades->each(function ($grade) use ($level_id, &$prizeData) {
             $prizes = BoxPrize::where(['level_id' => $level_id, 'grade' => $grade])->get();
-            return [
+            $prizeData[] = [
                 'name' => (new BoxPrize())->getGradeList()[$grade],
                 'chance' => $prizes->sum('chance'),
                 'prize' => $prizes,
             ];
         });
-        // 将 prize 数据嵌套在 box 对象中
+
+        // 将 prize 数据嵌套在 level 对象中
         $level->grade = $prizeData;
 
         $ticket_count = UsersPrize::getUserPresentLevelTicketCount($level->box_id, $level->name, $request->uid);
@@ -341,12 +343,12 @@ class BoxController extends BaseController
                 $notify = new NotifyController();
                 $request->set([
                     '_data' => [
-                        'get' => ['paytype'=>'balance','out_trade_no'=>$ordersn,'attach'=>'box']
+                        'get' => ['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']
                     ]
                 ]);
                 $res = $notify->pay($request);
                 $res = json_decode($res);
-                if ($res->code == 1){
+                if ($res->code == 1) {
                     //支付失败
                     // 回滚事务
                     Db::rollBack();

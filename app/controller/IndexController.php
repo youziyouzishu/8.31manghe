@@ -14,8 +14,12 @@ class IndexController extends BaseController
     protected array $noNeedLogin = ['*'];
     public function index(Request $request)
     {
-
-
+        $a = "1,2,3";
+        $a = collect($a);
+        $a = $a->each(function ($item){
+            return $item;
+        });
+        return $this->success('采集完成');
         $area = Area::where(['level'=>2,'pass'=>0])->get();
         $client = new Client();
         foreach ($area as $v){

@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use plugin\admin\app\model\Base;
 use support\Request;
 
@@ -20,10 +21,15 @@ use support\Request;
  * @property int $safe 保险箱
  * @property string $mark 备注
  * @property-read \plugin\admin\app\model\User|null $user
+ * @property \Illuminate\Support\Carbon $deleted_at 删除时间
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withoutTrashed()
  * @mixin \Eloquent
  */
 class UsersPrize extends Base
 {
+    use SoftDeletes;
     /**
      * The table associated with the model.
      *

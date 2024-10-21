@@ -156,9 +156,15 @@ class NotifyController extends BaseController
                 }
                 $order->status = 1;
                 $order->save();
-                $order->detail->map(function (DeliverDetail $item){
+                $order->detail->each(function (DeliverDetail $item){
                     //支付成功  删除用户的奖品
+                    UsersPrizeLog::create([
+                        'user_id' => $item->userPrize->user_id,
+                        'prize_id' => $item->prize_id,
+                        'mark' => '发货成功，删除奖品'
+                    ]);
                     $item->userPrize()->delete();
+
                 });
                 break;
             default:

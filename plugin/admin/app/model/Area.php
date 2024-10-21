@@ -26,6 +26,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Area newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Area query()
  * @property int $pass 采集过
+ * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
  * @mixin \Eloquent
  */
 class Area extends Base

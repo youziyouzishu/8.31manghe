@@ -21,6 +21,9 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Deliver newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Deliver query()
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\DeliverDetail> $detail
+ * @property int $address_id 收货地址
+ * @property-read \plugin\admin\app\model\Address|null $address
+ * @property-read mixed $status_text
  * @mixin \Eloquent
  */
 class Deliver extends Base

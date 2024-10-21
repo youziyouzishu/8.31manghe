@@ -15,11 +15,6 @@ class UserController extends  BaseController
 {
     protected array $noNeedLogin = ['login'];
 
-    public function index(Request $request)
-    {
-        return response(__CLASS__);
-    }
-
     function login(Request $request)
     {
 
@@ -50,6 +45,7 @@ class UserController extends  BaseController
             $row->last_ip = $request->getRealIp();
             $row->save();
         }
+        $row->client = JwtToken::TOKEN_CLIENT_MOBILE;
         $token = JwtToken::generateToken($row->toArray());
         return $this->success('成功',$token);
     }

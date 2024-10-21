@@ -84,7 +84,7 @@ class PrizeController extends BaseController
         $rows = UsersPrize::whereIn('id', explode(',', $ids))
             ->where(['user_id' => $request->uid])
             ->get();
-        $rows->map(function (UsersPrize $item) use (&$freight, &$data) {
+        $rows->each(function (UsersPrize $item) use (&$freight, &$data) {
             if ($item->prize->price < 30) {
                 $freight += 10;
             }
@@ -105,7 +105,7 @@ class PrizeController extends BaseController
         $rows = UsersPrize::whereIn('id', explode(',', $ids))
             ->where(['user_id' => $request->uid])
             ->get();
-        $rows->map(function (UsersPrize $item) use (&$freight) {
+        $rows->each(function (UsersPrize $item) use (&$freight) {
             if ($item->prize->price < 30) {
                 $freight += 10;
             }
