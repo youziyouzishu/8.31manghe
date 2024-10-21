@@ -3,6 +3,7 @@
 namespace plugin\admin\app\model;
 
 use plugin\admin\app\model\Base;
+use support\Request;
 
 /**
  * 
@@ -15,6 +16,10 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize query()
+ * @property-read \plugin\admin\app\model\BoxPrize|null $prize
+ * @property int $safe 保险箱
+ * @property string $mark 备注
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class UsersPrize extends Base
@@ -33,7 +38,28 @@ class UsersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['id', 'created_at', 'updated_at', 'user_id', 'prize_id'];
-    
+    protected $fillable = ['id', 'user_id', 'prize_id'];
+
+    public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
+    {
+
+        $getLastLevel = BoxLevel::getLastLevel($level_box_id, $level_name);
+        if ($getLastLevel) {
+            $lastPrizes = $getLastLevel->prize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
+            return self::where(['user_id' => $user_id])->whereIn('prize_id', $lastPrizes)->get()->count();//获取用户拥有的上一关通关券
+        }else{
+            return 0;
+        }
+    }
+
+    function prize()
+    {
+        return $this->belongsTo(BoxPrize::class,'prize_id');
+    }
+
+    function user()
+    {
+        return $this->belongsTo(User::class,'user_id');
+    }
     
 }

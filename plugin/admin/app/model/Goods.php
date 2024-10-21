@@ -10,24 +10,22 @@ use plugin\admin\app\model\Base;
  * @property integer $id 主键(主键)
  * @property string $created_at 创建时间
  * @property string $updated_at 更新时间
- * @property integer $user_id 用户
  * @property integer $prize_id 奖品
- * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog query()
- * @property string $mark 备注
+ * @property integer $class_id 分类
  * @property-read \plugin\admin\app\model\BoxPrize|null $prize
- * @property int $draw_id 抽奖
+ * @method static \Illuminate\Database\Eloquent\Builder|Goods newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Goods newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Goods query()
  * @mixin \Eloquent
  */
-class UsersPrizeLog extends Base
+class Goods extends Base
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'wa_users_prize_log';
+    protected $table = 'wa_goods';
 
     /**
      * The primary key associated with the table.
@@ -36,11 +34,9 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','prize_id','mark'];
-
     function prize()
     {
-        return $this->belongsTo(BoxPrize::class,'prize_id','id');
+        return $this->belongsTo(BoxPrize::class, 'prize_id');
     }
     
 }

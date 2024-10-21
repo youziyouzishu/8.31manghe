@@ -53,18 +53,20 @@ class User extends Base
      */
     protected $primaryKey = 'id';
 
+    protected $fillable = ['username', 'nickname', 'password', 'sex', 'avatar', 'email', 'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip', 'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official'];
 
     /**
      * 变更会员余额
-     * @param int    $money   余额
-     * @param int    $user_id 会员ID
-     * @param string $memo    备注
+     * @param int $money 余额
+     * @param int $user_id 会员ID
+     * @param string $memo 备注
+     * @throws \Throwable
      */
     public static function money($money, $user_id, $memo)
     {
         DB::beginTransaction();
         try {
-            $user = self::lock()->find($user_id);
+            $user = self::lockForUpdate()->find($user_id);
             if ($user && $money != 0) {
                 $before = $user->money;
                 //$after = $user->money + $money;
@@ -77,6 +79,7 @@ class User extends Base
             Db::commit();
         } catch (\Throwable $e) {
             Db::rollback();
+            throw $e;
         }
     }
 

@@ -47,13 +47,29 @@ class BoxLevel extends Base
     function getNameTextAttribute($value)
     {
         $value = $value ?: ($this->name ?? '');
-
         return "关卡 $value";
     }
 
     function box()
     {
         return $this->belongsTo(Box::class,'box_id');
+    }
+
+    #找出当前关卡的上一关
+    public static function getLastLevel($box_id,$name)
+    {
+        return self::where(['box_id' => $box_id, ['name','<',$name]])->orderBy('name', 'desc')->first();
+    }
+
+    #找到当前关卡的下一关
+    public static function getNextLevel($box_id,$name)
+    {
+        return self::where(['box_id' => $box_id, ['name','>',$name]])->orderBy('name')->first();
+    }
+
+    #找到当前盲盒的第一关
+    public static function getFirstLevel($box_id){
+        return self::where(['box_id' => $box_id])->orderBy('name')->first();
     }
 
     

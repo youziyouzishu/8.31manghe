@@ -20,5 +20,15 @@ namespace support;
  */
 class Request extends \Webman\Http\Request
 {
-
+    /**
+     * 设置$request数据，自动覆盖更新
+     * @param array $data
+     */
+    function set(array $data)
+    {
+        $key = key($data);// 获取数组的键名
+        $rawData = $this->$key ?: [];// 获取原数据
+        $data = array_merge($rawData, $data[$key]);// 合并新数据
+        $this->$key = $data; // 设置新数据
+    }
 }
