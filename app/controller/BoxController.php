@@ -27,7 +27,7 @@ use Webman\Push\Api;
 class BoxController extends BaseController
 {
 
-    protected array $noNeedLogin = ['index', 'prize'];
+    protected array $noNeedLogin = ['index', 'boxPrize'];
 
 
     public function index(Request $request)
@@ -53,7 +53,7 @@ class BoxController extends BaseController
             return $this->fail('不属于普通盲盒');
         }
         $grades = $box
-            ->prize()
+            ->boxPrize()
             ->whereNot('grade', 1)
             ->orderByDesc('grade')
             ->distinct()
@@ -65,10 +65,10 @@ class BoxController extends BaseController
             $prizeData[] = [
                 'name' => (new BoxPrize())->getGradeList()[$grade],
                 'chance' => $prizes->sum('chance'),
-                'prize' => $prizes,
+                'boxPrize' => $prizes,
             ];
         });
-        // 将 prize 数据嵌套在 box 对象中
+        // 将 boxPrize 数据嵌套在 box 对象中
         $box->grade = $prizeData;
         return $this->success('成功', $box);
     }
@@ -121,7 +121,7 @@ class BoxController extends BaseController
 
 
         $grades = $level
-            ->prize()
+            ->boxPrize()
             ->orderByDesc('grade')
             ->distinct()
             ->pluck('grade')
@@ -134,11 +134,11 @@ class BoxController extends BaseController
             $prizeData[] = [
                 'name' => (new BoxPrize())->getGradeList()[$grade],
                 'chance' => $prizes->sum('chance'),
-                'prize' => $prizes,
+                'boxPrize' => $prizes,
             ];
         });
 
-        // 将 prize 数据嵌套在 level 对象中
+        // 将 boxPrize 数据嵌套在 level 对象中
         $level->grade = $prizeData;
 
         $ticket_count = UsersPrize::getUserPresentLevelTicketCount($level->box_id, $level->name, $request->uid);
@@ -230,7 +230,7 @@ class BoxController extends BaseController
                     //非第一关 进行抽奖
                     //找出上一关判断是否有这一关的通关券
                     $getLastLevel = BoxLevel::getLastLevel($box_id, $level->name);
-                    $lastPrizes = $getLastLevel->prize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
+                    $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
                     $lastTicket = UsersPrize::where(['user_id' => $request->uid])->whereIn('prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
                     $lastTicketCount = $lastTicket->count();
                     if ($times > $lastTicketCount) {
@@ -386,11 +386,11 @@ class BoxController extends BaseController
             if ($level->box_id != $box_id) {
                 return $this->fail('盲盒关卡不存在');
             }
-            $prize_ids = $level->prize()->pluck('id');
+            $prize_ids = $level->boxPrize()->pluck('id');
         } else {
-            $prize_ids = $box->prize()->pluck('id');
+            $prize_ids = $box->boxPrize()->pluck('id');
         }
-        $list = UsersPrizeLog::with(['prize'])
+        $list = UsersPrizeLog::with(['boxPrize'])
             ->where(['user_id' => $request->uid])
             ->whereIn('prize_id', $prize_ids)
             ->orderBy('id', 'desc')

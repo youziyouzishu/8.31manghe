@@ -26,7 +26,7 @@ class PrizeController extends BaseController
                 //执行删除
                 $item->delete();
                 //增加水晶
-                User::money($item->prize->price, $request->uid, '分解获得');
+                User::money($item->boxPrize->price, $request->uid, '分解获得');
             });
         return $this->success();
     }
@@ -85,11 +85,11 @@ class PrizeController extends BaseController
             ->where(['user_id' => $request->uid])
             ->get();
         $rows->each(function (UsersPrize $item) use (&$freight, &$data) {
-            if ($item->prize->price < 30) {
+            if ($item->boxPrize->price < 30) {
                 $freight += 10;
             }
-            $item->prize->freight = $item->prize->price < 30 ? 10 : 0;
-            $data['prize'][] = $item->prize;
+            $item->boxPrize->freight = $item->boxPrize->price < 30 ? 10 : 0;
+            $data['boxPrize'][] = $item->boxPrize;
         });
         $data['freight'] = $freight;
         return $this->success('成功', $data);

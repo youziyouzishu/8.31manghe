@@ -34,7 +34,7 @@ class RoomController extends BaseController
         ]);
         // 使用 each 方法批量创建关联模型
         $prize_ids->each(function ($prize_id) use ($room) {
-            $room->prize()->create(['prize_id' => $prize_id]);
+            $room->roomPrize()->create(['prize_id' => $prize_id]);
             //软删除用户奖品  取消时恢复
             UsersPrize::where('id', $prize_id)->delete();
         });
@@ -46,9 +46,9 @@ class RoomController extends BaseController
         $status = $request->get('status', 1);
         $rows = Room::with([
             'user',
-            'roomPrize.userPrize.prize'
+            'roomPrize.userPrize.boxPrize'
         ])
-            ->withCount(['prize'])
+            ->withCount(['roomPrize'])
             ->where('status', $status)
             ->get();
         return $this->success($rows);

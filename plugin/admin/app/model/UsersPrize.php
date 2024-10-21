@@ -17,7 +17,7 @@ use support\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize query()
- * @property-read \plugin\admin\app\model\BoxPrize|null $prize
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property int $safe 保险箱
  * @property string $mark 备注
  * @property-read \plugin\admin\app\model\User|null $user
@@ -51,14 +51,14 @@ class UsersPrize extends Base
 
         $getLastLevel = BoxLevel::getLastLevel($level_box_id, $level_name);
         if ($getLastLevel) {
-            $lastPrizes = $getLastLevel->prize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
+            $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
             return self::where(['user_id' => $user_id])->whereIn('prize_id', $lastPrizes)->get()->count();//获取用户拥有的上一关通关券
         }else{
             return 0;
         }
     }
 
-    function prize()
+    function boxPrize()
     {
         return $this->belongsTo(BoxPrize::class,'prize_id');
     }

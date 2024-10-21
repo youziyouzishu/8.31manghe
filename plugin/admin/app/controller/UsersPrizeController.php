@@ -34,7 +34,7 @@ class UsersPrizeController extends Crud
      */
     public function index(): Response
     {
-        return view('users-prize/index');
+        return view('users-boxPrize/index');
     }
 
     /**
@@ -48,7 +48,7 @@ class UsersPrizeController extends Crud
         if ($request->method() === 'POST') {
             return parent::insert($request);
         }
-        return view('users-prize/insert');
+        return view('users-boxPrize/insert');
     }
 
     /**
@@ -62,7 +62,7 @@ class UsersPrizeController extends Crud
         if ($request->method() === 'POST') {
             return parent::update($request);
         }
-        return view('users-prize/update');
+        return view('users-boxPrize/update');
     }
 
 }

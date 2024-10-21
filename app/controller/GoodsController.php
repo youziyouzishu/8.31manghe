@@ -27,7 +27,7 @@ class GoodsController extends BaseController
     function index(Request $request)
     {
         $class_id = $request->get('class_id');
-        $row = Goods::with(['prize'])->when(!empty($class_id), function (Builder $query) use ($class_id) {
+        $row = Goods::with(['boxPrize'])->when(!empty($class_id), function (Builder $query) use ($class_id) {
             return $query->where('class_id', $class_id);
         })->paginate()->items();
         return $this->success('成功', $row);
@@ -36,7 +36,7 @@ class GoodsController extends BaseController
     function detail(Request $request)
     {
         $goods_id = $request->get('goods_id');
-        $row = Goods::with(['prize'])->find($goods_id);
+        $row = Goods::with(['boxPrize'])->find($goods_id);
         return $this->success('成功', $row);
     }
 

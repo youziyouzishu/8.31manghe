@@ -21,7 +21,7 @@ Route::any('/', [\app\controller\IndexController::class, 'index']);
 
 Route::group('/box', function () {
     Route::get('/index', [\app\controller\BoxController::class, 'index']);
-    Route::get('/prize', [\app\controller\BoxController::class, 'prize']);
+    Route::get('/boxPrize', [\app\controller\BoxController::class, 'prize']);
     Route::get('/canusecoupon', [\app\controller\BoxController::class, 'canusecoupon']);
     Route::get('/get_price', [\app\controller\BoxController::class, 'get_price']);
     Route::post('/draw', [\app\controller\BoxController::class, 'draw']);
@@ -49,14 +49,14 @@ Route::group('/banner', function () {
 
 Route::group('/user', function () {
     Route::post('/login', [\app\controller\UserController::class, 'login']);
-    Route::get('/prize', [\app\controller\UserController::class, 'prize']);
+    Route::get('/boxPrize', [\app\controller\UserController::class, 'prize']);
     Route::get('/getinfo', [\app\controller\UserController::class, 'getinfo']);
     Route::get('/deliverList', [\app\controller\UserController::class, 'deliverList']);
     Route::get('/getDeliverInfo', [\app\controller\UserController::class, 'getDeliverInfo']);
     Route::post('/confirmReceipt', [\app\controller\UserController::class, 'confirmReceipt']);
 });
 
-Route::group('/prize', function () {
+Route::group('/boxPrize', function () {
     Route::post('/dissolve', [\app\controller\PrizeController::class, 'dissolve']);
     Route::post('/give', [\app\controller\PrizeController::class, 'give']);
     Route::post('/changesafe', [\app\controller\PrizeController::class, 'changesafe']);

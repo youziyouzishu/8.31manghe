@@ -60,7 +60,7 @@ class UserController extends  BaseController
     {
         $safe = $request->get('safe', 0);
 
-        $rows = UsersPrize::with(['prize'])
+        $rows = UsersPrize::with(['boxPrize'])
             ->where(['user_id' => $request->uid, 'safe' => $safe])
             ->paginate()
             ->items();

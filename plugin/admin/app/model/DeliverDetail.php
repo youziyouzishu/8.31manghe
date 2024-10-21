@@ -18,7 +18,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|DeliverDetail query()
  * @property int $user_prize_id 所属用户奖品
  * @property-read \plugin\admin\app\model\Deliver|null $deliver
- * @property-read \plugin\admin\app\model\BoxPrize|null $prize
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property-read \plugin\admin\app\model\UsersPrize|null $userPrize
  * @mixin \Eloquent
  */
@@ -46,7 +46,7 @@ class DeliverDetail extends Base
         return $this->belongsTo(Deliver::class, 'deliver_id');
     }
 
-    function prize()
+    function boxPrize()
     {
         return $this->belongsTo(BoxPrize::class, 'prize_id');
     }

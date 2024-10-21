@@ -35,7 +35,7 @@ class BoxPrizeController extends Crud
      */
     public function index(Request $request): Response
     {
-        return view('box-prize/index');
+        return view('box-boxPrize/index');
     }
 
     /**
@@ -48,7 +48,7 @@ class BoxPrizeController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            $box = Box::with(['prize'])->find($params['box_id']);
+            $box = Box::with(['boxPrize'])->find($params['box_id']);
             $row = $this->model->where(['box_id' => $params['box_id']])
                 ->when($box->type == 4, function (Builder $query) use ($params) {
                     $query->where('level_id', $params['level_id']);
@@ -61,7 +61,7 @@ class BoxPrizeController extends Crud
 
             return parent::insert($request);
         }
-        return view('box-prize/insert');
+        return view('box-boxPrize/insert');
     }
 
     /**
@@ -88,7 +88,7 @@ class BoxPrizeController extends Crud
             }
             return parent::update($request);
         }
-        return view('box-prize/update');
+        return view('box-boxPrize/update');
     }
 
 }

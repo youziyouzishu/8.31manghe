@@ -19,7 +19,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Box query()
  * @property-read mixed $images_text
  * @property-read mixed $type_text
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $prize
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxLevel> $level
  * @mixin \Eloquent
  */
@@ -41,7 +41,7 @@ class Box extends Base
 
     protected $appends = ['images_text','type_text'];
 
-    public function prize()
+    public function boxPrize()
     {
         return $this->hasMany(BoxPrize::class);
     }

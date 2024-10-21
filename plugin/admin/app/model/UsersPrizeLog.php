@@ -16,7 +16,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog query()
  * @property string $mark 备注
- * @property-read \plugin\admin\app\model\BoxPrize|null $prize
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property int $draw_id 抽奖
  * @mixin \Eloquent
  */
@@ -38,7 +38,7 @@ class UsersPrizeLog extends Base
 
     protected $fillable = ['user_id','prize_id','mark'];
 
-    function prize()
+    function boxPrize()
     {
         return $this->belongsTo(BoxPrize::class,'prize_id','id');
     }

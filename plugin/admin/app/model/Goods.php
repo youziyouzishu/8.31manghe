@@ -12,7 +12,7 @@ use plugin\admin\app\model\Base;
  * @property string $updated_at 更新时间
  * @property integer $prize_id 奖品
  * @property integer $class_id 分类
- * @property-read \plugin\admin\app\model\BoxPrize|null $prize
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @method static \Illuminate\Database\Eloquent\Builder|Goods newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Goods newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Goods query()
@@ -34,7 +34,7 @@ class Goods extends Base
      */
     protected $primaryKey = 'id';
 
-    function prize()
+    function boxPrize()
     {
         return $this->belongsTo(BoxPrize::class, 'prize_id');
     }

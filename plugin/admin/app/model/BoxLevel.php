@@ -16,7 +16,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|BoxLevel newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxLevel newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxLevel query()
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $prize
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property-read mixed $name_text
  * @mixin \Eloquent
@@ -39,7 +39,7 @@ class BoxLevel extends Base
 
     protected $appends = ['name_text'];
 
-    function prize()
+    function boxPrize()
     {
         return $this->hasMany(BoxPrize::class,'level_id');
     }
