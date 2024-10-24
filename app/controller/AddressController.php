@@ -7,36 +7,38 @@ use support\Request;
 
 class AddressController extends BaseController
 {
+    /**
+     * 添加地址
+     */
     function add(Request $request)
     {
-        $name = $request->post('name');
-        $mobile = $request->post('mobile');
-        $province = $request->post('province');
-        $city = $request->post('city');
-        $region = $request->post('region');
-        $detail = $request->post('detail');
-        $default = $request->post('default', 0);
-        if (!$name || !$mobile || !$province || !$city || !$region || !$detail) {
-            return $this->fail('参数错误');
+        $requiredFields = ['name', 'mobile', 'province', 'city', 'region', 'detail'];
+        foreach ($requiredFields as $field) {
+            if (!$request->post($field)) {
+                return $this->fail('参数错误');
+            }
         }
+
         $data = [
-            'name' => $name,
-            'mobile' => $mobile,
-            'province' => $province,
-            'city' => $city,
-            'region' => $region,
-            'detail' => $detail,
+            'name' => $request->post('name'),
+            'mobile' => $request->post('mobile'),
+            'province' => $request->post('province'),
+            'city' => $request->post('city'),
+            'region' => $request->post('region'),
+            'detail' => $request->post('detail'),
             'user_id' => $request->uid,
+            'default' => $request->post('default', 0),
         ];
-        if ($default == 0) {
-            $row = Address::where(['user_id' => $request->uid, 'default' => 1])->first();
-            if (!$row) {
+
+        if ($data['default'] == 0) {
+            $existingDefault = Address::where(['user_id' => $request->uid, 'default' => 1])->first();
+            if (!$existingDefault) {
                 $data['default'] = 1;
             }
         } else {
             Address::where(['user_id' => $request->uid, 'default' => 1])->update(['default' => 0]);
-            $data['default'] = 1;
         }
+
         Address::create($data);
         return $this->success();
     }
@@ -66,9 +68,9 @@ class AddressController extends BaseController
      */
     function get(Request $request)
     {
-        $id = $request->get('id');
-        $row = Address::find($id);
-        if (!$row){
+        $address_id = $request->post('address_id');
+        $row = Address::find($address_id);
+        if (!$row) {
             return $this->fail('地址不存在');
         }
         return $this->success('成功', $row);
@@ -79,30 +81,27 @@ class AddressController extends BaseController
      */
     function edit(Request $request)
     {
-        $id = $request->post('id');
-        $default = $request->post('default');
-        $detail = $request->post('detail');
-        $province = $request->post('province');
-        $city = $request->post('city');
-        $region = $request->post('region');
-        $mobile = $request->post('mobile');
-        $name = $request->post('name');
-
-
-        $row = Address::find($id);
-        if (!$row){
+        $address_id = $request->post('address_id');
+        $row = Address::find($address_id);
+        if (!$row) {
             return $this->fail('地址不存在');
         }
-        if (isset($default)&&$default == 1) {
+
+        $fieldsToUpdate = [
+            'name' => $request->post('name'),
+            'mobile' => $request->post('mobile'),
+            'province' => $request->post('province'),
+            'city' => $request->post('city'),
+            'region' => $request->post('region'),
+            'detail' => $request->post('detail'),
+            'default' => $request->post('default', 0),
+        ];
+
+        if ($fieldsToUpdate['default'] == 1) {
             Address::where(['user_id' => $request->uid])->update(['default' => 0]);
         }
-        $row->default = $default;
-        $row->detail = $detail;
-        $row->province = $province;
-        $row->city = $city;
-        $row->region = $region;
-        $row->mobile = $mobile;
-        $row->name = $name;
+
+        $row->fill($fieldsToUpdate);
         $row->save();
         return $this->success();
     }
@@ -112,9 +111,9 @@ class AddressController extends BaseController
      */
     function delete(Request $request)
     {
-        $id = $request->post('id/d');
+        $id = $request->post('id');
         $row = Address::where(['user_id' => $request->uid])->find($id);
-        if (!$row){
+        if (!$row) {
             return $this->fail('地址不存在');
         }
         $row->delete();
@@ -126,10 +125,10 @@ class AddressController extends BaseController
      */
     function getList(Request $request)
     {
-        $rows = Address::where(['user_id' => $request->uid])->orderByDesc('id')
+        $rows = Address::where(['user_id' => $request->uid])
+            ->orderByDesc('id')
             ->paginate()
             ->items();
-        return $this->success('成功',$rows);
+        return $this->success('成功', $rows);
     }
-
 }

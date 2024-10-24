@@ -26,18 +26,27 @@ class GoodsController extends BaseController
 
     function index(Request $request)
     {
-        $class_id = $request->get('class_id');
-        $row = Goods::with(['boxPrize'])->when(!empty($class_id), function (Builder $query) use ($class_id) {
-            return $query->where('class_id', $class_id);
-        })->paginate()->items();
-        return $this->success('成功', $row);
+        $class_id = $request->post('class_id');
+        $rows = Goods::when(!empty($class_id), function (Builder $query) use ($class_id) {
+                return $query->where('class_id', $class_id);
+            })
+            ->paginate()
+            ->getCollection()
+            ->map(function (Goods $item) {
+                return $item->boxPrize;
+            });
+        return $this->success('成功', $rows);
     }
 
     function detail(Request $request)
     {
-        $goods_id = $request->get('goods_id');
+        $goods_id = $request->post('goods_id');
         $row = Goods::with(['boxPrize'])->find($goods_id);
-        return $this->success('成功', $row);
+
+        // 只返回 boxPrize 关联数据
+        $boxPrize = optional($row)->boxPrize ?? [];
+
+        return $this->success('成功', $boxPrize);
     }
 
     function pay(Request $request)
@@ -105,7 +114,6 @@ class GoodsController extends BaseController
             Db::rollBack();
             return $this->fail($e->getMessage());
         }
-
 
 
     }

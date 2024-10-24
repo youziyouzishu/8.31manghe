@@ -4,12 +4,13 @@ namespace app\queue\redis;
 
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersCoupon;
+use Webman\RedisQueue\Client;
 use Webman\RedisQueue\Consumer;
 
 class CouponExpire implements Consumer
 {
     // 要消费的队列名
-    public $queue = 'coupon-expire';
+    public $queue = 'userCoupon-expire';
 
     // 连接名，对应 plugin/webman/redis-queue/redis.php 里的连接`
     public $connection = 'default';
@@ -22,6 +23,9 @@ class CouponExpire implements Consumer
         foreach ($events as $event) {
             $event->status = 3;
             $event->save();
+            $queue = 'create-room';
+            // 投递延迟消息，消息会在60秒后处理
+            Client::send($queue, ['id' => $room->id],$start_time - time());
         }
     }
 

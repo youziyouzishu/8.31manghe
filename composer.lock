@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15f299a7cb7497f86aa0fa4fb31de204",
+    "content-hash": "e667f0246289ee75a7d1972aa0595256",
     "packages": [
         {
             "name": "barryvdh/laravel-ide-helper",
@@ -1565,7 +1565,7 @@
         },
         {
             "name": "illuminate/pagination",
-            "version": "v11.27.2",
+            "version": "v11.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/pagination.git",

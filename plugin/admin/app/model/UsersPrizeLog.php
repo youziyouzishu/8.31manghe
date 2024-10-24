@@ -11,13 +11,16 @@ use plugin\admin\app\model\Base;
  * @property string $created_at 创建时间
  * @property string $updated_at 更新时间
  * @property integer $user_id 用户
- * @property integer $prize_id 奖品
+ * @property integer $source_user_id 来源对象
+ * @property integer $box_prize_id 奖品
+ * @property integer $type 类型
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog query()
  * @property string $mark 备注
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property int $draw_id 抽奖
+ * @property-read \plugin\admin\app\model\User|null $sourceUser
  * @mixin \Eloquent
  */
 class UsersPrizeLog extends Base
@@ -36,11 +39,17 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','prize_id','mark'];
+    protected $fillable = ['user_id','box_prize_id','mark'];
 
     function boxPrize()
     {
-        return $this->belongsTo(BoxPrize::class,'prize_id','id');
+        return $this->belongsTo(BoxPrize::class,'box_prize_id','id');
     }
+
+    function sourceUser()
+    {
+        return $this->belongsTo(User::class,'source_user_id','id');
+    }
+
     
 }

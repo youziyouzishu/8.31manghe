@@ -5,6 +5,7 @@ namespace app\controller;
 use app\service\Coupon;
 use app\service\Pay;
 use app\tool\Random;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Redirect;
 use plugin\admin\app\model\Box;
 use plugin\admin\app\model\BoxLevel;
@@ -32,8 +33,8 @@ class BoxController extends BaseController
 
     public function index(Request $request)
     {
-        $type = $request->get('type', 1);
-        $sort = $request->get('sort', 'asc');
+        $type = $request->post('type', 1);
+        $sort = $request->post('sort', 'asc');
         $rows = Box::where(['type' => $type])
             ->orderBy('id', $sort)
             ->paginate()
@@ -43,7 +44,7 @@ class BoxController extends BaseController
 
     function prize(Request $request)
     {
-        $box_id = $request->get('box_id');
+        $box_id = $request->post('box_id');
         $box = Box::find($box_id);
         if (empty($box)) {
             return $this->fail('盲盒不存在');
@@ -69,13 +70,13 @@ class BoxController extends BaseController
             ];
         });
         // 将 boxPrize 数据嵌套在 box 对象中
-        $box->grade = $prizeData;
+        $box->list = $prizeData;
         return $this->success('成功', $box);
     }
 
     function level(Request $request)
     {
-        $box_id = $request->get('box_id');
+        $box_id = $request->post('box_id');
         $box = Box::find($box_id);
         if (empty($box)) {
             return $this->fail('盲盒不存在');
@@ -111,9 +112,9 @@ class BoxController extends BaseController
         return $this->success('成功', $level);
     }
 
-    function level_prize(Request $request)
+    function levelPrize(Request $request)
     {
-        $level_id = $request->get('level_id');
+        $level_id = $request->post('level_id');
         $level = BoxLevel::with(['box'])->find($level_id);
         if (!$level) {
             return $this->fail('关卡不存在');
@@ -160,32 +161,32 @@ class BoxController extends BaseController
     }
 
     #满足条件优惠券
-    function canusecoupon(Request $request)
+    function canuseCoupon(Request $request)
     {
-        $id = $request->get('id');
-        $times = $request->get('times');
-        $box = Box::find($id);
+        $box_id = $request->post('box_id');
+        $times = $request->post('times');
+        $box = Box::find($box_id);
         $amount = $box->price * $times; #需要支付金额
 
         $rows = UsersCoupon::where(['user_id' => $request->uid, 'status' => 1])
-            ->get()
-            ->reject(function (UsersCoupon $item) use ($amount) {
-                if ($item->coupon->type == 2 && $item->coupon->with_amount > $amount) {
-                    return true;
-                }
-                return false;
-            })->values();
+            ->whereDoesntHave('coupon', function (Builder $query) use ($amount) {
+                $query->where([
+                    ['type', '=', 2],
+                    ['with_amount', '>', $amount]
+                ]);
+            })
+            ->get();
 
         return $this->success('成功', $rows);
 
     }
 
 
-    function get_price(Request $request)
+    function getPrice(Request $request)
     {
-        $box_id = $request->get('box_id');
-        $times = $request->get('times');
-        $coupon_id = $request->get('coupon_id');
+        $box_id = $request->post('box_id');
+        $times = $request->post('times');
+        $coupon_id = $request->post('coupon_id');
         $row = Box::find($box_id);
         $amount = $row->price * $times;
         $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
@@ -231,14 +232,14 @@ class BoxController extends BaseController
                     //找出上一关判断是否有这一关的通关券
                     $getLastLevel = BoxLevel::getLastLevel($box_id, $level->name);
                     $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
-                    $lastTicket = UsersPrize::where(['user_id' => $request->uid])->whereIn('prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
+                    $lastTicket = UsersPrize::where(['user_id' => $request->uid])->whereIn('box_prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
                     $lastTicketCount = $lastTicket->count();
                     if ($times > $lastTicketCount) {
                         return $this->fail('通关券不足');
                     }
 
                     //开始抽奖
-                    $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id]); #创建抽奖记录
+                    $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id,'ordersn' => '000000000000']); #创建抽奖记录
                     $winnerPrize = [];
                     for ($i = 0; $i < $times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
@@ -268,13 +269,13 @@ class BoxController extends BaseController
                                 // 发放奖品并且记录
                                 UsersPrize::create([
                                     'user_id' => $request->uid,
-                                    'prize_id' => $prize->id,
+                                    'box_prize_id' => $prize->id,
                                     'mark' => '抽奖获得'
                                 ]);
                                 UsersPrizeLog::create([
                                     'draw_id' => $draw->id,
                                     'user_id' => $request->uid,
-                                    'prize_id' => $prize->id,
+                                    'box_prize_id' => $prize->id,
                                     'mark' => '抽奖获得',
                                 ]);
                                 //删除用户通关券
@@ -370,10 +371,10 @@ class BoxController extends BaseController
         }
     }
 
-    function prize_log(Request $request)
+    function prizeLog(Request $request)
     {
-        $box_id = $request->get('box_id');
-        $level_id = $request->get('level_id', 0);
+        $box_id = $request->post('box_id');
+        $level_id = $request->post('level_id', 0);
         $box = Box::find($box_id);
         if (!$box) {
             return $this->fail('盲盒不存在');
@@ -392,7 +393,7 @@ class BoxController extends BaseController
         }
         $list = UsersPrizeLog::with(['boxPrize'])
             ->where(['user_id' => $request->uid])
-            ->whereIn('prize_id', $prize_ids)
+            ->whereIn('box_prize_id', $prize_ids)
             ->orderBy('id', 'desc')
             ->paginate()
             ->items();

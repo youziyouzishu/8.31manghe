@@ -156,19 +156,19 @@
         </div>
 
         <!-- 表格顶部工具栏 -->
-        <script type="text/html" id="table-toolbar">
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.user.insert">
-                <i class="layui-icon layui-icon-add-1"></i>新增
-            </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.user.delete">
-                <i class="layui-icon layui-icon-delete"></i>删除
-            </button>
-        </script>
+<!--        <script type="text/html" id="table-toolbar">-->
+<!--            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.user.insert">-->
+<!--                <i class="layui-icon layui-icon-add-1"></i>新增-->
+<!--            </button>-->
+<!--            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.user.delete">-->
+<!--                <i class="layui-icon layui-icon-delete"></i>删除-->
+<!--            </button>-->
+<!--        </script>-->
 
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.user.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.user.delete">删除</button>
+<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.user.delete">删除</button>-->
         </script>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
@@ -294,7 +294,8 @@
 								items.push(apiResults[field][v] || v);
 							});
 							return util.escape(items.join(","));
-						}
+						},
+                        hide: true,
 					},{
 						title: "头像",align: "center",
 						field: "avatar",
@@ -304,6 +305,7 @@
 					},{
 						title: "邮箱",align: "center",
 						field: "email",
+                        hide: true,
 					},{
 						title: "手机",align: "center",
 						field: "mobile",
@@ -316,9 +318,8 @@
 						field: "birthday",
 						hide: true,
 					},{
-						title: "余额(元)",align: "center",
+						title: "水晶",align: "center",
 						field: "money",
-						hide: true,
 					},{
 						title: "积分",align: "center",
 						field: "score",
@@ -326,19 +327,17 @@
 					},{
 						title: "登录时间",align: "center",
 						field: "last_time",
-						hide: true,
 					},{
 						title: "登录ip",align: "center",
 						field: "last_ip",
-						hide: true,
 					},{
 						title: "注册时间",align: "center",
 						field: "join_time",
-						hide: true,
+
 					},{
 						title: "注册ip",align: "center",
 						field: "join_ip",
-						hide: true,
+
 					},{
 						title: "token",align: "center",
 						field: "token",

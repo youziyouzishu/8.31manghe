@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\UsersMoneyLog;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\User;
@@ -60,6 +61,14 @@ class UserController extends Crud
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            $user = $this->model->find($request->input('id'));
+            $originmoney = $user->money;
+            $changemoney = $request->post('money');
+
+            if (!empty($changemoney) && (function_exists('bccomp') ? bccomp($changemoney, $originmoney, 2) !== 0 : (double)$changemoney !== (double)$originmoney)) {
+
+                UsersMoneyLog::create(['user_id' => $user->id, 'money' => $changemoney - $originmoney, 'before' => $originmoney, 'after' => $changemoney, 'memo' => '管理员变更']);
+            }
             return parent::update($request);
         }
         return view('user/update');

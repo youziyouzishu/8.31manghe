@@ -18,7 +18,6 @@ use plugin\admin\app\model\Base;
  * @property string $content 活动介绍
  * @property int $type 房间类型:1=密码,2=流水
  * @property string $password
- * @property int $bill_type 流水类型:1=本周>=50,2=今日>=10
  * @property int $status 房间状态:1=进行中,2=未开始,3=已结束
  * @property int $num 参与人数
  * @method static \Illuminate\Database\Eloquent\Builder|Room newModelQuery()
@@ -27,6 +26,9 @@ use plugin\admin\app\model\Base;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomPrize> $roomPrize
  * @property-read mixed $status_text
  * @property-read \plugin\admin\app\model\User|null $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomUsers> $roomUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrizes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\User> $roomUserUser
  * @mixin \Eloquent
  */
 class Room extends Base
@@ -45,18 +47,32 @@ class Room extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['name','content','type','password','bill_type','status','num','user_id'];
+    protected $fillable = ['name','content','type','password','status','num','user_id'];
 
     protected $appends = ['status_text'];
+
+
+    public function boxPrizes()
+    {
+        return $this->hasManyThrough(BoxPrize::class, RoomPrize::class, 'room_id', 'id', 'id', 'user_prize_id');
+    }
+
     function roomPrize()
     {
-        return $this->hasMany(RoomPrize::class,'room_id','id');
+        return $this->hasMany(RoomPrize::class);
     }
+
 
     function user()
     {
         return $this->belongsTo(User::class,'user_id');
     }
+
+    public function roomUserUser()
+    {
+        return $this->hasManyThrough(User::class, roomUsers::class, 'room_id', 'id', 'id', 'user_id');
+    }
+
 
 
     function getStatusTextAttribute($value)
@@ -64,6 +80,11 @@ class Room extends Base
         $value = $value ?: ($this->status ?? '');
         $list = $this->getStatusList();
         return $list[$value] ?? '';
+    }
+
+    function roomUser()
+    {
+        return $this->hasMany(RoomUsers::class);
     }
 
     public function getStatusList()

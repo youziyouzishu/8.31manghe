@@ -5,6 +5,7 @@ namespace app\controller;
 use GuzzleHttp\Client;
 use plugin\admin\app\model\Area;
 use plugin\admin\app\model\Caiji;
+use plugin\admin\app\model\UsersPrize;
 use support\Db;
 use support\Request;
 use Webman\Push\Api;
@@ -14,17 +15,17 @@ class IndexController extends BaseController
     protected array $noNeedLogin = ['*'];
     public function index(Request $request)
     {
-        $a = "1,2,3";
-        $a = collect($a);
-        $a = $a->each(function ($item){
-            return $item;
-        });
-        return $this->success('采集完成');
+
+
+        UsersPrize::withTrashed()->restore();
+        return $this->success('采集开始');
         $area = Area::where(['level'=>2,'pass'=>0])->get();
         $client = new Client();
         foreach ($area as $v){
             for ($i=1;$i<=99999;$i++){
+
                 $res = $client->request('GET','https://restapi.amap.com/v3/place/text?key=ad941626aed3c16b84c28562865314a3&keywords=防水&region='.$v->name.'&page_size=25&page_num='.$i.'&show_fields=children,business');
+
                 $res = json_decode($res->getBody()->getContents());
 
                 if ($res->status != '1') {

@@ -32,6 +32,20 @@
                         </div>
                     </div>
                     
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">用户</label>
+                        <div class="layui-input-block">
+                            <div name="user_id" id="user_id" value="" ></div>
+                        </div>
+                    </div>
+                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">奖品</label>
+                        <div class="layui-input-block">
+                            <div name="box_prize_id" id="box_prize_id" value="" ></div>
+                        </div>
+                    </div>
+                    
                     <div class="layui-form-item layui-inline">
                         <label class="layui-form-label"></label>
                         <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
@@ -57,20 +71,20 @@
         </div>
 
         <!-- 表格顶部工具栏 -->
-        <script type="text/html" id="table-toolbar">
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.usersprizelog.insert">
-                <i class="layui-icon layui-icon-add-1"></i>新增
-            </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.usersprizelog.delete">
-                <i class="layui-icon layui-icon-delete"></i>删除
-            </button>
-        </script>
+<!--        <script type="text/html" id="table-toolbar">-->
+<!--            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.usersprizelog.insert">-->
+<!--                <i class="layui-icon layui-icon-add-1"></i>新增-->
+<!--            </button>-->
+<!--            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.usersprizelog.delete">-->
+<!--                <i class="layui-icon layui-icon-delete"></i>删除-->
+<!--            </button>-->
+<!--        </script>-->
 
         <!-- 表格行工具栏 -->
-        <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.usersprizelog.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.usersprizelog.delete">删除</button>
-        </script>
+<!--        <script type="text/html" id="table-bar">-->
+<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.usersprizelog.update">编辑</button>-->
+<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.usersprizelog.delete">删除</button>-->
+<!--        </script>-->
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
         <script src="/app/admin/component/pear/pear.js"></script>
@@ -96,6 +110,56 @@
                 });
             })
             
+            // 字段 用户 user_id
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                layui.$.ajax({
+                    url: "/app/admin/user/select?format=select",
+                    dataType: "json",
+                    success: function (res) {
+                        let value = layui.$("#user_id").attr("value");
+                        let initValue = value ? value.split(",") : [];
+                        layui.xmSelect.render({
+                            el: "#user_id",
+                            name: "user_id",
+                            initValue: initValue,
+                            filterable: true,
+                            data: res.data, 
+                            model: {"icon":"hidden","label":{"type":"text"}},
+                            clickClose: true,
+                            radio: true,
+                        });
+                        if (res.code) {
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            });
+            
+            // 字段 奖品 box_prize_id
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                layui.$.ajax({
+                    url: "/app/admin/box-prize/select?format=select",
+                    dataType: "json",
+                    success: function (res) {
+                        let value = layui.$("#box_prize_id").attr("value");
+                        let initValue = value ? value.split(",") : [];
+                        layui.xmSelect.render({
+                            el: "#box_prize_id",
+                            name: "box_prize_id",
+                            initValue: initValue,
+                            filterable: true,
+                            data: res.data, 
+                            model: {"icon":"hidden","label":{"type":"text"}},
+                            clickClose: true,
+                            radio: true,
+                        });
+                        if (res.code) {
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            });
+            
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
                 let table = layui.table;
@@ -114,19 +178,52 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "创建时间",align: "center",
-						field: "created_at",
-						sort: true,
-					},{
-						title: "更新时间",align: "center",
-						field: "updated_at",
-					},{
 						title: "用户",align: "center",
 						field: "user_id",
+						templet: function (d) {
+							let field = "user_id";
+							if (typeof d[field] == "undefined") return "";
+							let items = [];
+							layui.each((d[field] + "").split(","), function (k , v) {
+								items.push(apiResults[field][v] || v);
+							});
+							return util.escape(items.join(","));
+						}
 					},{
 						title: "奖品",align: "center",
-						field: "prize_id",
+						field: "box_prize_id",
+						templet: function (d) {
+							let field = "box_prize_id";
+							if (typeof d[field] == "undefined") return "";
+							let items = [];
+							layui.each((d[field] + "").split(","), function (k , v) {
+								items.push(apiResults[field][v] || v);
+							});
+							return util.escape(items.join(","));
+						}
 					},{
+						title: "备注",align: "center",
+						field: "mark",
+					},{
+						title: "抽奖",align: "center",
+						field: "draw_id",
+						hide: true,
+					},{
+						title: "类型:1=赠送,2=收到赠送",align: "center",
+						field: "type",
+						hide: true,
+					},{
+						title: "赠送对象",align: "center",
+						field: "source_user_id",
+						hide: true,
+					},{
+                        title: "创建时间",align: "center",
+                        field: "created_at",
+                        sort: true,
+                    },{
+                        title: "更新时间",align: "center",
+                        field: "updated_at",
+                    },{
 						title: "操作",
 						toolbar: "#table-bar",
 						align: "center",
@@ -136,25 +233,66 @@
 				];
 				
 				// 渲染表格
-				table.render({
-				    elem: "#data-table",
-				    url: SELECT_API,
-				    page: true,
-				    cols: [cols],
-				    skin: "line",
-				    size: "lg",
-				    toolbar: "#table-toolbar",
-				    autoSort: false,
-				    defaultToolbar: [{
-				        title: "刷新",
-				        layEvent: "refresh",
-				        icon: "layui-icon-refresh",
-				    }, "filter", "print", "exports"],
-				    done: function () {
-				        layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
-				    }
-				});
+				function render()
+				{
+				    table.render({
+				        elem: "#data-table",
+				        url: SELECT_API,
+				        page: true,
+				        cols: [cols],
+				        skin: "line",
+				        size: "lg",
+				        toolbar: "#table-toolbar",
+				        autoSort: false,
+				        defaultToolbar: [{
+				            title: "刷新",
+				            layEvent: "refresh",
+				            icon: "layui-icon-refresh",
+				        }, "filter", "print", "exports"],
+				        done: function () {
+				            layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
+				        }
+				    });
+				}
 				
+				// 获取表格中下拉或树形组件数据
+				let apis = [];
+				apis.push(["user_id", "/app/admin/user/select?format=select"]);
+				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
+				let apiResults = {};
+				apiResults["user_id"] = [];
+				apiResults["box_prize_id"] = [];
+				let count = apis.length;
+				layui.each(apis, function (k, item) {
+				    let [field, url] = item;
+				    $.ajax({
+				        url: url,
+				        dateType: "json",
+				        success: function (res) {
+				            if (res.code) {
+				                return layui.popup.failure(res.msg);
+				            }
+				            function travel(items) {
+				                for (let k in items) {
+				                    let item = items[k];
+				                    apiResults[field][item.value] = item.name;
+				                    if (item.children) {
+				                        travel(item.children);
+				                    }
+				                }
+				            }
+				            travel(res.data);
+				        },
+				        complete: function () {
+				            if (--count === 0) {
+				                render();
+				            }
+				        }
+				    });
+				});
+				if (!count) {
+				    render();
+				}
 				
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {

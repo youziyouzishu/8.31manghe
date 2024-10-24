@@ -20,40 +20,47 @@ use Webman\Route;
 Route::any('/', [\app\controller\IndexController::class, 'index']);
 
 Route::group('/box', function () {
-    Route::get('/index', [\app\controller\BoxController::class, 'index']);
-    Route::get('/boxPrize', [\app\controller\BoxController::class, 'prize']);
-    Route::get('/canusecoupon', [\app\controller\BoxController::class, 'canusecoupon']);
-    Route::get('/get_price', [\app\controller\BoxController::class, 'get_price']);
+    Route::post('/index', [\app\controller\BoxController::class, 'index']);
+    Route::post('/boxPrize', [\app\controller\BoxController::class, 'prize']);
+    Route::post('/canuseCoupon', [\app\controller\BoxController::class, 'canuseCoupon']);
+    Route::post('/getPrice', [\app\controller\BoxController::class, 'getPrice']);
     Route::post('/draw', [\app\controller\BoxController::class, 'draw']);
-    Route::get('/level', [\app\controller\BoxController::class, 'level']); //闯关赏查看关卡
-    Route::get('/level_prize', [\app\controller\BoxController::class, 'level_prize']); //闯关赏关卡详情
-    Route::get('/prize_log', [\app\controller\BoxController::class, 'prize_log']); //中奖记录
+    Route::post('/level', [\app\controller\BoxController::class, 'level']); //闯关赏查看关卡
+    Route::post('/levelPrize', [\app\controller\BoxController::class, 'levelPrize']); //闯关赏关卡详情
+    Route::post('/prizeLog', [\app\controller\BoxController::class, 'prizeLog']); //中奖记录
 });
 
 Route::group('/goods', function () {
-    Route::get('/class', [\app\controller\GoodsController::class, 'class']);
-    Route::get('/index', [\app\controller\GoodsController::class, 'index']);
-    Route::get('/detail', [\app\controller\GoodsController::class, 'detail']);
+    Route::post('/class', [\app\controller\GoodsController::class, 'class']);
+    Route::post('/index', [\app\controller\GoodsController::class, 'index']);
+    Route::post('/detail', [\app\controller\GoodsController::class, 'detail']);
     Route::post('/pay', [\app\controller\GoodsController::class, 'pay']);
 });
 
-Route::group('/coupon', function () {
-    Route::get('/index', [\app\controller\CouponController::class, 'index']);
+Route::group('/userCoupon', function () {
+    Route::post('/index', [\app\controller\CouponController::class, 'index']);
     Route::post('/receive', [\app\controller\CouponController::class, 'receive']);
 });
 
 
 Route::group('/banner', function () {
-    Route::get('/index', [\app\controller\BannerController::class, 'index']);
+    Route::post('/index', [\app\controller\BannerController::class, 'index']);
 });
 
 Route::group('/user', function () {
     Route::post('/login', [\app\controller\UserController::class, 'login']);
-    Route::get('/boxPrize', [\app\controller\UserController::class, 'prize']);
-    Route::get('/getinfo', [\app\controller\UserController::class, 'getinfo']);
-    Route::get('/deliverList', [\app\controller\UserController::class, 'deliverList']);
-    Route::get('/getDeliverInfo', [\app\controller\UserController::class, 'getDeliverInfo']);
+    Route::post('/boxPrize', [\app\controller\UserController::class, 'boxPrize']);
+    Route::post('/getinfo', [\app\controller\UserController::class, 'getinfo']);
+    Route::post('/deliverList', [\app\controller\UserController::class, 'deliverList']);
+    Route::post('/getDeliverInfo', [\app\controller\UserController::class, 'getDeliverInfo']);
     Route::post('/confirmReceipt', [\app\controller\UserController::class, 'confirmReceipt']);
+    Route::post('/editAvatar', [\app\controller\UserController::class, 'editAvatar']);
+    Route::post('/editNickname', [\app\controller\UserController::class, 'editNickname']);
+    Route::post('/giveLog', [\app\controller\UserController::class, 'giveLog']);
+    Route::post('/getMoneyLog', [\app\controller\UserController::class, 'getMoneyLog']);
+    Route::post('/receiveLog', [\app\controller\UserController::class, 'receiveLog']);
+    Route::post('/consumeLog', [\app\controller\UserController::class, 'consumeLog']);
+    Route::post('/couponList', [\app\controller\UserController::class, 'couponList']);
 });
 
 Route::group('/boxPrize', function () {
@@ -67,11 +74,31 @@ Route::group('/boxPrize', function () {
 Route::group('/address', function () {
     Route::post('/add', [\app\controller\AddressController::class, 'add']);
     Route::post('/setDefault', [\app\controller\AddressController::class, 'setDefault']);
-    Route::get('/getDefault', [\app\controller\AddressController::class, 'getDefault']);
-    Route::get('/get', [\app\controller\AddressController::class, 'get']);
+    Route::post('/getDefault', [\app\controller\AddressController::class, 'getDefault']);
+    Route::post('/get', [\app\controller\AddressController::class, 'get']);
     Route::post('/edit', [\app\controller\AddressController::class, 'edit']);
     Route::post('/delete', [\app\controller\AddressController::class, 'delete']);
-    Route::get('/getList', [\app\controller\AddressController::class, 'getList']);
+    Route::post('/getList', [\app\controller\AddressController::class, 'getList']);
+});
+
+Route::group('/room', function () {
+    Route::post('/create', [\app\controller\RoomController::class, 'create']);
+    Route::post('/list', [\app\controller\RoomController::class, 'list']);
+    Route::post('/roomDetail', [\app\controller\RoomController::class, 'roomDetail']);
+    Route::post('/roomUsers', [\app\controller\RoomController::class, 'roomUsers']);
+    Route::post('/joinRoom', [\app\controller\RoomController::class, 'joinRoom']);
+    Route::post('/winList', [\app\controller\RoomController::class, 'winList']);
+    Route::post('/createList', [\app\controller\RoomController::class, 'createList']);
+    Route::post('/cancel', [\app\controller\RoomController::class, 'cancel']);
+    Route::post('/edit', [\app\controller\RoomController::class, 'edit']);
+});
+
+Route::group('/dream', function () {
+    Route::post('/getPrice', [\app\controller\DreamController::class, 'getPrice']);
+    Route::post('/getUserOrders', [\app\controller\DreamController::class, 'getUserOrders']);
+    Route::post('/index', [\app\controller\DreamController::class, 'index']);
+    Route::post('/draw', [\app\controller\DreamController::class, 'draw']);
+    Route::post('/getOrders', [\app\controller\DreamController::class, 'getOrders']);
 });
 
 Route::group('/token', function () {

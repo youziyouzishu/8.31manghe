@@ -19,12 +19,12 @@ class PrizeController extends BaseController
     function dissolve(Request $request)
     {
         $ids = $request->post('ids');
-        $rows = UsersPrize::whereIn('id', explode(',', $ids))
+        UsersPrize::whereIn('id', explode(',', $ids))
             ->where(['user_id' => $request->uid, 'safe' => 0])
             ->get()
             ->each(function (UsersPrize $item) use ($request) {
                 //执行删除
-                $item->delete();
+                $item->forceDelete();
                 //增加水晶
                 User::money($item->boxPrize->price, $request->uid, '分解获得');
             });
@@ -39,7 +39,7 @@ class PrizeController extends BaseController
         if (!$to_user) {
             return $this->fail('转增对象不存在');
         }
-        $rows = UsersPrize::whereIn('id', explode(',', $ids))
+        UsersPrize::whereIn('id', explode(',', $ids))
             ->where(['user_id' => $request->uid, 'safe' => 0])
             ->get()
             ->each(function (UsersPrize $item) use ($request, $to_user_id, $to_user) {
@@ -49,14 +49,18 @@ class PrizeController extends BaseController
                 $item->save();
                 //记录
                 UsersPrizeLog::create([
+                    'type' => 2,
+                    'source_user_id'=> $request->uid,
                     'user_id' => $to_user_id,
-                    'prize_id' => $item->prize_id,
-                    'memo' => $item->user->nickname . '赠送'
+                    'box_prize_id' => $item->box_prize_id,
+                    'memo' => $item->user->nickname . ' 赠送'
                 ]);
                 UsersPrizeLog::create([
+                    'type' => 1,
+                    'source_user_id' => $to_user_id,
                     'user_id' => $request->uid,
-                    'prize_id' => $item->prize_id,
-                    'memo' => '赠送' . $to_user->nickname
+                    'box_prize_id' => $item->box_prize_id,
+                    'memo' => '赠送 ' . $to_user->nickname
                 ]);
             });
         return $this->success();
@@ -106,7 +110,7 @@ class PrizeController extends BaseController
             ->where(['user_id' => $request->uid])
             ->get();
         $rows->each(function (UsersPrize $item) use (&$freight) {
-            if ($item->prize->price < 30) {
+            if ($item->boxPrize->price < 30) {
                 $freight += 10;
             }
         });
@@ -124,7 +128,7 @@ class PrizeController extends BaseController
 
             $rows->each(function (UsersPrize $item) use ($deliver) {
                 $deliver->detail()->create([
-                    'prize_id' => $item->prize_id,
+                    'box_prize_id' => $item->box_prize_id,
                     'user_prize_id' => $item->id
                 ]);
             });

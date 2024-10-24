@@ -9,7 +9,7 @@ use plugin\admin\app\controller\Crud;
 use support\exception\BusinessException;
 
 /**
- * 会员奖品 
+ * 用户奖品 
  */
 class UsersPrizeController extends Crud
 {
@@ -34,7 +34,7 @@ class UsersPrizeController extends Crud
      */
     public function index(): Response
     {
-        return view('users-boxPrize/index');
+        return view('users-prize/index');
     }
 
     /**
@@ -48,7 +48,7 @@ class UsersPrizeController extends Crud
         if ($request->method() === 'POST') {
             return parent::insert($request);
         }
-        return view('users-boxPrize/insert');
+        return view('users-prize/insert');
     }
 
     /**
@@ -62,7 +62,7 @@ class UsersPrizeController extends Crud
         if ($request->method() === 'POST') {
             return parent::update($request);
         }
-        return view('users-boxPrize/update');
+        return view('users-prize/update');
     }
 
 }

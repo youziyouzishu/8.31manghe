@@ -30,6 +30,7 @@ use plugin\admin\app\model\Base;
  * @property integer $role 角色
  * @property integer $status 禁用
  * @property string $openid 微信公众标识
+ * @property string $invitecode 邀请码
  * @property integer $official 官方
  * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
@@ -39,6 +40,10 @@ use plugin\admin\app\model\Base;
  */
 class User extends Base
 {
+
+
+
+
     /**
      * The table associated with the model.
      *
@@ -53,7 +58,7 @@ class User extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['username', 'nickname', 'password', 'sex', 'avatar', 'email', 'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip', 'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official'];
+    protected $fillable = ['username', 'nickname', 'password', 'sex', 'avatar', 'email', 'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip', 'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official', 'invitecode'];
 
     /**
      * 变更会员余额
@@ -85,9 +90,9 @@ class User extends Base
 
     /**
      * 变更会员积分
-     * @param int    $score   积分
-     * @param int    $user_id 会员ID
-     * @param string $memo    备注
+     * @param int $score 积分
+     * @param int $user_id 会员ID
+     * @param string $memo 备注
      */
     public static function score($score, $user_id, $memo)
     {
@@ -108,6 +113,6 @@ class User extends Base
             Db::rollback();
         }
     }
-    
-    
+
+
 }

@@ -64,7 +64,7 @@ class CouponController extends Crud
             $secondsDifference = $now->diffInSeconds($expire_at);
 
             // 队列名
-            $queue = 'coupon-expire';
+            $queue = 'userCoupon-expire';
             // 投递延迟消息，消息会在60秒后处理
             Client::send($queue, ['id' => $id], $secondsDifference);
             return $this->success('ok', ['id' => $id]);

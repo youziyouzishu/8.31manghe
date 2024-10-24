@@ -6,6 +6,7 @@ namespace app\controller;
 
 use Illuminate\Support\Facades\Redirect;
 use plugin\admin\app\model\Banner;
+use plugin\admin\app\model\UsersPrize;
 use support\Request;
 use Webman\Route\Route;
 

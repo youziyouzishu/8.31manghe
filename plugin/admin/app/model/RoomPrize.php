@@ -12,11 +12,12 @@ use plugin\admin\app\model\Base;
  * @property \Illuminate\Support\Carbon|null $created_at 创建时间
  * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
  * @property int|null $room_id 房间
- * @property int|null $prize_id 赏品
+ * @property int|null $user_prize_id 赏品
  * @method static \Illuminate\Database\Eloquent\Builder|RoomPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|RoomPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|RoomPrize query()
  * @property-read \plugin\admin\app\model\UsersPrize|null $userPrize
+ * @property-read \plugin\admin\app\model\Room|null $room
  * @mixin \Eloquent
  */
 class RoomPrize extends Base
@@ -35,9 +36,17 @@ class RoomPrize extends Base
      */
     protected $primaryKey = 'id';
 
+    protected $fillable = ['room_id','user_prize_id'];
+
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
+
     function userPrize()
     {
-        return $this->belongsTo(UsersPrize::class,'prize_id');
+        return $this->belongsTo(UsersPrize::class,'user_prize_id');
     }
 
 

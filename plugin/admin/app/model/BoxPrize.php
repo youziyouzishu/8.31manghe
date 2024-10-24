@@ -25,6 +25,7 @@ use plugin\admin\app\model\Base;
  * @property int $level_id 所属关卡
  * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @property string $price 市场价
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrizes
  * @mixin \Eloquent
  */
 class BoxPrize extends Base
@@ -65,6 +66,11 @@ class BoxPrize extends Base
     function level()
     {
         return $this->belongsTo(BoxLevel::class,'level_id');
+    }
+
+    public function userPrizes()
+    {
+        return $this->hasMany(UsersPrize::class);
     }
     
     

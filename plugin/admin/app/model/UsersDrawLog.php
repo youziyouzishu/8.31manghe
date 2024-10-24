@@ -19,6 +19,8 @@ use plugin\admin\app\model\Base;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrizeLog> $prizeLog
  * @property int $box_id 所属盲盒
  * @property int $level_id 所属关卡
+ * @property-read \plugin\admin\app\model\Box|null $box
+ * @property string $ordersn 订单编号
  * @mixin \Eloquent
  */
 class UsersDrawLog extends Base
@@ -42,6 +44,11 @@ class UsersDrawLog extends Base
     function prizeLog()
     {
         return $this->hasMany(UsersPrizeLog::class, 'draw_id', 'id');
+    }
+
+    function box()
+    {
+        return $this->belongsTo(Box::class, 'box_id', 'id');
     }
 
     

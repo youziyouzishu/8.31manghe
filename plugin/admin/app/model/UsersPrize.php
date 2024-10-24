@@ -13,7 +13,7 @@ use support\Request;
  * @property string $created_at 创建时间
  * @property string $updated_at 更新时间
  * @property integer $user_id 用户
- * @property integer $prize_id 奖品
+ * @property integer $box_prize_id 奖品
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize query()
@@ -25,6 +25,7 @@ use support\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withoutTrashed()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomPrize> $roomPrizes
  * @mixin \Eloquent
  */
 class UsersPrize extends Base
@@ -44,7 +45,7 @@ class UsersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['id', 'user_id', 'prize_id'];
+    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark'];
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {
@@ -52,7 +53,7 @@ class UsersPrize extends Base
         $getLastLevel = BoxLevel::getLastLevel($level_box_id, $level_name);
         if ($getLastLevel) {
             $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
-            return self::where(['user_id' => $user_id])->whereIn('prize_id', $lastPrizes)->get()->count();//获取用户拥有的上一关通关券
+            return self::where(['user_id' => $user_id])->whereIn('box_prize_id', $lastPrizes)->get()->count();//获取用户拥有的上一关通关券
         }else{
             return 0;
         }
@@ -60,7 +61,12 @@ class UsersPrize extends Base
 
     function boxPrize()
     {
-        return $this->belongsTo(BoxPrize::class,'prize_id');
+        return $this->belongsTo(BoxPrize::class,'box_prize_id');
+    }
+
+    public function roomPrizes()
+    {
+        return $this->hasMany(RoomPrize::class);
     }
 
     function user()
