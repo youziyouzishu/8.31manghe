@@ -18,7 +18,7 @@ use plugin\admin\app\model\Base;
  * @property string $coupon_amount 优惠金额
  * @property string $ordersn 订单编号
  * @property string $pay_at 支付时间
- * @property int $coupon_id 优惠券
+ * @property int $user_coupon_id 优惠券
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxOrder query()
@@ -26,6 +26,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property int $times 抽奖次数
  * @property int $level_id 所属关卡
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class BoxOrder extends Base
@@ -63,12 +64,17 @@ class BoxOrder extends Base
 
     function userCoupon()
     {
-        return $this->hasOne(UsersCoupon::class, 'id', 'coupon_id');
+        return $this->hasOne(UsersCoupon::class);
     }
 
     function box()
     {
         return $this->belongsTo(Box::class);
+    }
+
+    function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
 

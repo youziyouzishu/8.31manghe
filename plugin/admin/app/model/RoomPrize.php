@@ -18,6 +18,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|RoomPrize query()
  * @property-read \plugin\admin\app\model\UsersPrize|null $userPrize
  * @property-read \plugin\admin\app\model\Room|null $room
+ * @property int $box_prize_id 奖品
  * @mixin \Eloquent
  */
 class RoomPrize extends Base

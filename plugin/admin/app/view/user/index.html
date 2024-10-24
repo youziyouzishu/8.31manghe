@@ -21,13 +21,7 @@
                         </div>
                     </div>
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">用户名</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="username" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">昵称</label>
                         <div class="layui-input-block">
@@ -35,20 +29,7 @@
                         </div>
                     </div>
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">性别</label>
-                        <div class="layui-input-block">
-                            <div name="sex" id="sex" value="" ></div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">邮箱</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="email" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">手机</label>
                         <div class="layui-input-block">
@@ -56,78 +37,19 @@
                         </div>
                     </div>
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">等级</label>
-                        <div class="layui-input-block">
-                            <input type="number" name="level" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">生日</label>
-                        <div class="layui-input-block">
-                            <div class="layui-input-block" id="birthday">
-                                <input type="text" autocomplete="off" name="birthday[]" id="birthday-date-start" class="layui-input inline-block" placeholder="开始时间">
-                                -
-                                <input type="text" autocomplete="off" name="birthday[]" id="birthday-date-end" class="layui-input inline-block" placeholder="结束时间">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">余额(元)</label>
-                        <div class="layui-input-block">
-                            <input type="number" name="money" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">积分</label>
-                        <div class="layui-input-block">
-                            <input type="number" name="score" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">登录时间</label>
-                        <div class="layui-input-block">
-                            <div class="layui-input-block" id="last_time">
-                                <input type="text" autocomplete="off" name="last_time[]" id="last_time-date-start" class="layui-input inline-block" placeholder="开始时间">
-                                -
-                                <input type="text" autocomplete="off" name="last_time[]" id="last_time-date-end" class="layui-input inline-block" placeholder="结束时间">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">登录ip</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="last_ip" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">注册时间</label>
-                        <div class="layui-input-block">
-                            <div class="layui-input-block" id="join_time">
-                                <input type="text" autocomplete="off" name="join_time[]" id="join_time-date-start" class="layui-input inline-block" placeholder="开始时间">
-                                -
-                                <input type="text" autocomplete="off" name="join_time[]" id="join_time-date-end" class="layui-input inline-block" placeholder="结束时间">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">注册ip</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="join_ip" value="" class="layui-input">
-                        </div>
-                    </div>
+
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">官方</label>
                         <div class="layui-input-block">
-                            <div name="official" id="official" value="2" ></div>
+                            <div name="official" id="official" value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">达人</label>
+                        <div class="layui-input-block">
+                            <div name="kol" id="kol" value="" ></div>
                         </div>
                     </div>
                     
@@ -168,6 +90,7 @@
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.user.update">编辑</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="getwxacodeunlimit" permission="app.admin.user.getwxacodeunlimit">生成小程序码</button>
 <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.user.delete">删除</button>-->
         </script>
 
@@ -254,6 +177,23 @@
                     radio: true,
                 })
             });
+
+
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#kol").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#kol",
+                    name: "kol",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"0","name":"否"},{"value":"1","name":"是"}],
+                    value: "",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -321,6 +261,9 @@
 						title: "水晶",align: "center",
 						field: "money",
 					},{
+                        title: "今日消费",align: "center",
+                        field: "user_disburse_sum_amount",
+                    },{
 						title: "积分",align: "center",
 						field: "score",
 						hide: true,
@@ -381,6 +324,7 @@
 					},{
 						title: "微信公众标识",align: "center",
 						field: "openid",
+                        hide: true
 					},{
 						title: "官方",align: "center",
 						field: "official",
@@ -394,11 +338,23 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "达人",align: "center",
+                        field: "kol",
+                        templet: function (d) {
+                            let field = "kol";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "操作",
 						toolbar: "#table-bar",
 						align: "center",
 						fixed: "right",
-						width: 120,
+						width: 200,
 					}
 				];
 				
@@ -431,6 +387,7 @@
 				let apiResults = {};
 				apiResults["sex"] = [];
 				apiResults["official"] = {"1":"是","2":"否"};
+				apiResults["kol"] = {"0":"否","1":"是"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;
@@ -469,6 +426,8 @@
                         remove(obj);
                     } else if (obj.event === "edit") {
                         edit(obj);
+                    } else if (obj.event === "getwxacodeunlimit") {
+                        getwxacodeunlimit(obj);
                     }
                 });
 
@@ -546,6 +505,32 @@
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
                         content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
                     });
+                }
+
+                let getwxacodeunlimit = function(obj) {
+                    let value = obj.data[PRIMARY_KEY];
+                    let data = {};
+                    data[PRIMARY_KEY] = value;
+                    $.ajax({
+                        url: '/app/admin/user/getwxacodeunlimit',
+                        data: data,
+                        dataType: "json",
+                        type: "post",
+                        success: function(res) {
+                            if (res.code) {
+                                return layui.popup.failure(res.msg);
+                            }
+                            layer.open({
+                                type: 5,
+                                title: obj.data.nickname + "小程序码",
+                                shade: 0.1,
+                                maxmin: true,
+                                area: [common.isModile()?"100%":"280px", common.isModile()?"100%":"340px"],
+                                content: `<img src="data:image/png;base64,`+res.data.base64+`">`
+                            });
+
+                        }
+                    })
                 }
 
                 // 删除一行

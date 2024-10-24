@@ -206,7 +206,7 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $times = $request->post('times');
-        $coupon_id = $request->post('coupon_id', 0);
+        $user_coupon_id = $request->post('user_coupon_id', 0);
         $level_id = $request->post('level_id', 0);
         $box = Box::find($box_id);
         if (empty($box)) {
@@ -241,6 +241,7 @@ class BoxController extends BaseController
                     //开始抽奖
                     $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id,'ordersn' => '000000000000']); #创建抽奖记录
                     $winnerPrize = [];
+                    $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
 
@@ -264,7 +265,10 @@ class BoxController extends BaseController
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
-                                $prize->decrement('num');
+                                //达人不减数量
+                                if ($user->kol == 0){
+                                    $prize->decrement('num');
+                                }
                                 $winnerPrize[] = $prize;
                                 // 发放奖品并且记录
                                 UsersPrize::create([
@@ -303,7 +307,7 @@ class BoxController extends BaseController
 
             $amount = $box->price * $times;
 
-            $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
+            $coupon_amount = Coupon::getCouponAmount($amount, $user_coupon_id);
 
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
 
@@ -327,7 +331,7 @@ class BoxController extends BaseController
                 'pay_amount' => $pay_amount,
                 'coupon_amount' => $coupon_amount,
                 'ordersn' => $ordersn,
-                'coupon_id' => $coupon_id,
+                'user_coupon_id' => $user_coupon_id,
                 'times' => $times,
                 'level_id' => $level_id
             ]);

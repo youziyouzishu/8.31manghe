@@ -4,18 +4,18 @@ namespace plugin\admin\app\controller;
 
 use support\Request;
 use support\Response;
-use plugin\admin\app\model\Goods;
+use plugin\admin\app\model\RoomWinprize;
 use plugin\admin\app\controller\Crud;
 use support\exception\BusinessException;
 
 /**
- * 商品管理 
+ * 中奖信息 
  */
-class GoodController extends Crud
+class RoomWinprizeController extends Crud
 {
     
     /**
-     * @var Goods
+     * @var RoomWinprize
      */
     protected $model = null;
 
@@ -25,7 +25,7 @@ class GoodController extends Crud
      */
     public function __construct()
     {
-        $this->model = new Goods;
+        $this->model = new RoomWinprize;
     }
     
     /**
@@ -34,7 +34,7 @@ class GoodController extends Crud
      */
     public function index(): Response
     {
-        return view('good/index');
+        return view('room-winprize/index');
     }
 
     /**
@@ -48,7 +48,7 @@ class GoodController extends Crud
         if ($request->method() === 'POST') {
             return parent::insert($request);
         }
-        return view('good/insert');
+        return view('room-winprize/insert');
     }
 
     /**
@@ -62,7 +62,7 @@ class GoodController extends Crud
         if ($request->method() === 'POST') {
             return parent::update($request);
         }
-        return view('good/update');
+        return view('room-winprize/update');
     }
 
 }

@@ -57,6 +57,6 @@ class UsersCoupon extends Base
     {
         return $this->belongsTo(Coupon::class);
     }
-    
-    
+
+
 }

@@ -114,19 +114,19 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "创建时间",align: "center",
-						field: "created_at",
-						sort: true,
-					},{
-						title: "更新时间",align: "center",
-						field: "updated_at",
-					},{
 						title: "图片",align: "center",
 						field: "image",
 						templet: function (d) {
 							return '<img src="'+encodeURI(d['image'])+'" style="max-width:32px;max-height:32px;" alt="" />'
 						}
 					},{
+                        title: "创建时间",align: "center",
+                        field: "created_at",
+                        sort: true,
+                    },{
+                        title: "更新时间",align: "center",
+                        field: "updated_at",
+                    },{
 						title: "操作",
 						toolbar: "#table-bar",
 						align: "center",

@@ -38,7 +38,7 @@ class Address extends Base
      * @var string
      */
     protected $primaryKey = 'id';
-    
+
     protected $fillable = ['user_id','default','detail','province','city','region','mobile','name'];
-    
+
 }

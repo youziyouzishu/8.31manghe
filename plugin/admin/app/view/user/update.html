@@ -131,7 +131,7 @@
                         <label class="layui-form-label">禁用</label>
                         <div class="layui-input-block">
                             <input type="checkbox" id="status" lay-filter="status" lay-skin="switch" />
-                            <input type="text" style="display:none" name="status" value="0" />
+                            <input type="text" style="display:none" name="status" value="" />
                         </div>
                     </div>
                     
@@ -145,7 +145,14 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">官方</label>
                         <div class="layui-input-block">
-                            <div name="official" id="official" value="2" ></div>
+                            <div name="official" id="official" value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">达人</label>
+                        <div class="layui-input-block">
+                            <div name="kol" id="kol" value="" ></div>
                         </div>
                     </div>
                     
@@ -306,7 +313,23 @@
                                 filterable: true,
                                 initValue: initValue,
                                 data: [{"value":"1","name":"是"},{"value":"2","name":"否"}],
-                                value: "2",
+                                value: "",
+                                model: {"icon":"hidden","label":{"type":"text"}},
+                                clickClose: true,
+                                radio: true,
+                            })
+                        });
+
+                        layui.use(["jquery", "xmSelect"], function() {
+                            let value = layui.$("#kol").attr("value");
+                            let initValue = value ? value.split(",") : [];
+                            layui.xmSelect.render({
+                                el: "#kol",
+                                name: "kol",
+                                filterable: true,
+                                initValue: initValue,
+                                data: [{"value":"0","name":"否"},{"value":"1","name":"是"}],
+                                value: "",
                                 model: {"icon":"hidden","label":{"type":"text"}},
                                 clickClose: true,
                                 radio: true,

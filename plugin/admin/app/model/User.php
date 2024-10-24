@@ -36,6 +36,8 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|User query()
  * @property int $coupon_num 优惠券展示次数
+ * @property int $kol 达人
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersDisburse> $userDisburse
  * @mixin \Eloquent
  */
 class User extends Base
@@ -112,6 +114,11 @@ class User extends Base
         } catch (\Exception $e) {
             Db::rollback();
         }
+    }
+
+    function userDisburse()
+    {
+        return $this->hasMany(UsersDisburse::class);
     }
 
 

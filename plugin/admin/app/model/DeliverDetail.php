@@ -55,5 +55,5 @@ class DeliverDetail extends Base
     {
         return $this->hasOne(UsersPrize::class, 'user_prize_id');
     }
-    
+
 }

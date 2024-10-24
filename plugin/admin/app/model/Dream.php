@@ -2,7 +2,6 @@
 
 namespace plugin\admin\app\model;
 
-use plugin\admin\app\model\Base;
 
 /**
  * 

@@ -39,6 +39,11 @@ class PrizeController extends BaseController
         if (!$to_user) {
             return $this->fail('转增对象不存在');
         }
+        $user = User::find($request->uid);
+        if ($user->kol == 1){
+            return $this->fail('达人不能转赠');
+        }
+
         UsersPrize::whereIn('id', explode(',', $ids))
             ->where(['user_id' => $request->uid, 'safe' => 0])
             ->get()
@@ -103,10 +108,20 @@ class PrizeController extends BaseController
     {
         $ids = $request->post('ids');
         $address_id = $request->post('address_id');
+        $ids = explode(',', $ids);
+        if (empty($ids)){
+            return $this->fail('请选择奖品');
+        }
+
+        $user = User::find($request->uid);
+        if ($user->kol == 1){
+            return $this->fail('达人不能发货');
+        }
+
         $ordersn = Random::ordersn();
 
         $freight = 0;
-        $rows = UsersPrize::whereIn('id', explode(',', $ids))
+        $rows = UsersPrize::whereIn('id', $ids)
             ->where(['user_id' => $request->uid])
             ->get();
         $rows->each(function (UsersPrize $item) use (&$freight) {

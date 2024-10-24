@@ -3,6 +3,7 @@
 namespace app\controller;
 
 use app\tool\Random;
+use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
@@ -15,7 +16,6 @@ use plugin\admin\app\model\UsersMoneyLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Request;
-use EasyWeChat\MiniApp\Application;
 use Tinywan\Jwt\JwtToken;
 
 class UserController extends BaseController

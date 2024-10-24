@@ -59,7 +59,7 @@ class DreamController extends BaseController
         $small_prize_price = $small_prize->price;
 
 
-        $r = 0.26; //期望利润率
+        $r = 0.27; //期望利润率
         $small_probability = 1 - $probability / 100;//低价值中奖概率
 
         $price = ($big_prize_price * $probability + $small_prize_price * $small_probability) * (1 + $r); //单抽价格
@@ -94,7 +94,7 @@ class DreamController extends BaseController
             $big_prize_price = $big_prize->price;
             $small_prize_price = $small_prize->price;
 
-            $r = 0.3; //期望利润率
+            $r = 0.27; //期望利润率
             $small_probability = 1 - $probability;//低价值中奖概率
 
             $price = ($big_prize_price * $probability + $small_prize_price * $small_probability) * (1 + $r); //单抽价格

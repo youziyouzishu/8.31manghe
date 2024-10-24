@@ -95,8 +95,10 @@ class NotifyController extends BaseController
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
-
-                                $prize->decrement('num');
+                                //达人抽奖不减数量
+                                if ($order->user->kol == 0){
+                                    $prize->decrement('num');
+                                }
                                 $winnerPrize[] = $prize;
                                 // 发放奖品并且记录
                                 UsersPrize::create([

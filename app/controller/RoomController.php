@@ -2,6 +2,7 @@
 
 namespace app\controller;
 
+use Carbon\Carbon;
 use plugin\admin\app\model\Room;
 use plugin\admin\app\model\RoomPrize;
 use plugin\admin\app\model\RoomUsers;
@@ -24,9 +25,13 @@ class RoomController extends BaseController
         $end_at = $request->post('end_at');
         $num = $request->post('num');
         $user_prize_ids = $request->post('user_prize_ids');
-        $user_prize_ids = collect(explode(',', $user_prize_ids));
-        if ($user_prize_ids->isEmpty()) {
+        $user_prize_ids = explode(',', $user_prize_ids);
+        if (empty($user_prize_ids)) {
             return $this->fail('奖品不能为空');
+        }
+        $user_prizes = UsersPrize::where(['user_id' => $request->uid])->whereIn('id', $user_prize_ids)->get();
+        if ($user_prizes->isEmpty()) {
+            return $this->fail('奖品不存在');
         }
         $start_time = strtotime($start_at);
         $end_time = strtotime($end_at);
@@ -49,10 +54,11 @@ class RoomController extends BaseController
             'num' => $num,
         ]);
         // 使用 each 方法批量创建关联模型
-        $user_prize_ids->each(function ($user_prize_ids) use ($room) {
-            $room->roomPrize()->create(['user_prize_id' => $user_prize_ids]);
+
+        $user_prizes->each(function (UsersPrize $user_prize) use ($room) {
+            $room->roomPrize()->create(['user_prize_id' => $user_prize->id,'box_prize_id'=>$user_prize->box_prize_id]);
             //软删除用户奖品  取消时恢复
-            UsersPrize::where('id', $user_prize_ids)->delete();
+            $user_prize->delete();
         });
 
         //加入队列倒计时开始
@@ -123,7 +129,10 @@ class RoomController extends BaseController
         if ($rooms->type == 1 && $rooms->password != $password) {
             return $this->fail('密码错误');
         }
-        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->uid])->whereTime('created_at', 'week')->sum('amount') < 50) {
+        // 获取本周的开始时间和结束时间
+        $startDate = Carbon::now()->startOfWeek(); // 默认一周从周一开始
+        $endDate = Carbon::now()->endOfWeek(); // 默认一周到周日结束
+        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->uid])->whereBetween('created_at', [$startDate, $endDate])->sum('amount') < 50) {
             return $this->fail('流水不足');
         }
         if (RoomUsers::where(['room_id' => $room_id, 'user_id' => $request->uid])->exists()) {

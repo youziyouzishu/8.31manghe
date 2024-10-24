@@ -22,6 +22,20 @@
                     </div>
                     
                     <div class="layui-form-item">
+                        <label class="layui-form-label">奖品</label>
+                        <div class="layui-input-block">
+                            <div name="box_prize_id" id="box_prize_id" value="" ></div>
+                        </div>
+                    </div>
+                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">类型</label>
+                        <div class="layui-input-block">
+                            <div name="type" id="type" value="" ></div>
+                        </div>
+                    </div>
+                    
+                    <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
                         <div class="layui-input-block">
                             <div class="layui-input-block" id="created_at">
@@ -29,20 +43,6 @@
                                 -
                                 <input type="text" autocomplete="off" name="created_at[]" id="created_at-date-end" class="layui-input inline-block" placeholder="结束时间">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">奖品</label>
-                        <div class="layui-input-block">
-                            <div name="prize_id" id="prize_id" value="" ></div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">分类</label>
-                        <div class="layui-input-block">
-                            <div name="class_id" id="class_id" value="" ></div>
                         </div>
                     </div>
                     
@@ -72,18 +72,18 @@
 
         <!-- 表格顶部工具栏 -->
         <script type="text/html" id="table-toolbar">
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.good.insert">
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.dream.insert">
                 <i class="layui-icon layui-icon-add-1"></i>新增
             </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.good.delete">
+            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.dream.delete">
                 <i class="layui-icon layui-icon-delete"></i>删除
             </button>
         </script>
 
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.good.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.good.delete">删除</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.dream.update">编辑</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.dream.delete">删除</button>
         </script>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
@@ -93,14 +93,55 @@
         
         <script>
 
-            const class_id = layui.url().search['class_id'];
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/good/select" + '?class_id=' + class_id;
-            const UPDATE_API = "/app/admin/good/update";
-            const DELETE_API = "/app/admin/good/delete";
-            const INSERT_URL = "/app/admin/good/insert" + '?class_id=' + class_id;
-            const UPDATE_URL = "/app/admin/good/update" + '?class_id=' + class_id;
+            const SELECT_API = "/app/admin/dream/select";
+            const UPDATE_API = "/app/admin/dream/update";
+            const DELETE_API = "/app/admin/dream/delete";
+            const INSERT_URL = "/app/admin/dream/insert";
+            const UPDATE_URL = "/app/admin/dream/update";
+            
+            // 字段 奖品 box_prize_id
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                layui.$.ajax({
+                    url: "/app/admin/box-prize/select?format=select",
+                    dataType: "json",
+                    success: function (res) {
+                        let value = layui.$("#box_prize_id").attr("value");
+                        let initValue = value ? value.split(",") : [];
+                        layui.xmSelect.render({
+                            el: "#box_prize_id",
+                            name: "box_prize_id",
+                            initValue: initValue,
+                            filterable: true,
+                            data: res.data, 
+                            model: {"icon":"hidden","label":{"type":"text"}},
+                            clickClose: true,
+                            radio: true,
+                        });
+                        if (res.code) {
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            });
+            
+            // 字段 类型 type
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#type").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#type",
+                    name: "type",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"1","name":"梦想大奖"},{"value":"2","name":"基础奖"}],
+                    value: "1",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
             
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
@@ -110,56 +151,6 @@
                     type: "datetime",
                 });
             })
-            
-            // 字段 奖品 prize_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box-prize/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#prize_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#prize_id",
-                            name: "prize_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-            
-            // 字段 分类 class_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/goods-class/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#class_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#class_id",
-                            name: "class_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -179,36 +170,36 @@
 						field: "id",
 						sort: true,
 					},{
+						title: "奖品",align: "center",
+						field: "box_prize_id",
+						templet: function (d) {
+							let field = "box_prize_id";
+							if (typeof d[field] == "undefined") return "";
+							let items = [];
+							layui.each((d[field] + "").split(","), function (k , v) {
+								items.push(apiResults[field][v] || v);
+							});
+							return util.escape(items.join(","));
+						}
+					},{
+						title: "类型",align: "center",
+						field: "type",
+						templet: function (d) {
+							let field = "type";
+							if (typeof d[field] == "undefined") return "";
+							let items = [];
+							layui.each((d[field] + "").split(","), function (k , v) {
+								items.push(apiResults[field][v] || v);
+							});
+							return util.escape(items.join(","));
+						}
+					},{
 						title: "创建时间",align: "center",
 						field: "created_at",
 						sort: true,
 					},{
 						title: "更新时间",align: "center",
 						field: "updated_at",
-					},{
-						title: "奖品",align: "center",
-						field: "prize_id",
-						templet: function (d) {
-							let field = "prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
-					},{
-						title: "分类",align: "center",
-						field: "class_id",
-						templet: function (d) {
-							let field = "class_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
 					},{
 						title: "操作",
 						toolbar: "#table-bar",
@@ -243,11 +234,10 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["prize_id", "/app/admin/box-prize/select?format=select"]);
-				apis.push(["class_id", "/app/admin/goods-class/select?format=select"]);
+				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
 				let apiResults = {};
-				apiResults["prize_id"] = [];
-				apiResults["class_id"] = [];
+				apiResults["box_prize_id"] = [];
+				apiResults["type"] = {"1":"梦想大奖","2":"基础奖"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;
@@ -361,7 +351,7 @@
                         shade: 0.1,
                         maxmin: true,
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
-                        content: UPDATE_URL + "&" + PRIMARY_KEY + "=" + value
+                        content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
                     });
                 }
 

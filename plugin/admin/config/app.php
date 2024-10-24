@@ -13,7 +13,7 @@
  */
 
 return [
-    'debug' => true,
+    'debug' => config('app.debug'),
     'controller_suffix' => 'Controller',
     'controller_reuse' => false,
     'public_path' => base_path(false) . DIRECTORY_SEPARATOR . 'public',
