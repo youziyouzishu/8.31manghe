@@ -36,7 +36,13 @@
                             <input type="text" name="mobile" value="" class="layui-input">
                         </div>
                     </div>
-                    
+
+<!--                    <div class="layui-form-item">-->
+<!--                        <label class="layui-form-label">性别</label>-->
+<!--                        <div class="layui-input-block">-->
+<!--                            <div name="sex" id="sex" value="" ></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 
                     
                     <div class="layui-form-item">
@@ -89,8 +95,8 @@
 
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.user.update">编辑</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="getwxacodeunlimit" permission="app.admin.user.getwxacodeunlimit">生成小程序码</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.user.update">编辑</button>
 <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.user.delete">删除</button>-->
         </script>
 
@@ -213,29 +219,8 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "用户名",align: "center",
-						field: "username",
-						hide: true,
-					},{
-						title: "昵称",align: "center",
+						title: "昵称",align: "left",
 						field: "nickname",
-					},{
-						title: "密码",align: "center",
-						field: "password",
-						hide: true,
-					},{
-						title: "性别",align: "center",
-						field: "sex",
-						templet: function (d) {
-							let field = "sex";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						},
-                        hide: true,
 					},{
 						title: "头像",align: "center",
 						field: "avatar",
@@ -243,60 +228,46 @@
 							return '<img src="'+encodeURI(d['avatar'])+'" style="max-width:32px;max-height:32px;" alt="" />'
 						}
 					},{
-						title: "邮箱",align: "center",
-						field: "email",
-                        hide: true,
-					},{
-						title: "手机",align: "center",
+						title: "手机",align: "left",
 						field: "mobile",
-					},{
-						title: "等级",align: "center",
-						field: "level",
-						hide: true,
-					},{
-						title: "生日",align: "center",
-						field: "birthday",
-						hide: true,
 					},{
 						title: "水晶",align: "center",
 						field: "money",
 					},{
                         title: "今日消费",align: "center",
-                        field: "user_disburse_sum_amount",
+                        field: "today_user_disburse_sum_amount",
+                        templet: function (d) {
+                            let field = "today_user_disburse_sum_amount";
+                            if (typeof d[field] == "undefined") {
+                                return ""
+                            }
+                            if (d[field] == null){
+                                return 0;
+                            }else{
+                                return d[field];
+                            }
+                        }
                     },{
-						title: "积分",align: "center",
-						field: "score",
-						hide: true,
-					},{
-						title: "登录时间",align: "center",
-						field: "last_time",
-					},{
-						title: "登录ip",align: "center",
-						field: "last_ip",
-					},{
-						title: "注册时间",align: "center",
-						field: "join_time",
-
-					},{
+                        title: "总消费",align: "center",
+                        field: "user_disburse_sum_amount",
+                        templet: function (d) {
+                            let field = "user_disburse_sum_amount";
+                            if (typeof d[field] == "undefined") {
+                                return ""
+                            }
+                            if (d[field] == null){
+                                return 0;
+                            }else{
+                                return d[field];
+                            }
+                        }
+                    },{
+                        title: "额外中奖率",align: "center",
+                        field: "chance",
+                    },{
 						title: "注册ip",align: "center",
 						field: "join_ip",
-
-					},{
-						title: "token",align: "center",
-						field: "token",
-						hide: true,
-					},{
-						title: "创建时间",align: "center",
-						field: "created_at",
-						hide: true,
-					},{
-						title: "更新时间",align: "center",
-						field: "updated_at",
-						hide: true,
-					},{
-						title: "角色",align: "center",
-						field: "role",
-						hide: true,
+                        hide: true,
 					},{
 						title: "禁用",align: "center",
 						field: "status",
@@ -320,11 +291,8 @@
 							});
 							let checked = d[field] === 1 ? "checked" : "";
 							return '<input type="checkbox" value="'+util.escape(d[PRIMARY_KEY])+'" lay-filter="'+util.escape(field)+'" lay-skin="switch" lay-text="'+util.escape('')+'" '+checked+'/>';
-						}
-					},{
-						title: "微信公众标识",align: "center",
-						field: "openid",
-                        hide: true
+						},
+                        hide:false
 					},{
 						title: "官方",align: "center",
 						field: "official",
@@ -349,6 +317,18 @@
                             });
                             return util.escape(items.join(","));
                         }
+                    },{
+                        title: "登录时间",align: "center",
+                        field: "last_time",
+                        hide: true,
+                    },{
+                        title: "登录ip",align: "center",
+                        field: "last_ip",
+                        hide: true,
+                    },{
+                        title: "注册时间",align: "center",
+                        field: "join_time",
+                        hide: true,
                     },{
 						title: "操作",
 						toolbar: "#table-bar",

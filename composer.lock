@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6329aff730fe86ffacc50f9da17006ca",
+    "content-hash": "a1e845fde7d32f7301ef0676a668b033",
     "packages": [
         {
             "name": "barryvdh/laravel-ide-helper",
@@ -280,6 +280,67 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "chance-fyi/operation-log",
+            "version": "v3.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Chance-fyi/operation-log.git",
+                "reference": "bfb73bc1c3dddf91772de4f37b42a41c519c67e5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Chance-fyi/operation-log/zipball/bfb73bc1c3dddf91772de4f37b42a41c519c67e5",
+                "reference": "bfb73bc1c3dddf91772de4f37b42a41c519c67e5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "fakerphp/faker": "^1.21@dev",
+                "friendsofphp/php-cs-fixer": "dev-master",
+                "hyperf/config": "^3.0@dev",
+                "hyperf/database": "^3.0@dev",
+                "hyperf/di": "^3.0@dev",
+                "hyperf/pimple": "^2.1",
+                "illuminate/database": "^8.0",
+                "phpstan/phpstan": "1.11.x-dev",
+                "phpunit/phpunit": "9.6.x-dev",
+                "topthink/think-orm": "2.0.x-dev"
+            },
+            "bin": [
+                "bin/chance-fyi-operation-log"
+            ],
+            "type": "library",
+            "extra": {
+                "hyperf": {
+                    "config": "Chance\\Log\\orm\\hyperf\\ConfigProvider"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Chance\\Log\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "chance",
+                    "email": "ctx_ya@qq.com"
+                }
+            ],
+            "description": "Elegant logging of operations",
+            "support": {
+                "issues": "https://github.com/Chance-fyi/operation-log/issues",
+                "source": "https://github.com/Chance-fyi/operation-log/tree/v3.0.7"
+            },
+            "time": "2023-12-22T08:06:25+00:00"
         },
         {
             "name": "composer/class-map-generator",

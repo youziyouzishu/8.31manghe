@@ -89,4 +89,20 @@ class DeliverController extends Crud
         return $this->success('发货成功');
     }
 
+    function cancel(Request $request)
+    {
+        $param = $request->post();
+        $row = $this->model->where('id', $param['id'])->first();
+        if (!$row) {
+            return $this->fail('找不到此数据');
+        }
+        if ($row->status != 1){
+            return $this->fail('订单状态异常');
+        }
+        $row->status = 4;
+        $row->mark = $param['mark'];
+        $row->save();
+        return $this->success('发货成功');
+    }
+
 }

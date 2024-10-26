@@ -84,6 +84,8 @@
                             <input type="number" name="money" value="" class="layui-input">
                         </div>
                     </div>
+
+
                     
 <!--                    <div class="layui-form-item">-->
 <!--                        <label class="layui-form-label">积分</label>-->
@@ -126,14 +128,7 @@
 <!--                            <input type="text" name="created_at" id="created_at" autocomplete="off" class="layui-input">-->
 <!--                        </div>-->
 <!--                    </div>-->
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">禁用</label>
-                        <div class="layui-input-block">
-                            <input type="checkbox" id="status" lay-filter="status" lay-skin="switch" />
-                            <input type="text" style="display:none" name="status" value="" />
-                        </div>
-                    </div>
+
                     
 <!--                    <div class="layui-form-item">-->
 <!--                        <label class="layui-form-label">微信公众标识</label>-->
@@ -153,6 +148,29 @@
                         <label class="layui-form-label">达人</label>
                         <div class="layui-input-block">
                             <div name="kol" id="kol" value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">额外中奖率</label>
+                        <div class="layui-input-block">
+                            <input type="number" name="chance" value="" class="layui-input">
+                        </div>
+                    </div>
+
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">禁用</label>
+                        <div class="layui-input-block">
+                            <input type="checkbox" id="status" lay-filter="status" lay-skin="switch" />
+                            <input type="text" style="display:none" name="status" value="" />
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">上级</label>
+                        <div class="layui-input-block">
+                            <div name="parent_id" id="parent_id" value="" ></div>
                         </div>
                     </div>
                     
@@ -208,30 +226,7 @@
                             }
                         });
                         
-                        // 字段 性别 sex
-                        layui.use(["jquery", "xmSelect", "popup"], function() {
-                            layui.$.ajax({
-                                url: "/app/admin/dict/get/sex",
-                                dataType: "json",
-                                success: function (res) {
-                                    let value = layui.$("#sex").attr("value");
-                                    let initValue = value ? value.split(",") : [];
-                                    layui.xmSelect.render({
-                                        el: "#sex",
-                                        name: "sex",
-                                        initValue: initValue,
-                                        filterable: true,
-                                        data: res.data, 
-                                        model: {"icon":"hidden","label":{"type":"text"}},
-                                        clickClose: true,
-                                        radio: true,
-                                    });
-                                    if (res.code) {
-                                        layui.popup.failure(res.msg);
-                                    }
-                                }
-                            });
-                        });
+
                         
                         // 字段 头像 avatar
                         layui.use(["upload", "layer"], function() {
@@ -293,6 +288,31 @@
                                 type: "datetime",
                             });
                         })
+
+                        layui.use(["jquery", "xmSelect", "popup"], function() {
+                            layui.$.ajax({
+                                url: "/app/admin/user/select?format=select",
+                                dataType: "json",
+                                success: function (res) {
+                                    let value = layui.$("#parent_id").attr("value");
+                                    let initValue = value ? value.split(",") : [];
+                                    layui.xmSelect.render({
+                                        el: "#parent_id",
+                                        name: "parent_id",
+                                        initValue: initValue,
+                                        filterable: true,
+                                        data: res.data,
+                                        model: {"icon":"hidden","label":{"type":"text"}},
+                                        clickClose: true,
+                                        radio: true,
+                                        layVerify: "required",
+                                    });
+                                    if (res.code) {
+                                        layui.popup.failure(res.msg);
+                                    }
+                                }
+                            });
+                        });
                         
                         // 字段 禁用 status
                         layui.use(["form"], function() {
@@ -369,7 +389,11 @@
                                 return layui.popup.failure(res.msg);
                             }
                             return layui.popup.success("操作成功", function () {
-                                parent.refreshTable();
+                                if (typeof parent.refreshTable === 'function') {
+                                    parent.refreshTable();
+                                } else {
+                                    parent.location.reload();
+                                }
                                 parent.layer.close(parent.layer.getFrameIndex(window.name));
                             });
                         }

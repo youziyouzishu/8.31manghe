@@ -24,6 +24,7 @@ use plugin\admin\app\model\Base;
  * @property int $address_id 收货地址
  * @property-read \plugin\admin\app\model\Address|null $address
  * @property-read mixed $status_text
+ * @property string $mark 备注
  * @mixin \Eloquent
  */
 class Deliver extends Base
@@ -65,7 +66,7 @@ class Deliver extends Base
 
     public function getStatusList()
     {
-        return ['1' => '待发货', '2' => '待收货', '3' => '完成'];
+        return ['1' => '待发货', '2' => '待收货', '3' => '完成', '4'=>'取消发货'];
     }
 
 

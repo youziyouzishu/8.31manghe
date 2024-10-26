@@ -2,9 +2,12 @@
 
 namespace plugin\admin\app\controller;
 
+use app\tool\Random;
+use GuzzleHttp\Client;
 use plugin\admin\app\common\Auth;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Admin;
+use plugin\admin\app\model\Sms;
 use support\exception\BusinessException;
 use support\Request;
 use support\Response;
@@ -21,7 +24,7 @@ class AccountController extends Crud
      * 不需要登录的方法
      * @var string[]
      */
-    protected $noNeedLogin = ['login', 'logout', 'captcha'];
+    protected $noNeedLogin = ['login', 'logout', 'captcha', 'sendcaptcha'];
 
     /**
      * 不需要鉴权的方法
@@ -60,8 +63,10 @@ class AccountController extends Crud
      */
     public function login(Request $request): Response
     {
+        dump($request->post());
         $this->checkDatabaseAvailable();
         $captcha = $request->post('captcha', '');
+        $mobilecaptcha = $request->post('mobilecaptcha', '');
         if (strtolower($captcha) !== session('captcha-login')) {
             return $this->json(1, '验证码错误');
         }
@@ -79,6 +84,11 @@ class AccountController extends Crud
         if ($admin->status != 0) {
             return $this->json(1, '当前账户暂时无法登录');
         }
+        $sms = Sms::where('mobile', $admin->mobile)->where('created_at', '>', date('Y-m-d H:i:s', time() - 60 * 5))->orderByDesc('id')->first();
+        if (!$sms || $sms->code != $mobilecaptcha) {
+            return $this->json(1, '短信验证码不正确');
+        }
+
         $admin->login_at = date('Y-m-d H:i:s');
         $admin->save();
         $this->removeLoginLimit($username);
@@ -215,7 +225,7 @@ class AccountController extends Crud
             mkdir($limit_log_path, 0777, true);
         }
         $limit_file = $limit_log_path . '/' . md5($username) . '.limit';
-        $time = date('YmdH') . ceil(date('i')/5);
+        $time = date('YmdH') . ceil(date('i') / 5);
         $limit_info = [];
         if (is_file($limit_file)) {
             $json_str = file_get_contents($limit_file);
@@ -255,6 +265,44 @@ class AccountController extends Crud
         if (!config('plugin.admin.database')) {
             throw new BusinessException('请重启webman');
         }
+    }
+
+    function sendcaptcha(Request $request)
+    {
+        $client = new Client();
+        $code = Random::numeric();
+        $mobile = Admin::where('id', 1)->value('mobile');
+        // 定义请求的 URL 和数据
+        $url = 'http://sms.lifala.com.cn/api/KehuSms/send';
+        $data = [
+            'appid' => 'apsms7193292067',
+            'key' => 'itmqkuN5UfHbQO8n0IGFT9oqJnWhGh7n',
+            'mobile' => $mobile,
+            'code' => $code,
+        ];
+        try {
+            // 发送 POST 请求
+            $response = $client->post($url, [
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'json' => $data
+            ]);
+            // 获取响应体
+            $ret = $response->getBody()->getContents();
+            $ret = json_decode($ret);
+            if ($ret->code != 1) {
+                return $this->fail($ret->msg);
+            }
+            Sms::create([
+                'mobile' => $mobile,
+                'code' => $code
+            ]);
+        } catch (\Throwable $e) {
+            return $this->fail($e->getMessage());
+        }
+        return $this->success($ret->msg);
+
     }
 
 }

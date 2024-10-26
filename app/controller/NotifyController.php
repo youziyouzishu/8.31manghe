@@ -90,8 +90,14 @@ class NotifyController extends BaseController
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
                         $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
+
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
+                        //达人拥有额外的中奖率
+                        if ($order->user->kol == 0){
+                            $currentChance += $order->user->chance;
+                        }
+
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {

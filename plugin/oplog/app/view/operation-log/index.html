@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>浏览页面</title>
+    <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css"/>
+    <link rel="stylesheet" href="/app/admin/admin/css/reset.css"/>
+</head>
+<body class="pear-container">
+
+<!-- 顶部查询表单 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form top-search-from">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input type="text" name="username" value="" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">操作日志</label>
+                <div class="layui-input-block">
+                    <input type="text" name="operation_log" value="" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">时间</label>
+                <div class="layui-input-block">
+                    <div class="layui-input-block" id="created_at">
+                        <input type="text" autocomplete="off" name="created_at[]" id="created_at-date-start"
+                               class="layui-input inline-block" placeholder="开始时间">
+                        -
+                        <input type="text" autocomplete="off" name="created_at[]" id="created_at-date-end"
+                               class="layui-input inline-block" placeholder="结束时间">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item layui-inline">
+                <label class="layui-form-label"></label>
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
+                    <i class="layui-icon layui-icon-search"></i>查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md" lay-submit lay-filter="table-reset">
+                    <i class="layui-icon layui-icon-refresh"></i>重置
+                </button>
+            </div>
+            <div class="toggle-btn">
+                <a class="layui-hide">展开<i class="layui-icon layui-icon-down"></i></a>
+                <a class="layui-hide">收起<i class="layui-icon layui-icon-up"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- 数据表格 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="data-table" lay-filter="data-table"></table>
+    </div>
+</div>
+
+<script src="/app/admin/component/layui/layui.js"></script>
+<script src="/app/admin/component/pear/pear.js"></script>
+<script src="/app/admin/admin/js/permission.js"></script>
+<script src="/app/admin/admin/js/common.js"></script>
+
+<script>
+
+    // 相关常量
+    const PRIMARY_KEY = "id";
+    const SELECT_API = "/app/oplog/operation-log/select";
+
+    // 字段 创建时间 created_at
+    layui.use(["laydate"], function () {
+        layui.laydate.render({
+            elem: "#created_at",
+            range: ["#created_at-date-start", "#created_at-date-end"],
+        });
+    })
+
+    // 表格渲染
+    layui.use(["table", "form", "common", "popup", "util"], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.$;
+        let common = layui.common;
+        let util = layui.util;
+
+        // 表头参数
+        let cols = [
+            {
+                title: "id",
+                field: "id",
+                width: 80,
+            }, {
+                title: "用户名",
+                field: "username",
+                width: 80,
+            }, {
+                title: "请求方式",
+                field: "method",
+                width: 80,
+            }, {
+                title: "路由",
+                field: "router",
+                width: 200,
+            }, {
+                title: "IP",
+                field: "ip",
+                width: 200,
+            }, {
+                title: "请求数据",
+                field: "request_data",
+                event: "request_data",
+            }, {
+                title: "响应数据",
+                field: "response_data",
+                event: "response_data",
+            }, {
+                title: "操作日志",
+                field: "operation_log",
+                event: "operation_log",
+            }, {
+                title: "时间",
+                field: "created_at",
+            }
+        ];
+
+        // 渲染表格
+        table.render({
+            elem: "#data-table",
+            url: SELECT_API,
+            page: true,
+            cols: [cols],
+            skin: "line",
+            size: "lg",
+            toolbar: "#table-toolbar",
+            where: {
+                field: "id",
+                order: "desc"
+            },
+            defaultToolbar: [{
+                title: "刷新",
+                layEvent: "refresh",
+                icon: "layui-icon-refresh",
+            }, "filter", "print", "exports"],
+            done: function () {
+                layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
+            }
+        });
+
+
+        // 表格顶部工具栏事件
+        table.on("toolbar(data-table)", function (obj) {
+            if (obj.event === "refresh") {
+                refreshTable();
+            }
+        });
+
+        // 表格顶部搜索事件
+        form.on("submit(table-query)", function (data) {
+            data.field.field = 'id'
+            data.field.order = 'desc'
+            table.reload("data-table", {
+                page: {
+                    curr: 1
+                },
+                where: data.field
+            })
+            return false;
+        });
+
+        // 表格顶部搜索重置事件
+        form.on("submit(table-reset)", function (data) {
+            table.reload("data-table", {
+                where: {
+                    field: 'id',
+                    order: 'desc'
+                }
+            })
+        });
+
+        // 表格排序事件
+        table.on("sort(data-table)", function (obj) {
+            table.reload("data-table", {
+                initSort: obj,
+                scrollPos: "fixed",
+                where: {
+                    field: 'id',
+                    order: 'desc'
+                }
+            });
+        });
+
+        // 刷新表格数据
+        window.refreshTable = function (param) {
+            table.reloadData("data-table", {
+                scrollPos: "fixed"
+            });
+        }
+
+        table.on("tool(data-table)", function (obj) {
+            if (obj.event === "request_data") {
+                dataShow(obj.data.request_data, "请求数据")
+            } else if (obj.event === "response_data") {
+                dataShow(obj.data.response_data, "响应数据")
+            } else if (obj.event === "operation_log") {
+                operationLogShow(obj.data.operation_log, "操作日志")
+            }
+        });
+
+        let dataShow = function (data, title) {
+            layer.open({
+                type: 1,
+                title: title,
+                shade: 0.1,
+                area: [common.isModile() ? "100%" : "800px", common.isModile() ? "100%" : "500px"],
+                content: '<textarea id="sql" name="sql" class="layui-textarea" wrap="off" style="width: 800px;height: 449px" disabled>' + JSON.stringify(JSON.parse(data), null, 4) + '</textarea>'
+            });
+        }
+
+        let operationLogShow = function (data, title) {
+            layer.open({
+                type: 1,
+                title: title,
+                shade: 0.1,
+                area: [common.isModile() ? "100%" : "800px", common.isModile() ? "100%" : "500px"],
+                content: '<pre class="layui-code" lay-title="" lay-height="" lay-skin="" lay-encode="">'
+                    + data +
+                    '</pre>',
+                success: function () {
+                    layui.use('code', function () { //加载code模块
+                        layui.code(); //引用code方法
+                    });
+                    $('.layui-code-title').remove()
+                }
+            });
+        }
+    })
+
+</script>
+</body>
+</html>

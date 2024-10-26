@@ -37,7 +37,8 @@
     "yansongda/pay": "^3.7",
     "webman/push": "^1.0",
     "illuminate/pagination": "^11.29",
-    "w7corp/easywechat": "^6.15"
+    "w7corp/easywechat": "^6.15",
+    "chance-fyi/operation-log": "^3.0"
   },
   "suggest": {
     "ext-event": "For better performance. "

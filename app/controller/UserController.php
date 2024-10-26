@@ -24,7 +24,9 @@ class UserController extends BaseController
 
     function login(Request $request)
     {
-
+        // 处理父级关系
+        $parentInviteCode = $request->post('invitecode');
+        $parent = User::where('invitecode', $parentInviteCode)->first();
         try {
             $app = new Application(config('wechat'));
             $res = $app->getUtils()->codeToSession((string)$request->post('code'));
@@ -52,16 +54,19 @@ class UserController extends BaseController
                 'last_ip' => $request->getRealIp(),
                 'invitecode' => $invitecode
             ];
+            if ($parent){
+                $userData['parent_id'] = $parent->id;
+            }
             // 创建新用户
             $user = User::create($userData);
 
-            // 处理父级关系
-            $parentInviteCode = $request->post('invitecode');
-            if ($parent = User::where('invitecode', $parentInviteCode)->first()) {
+
+
+            if ($parent) {
                 // 增加直推关系
                 UsersLayer::create([
                     'user_id' => $user->id,
-                    'pid' => $parent->id,
+                    'parent_id' => $parent->id,
                     'level' => 1
                 ]);
 
@@ -71,13 +76,16 @@ class UserController extends BaseController
                     foreach ($positions as $position) {
                         UsersLayer::create([
                             'user_id' => $user->id,
-                            'pid' => $position->pid,
+                            'parent_id' => $position->parent_id,
                             'layer' => $position->layer + 1
                         ]);
                     }
                 }
             }
         } else {
+            if ($user->status == 1){
+                return $this->fail('账号已被禁用');
+            }
             // 更新现有用户的最后登录时间和IP
             $user->last_time = date('Y-m-d H:i:s');
             $user->last_ip = $request->getRealIp();

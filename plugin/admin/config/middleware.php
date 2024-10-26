@@ -17,5 +17,6 @@ use plugin\admin\app\middleware\AccessControl;
 return [
     '' => [
         AccessControl::class,
+        plugin\oplog\app\middleware\AfterOperationLog::class
     ]
 ];

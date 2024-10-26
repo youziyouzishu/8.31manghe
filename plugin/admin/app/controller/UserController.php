@@ -39,9 +39,9 @@ class UserController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->withSum(['userDisburse'=>function ($query) {
+        $query = $this->doSelect($where, $field, $order)->with(['children'])->withSum(['userDisburse as today_user_disburse_sum_amount'=>function ($query) {
             $query->whereDate('created_at',date('Y-m-d'));
-        }],'amount');
+        }],'amount')->withSum('userDisburse as user_disburse_sum_amount','amount');
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -52,6 +52,15 @@ class UserController extends Crud
     public function index(): Response
     {
         return view('user/index');
+    }
+
+    /**
+     * 浏览
+     * @return Response
+     */
+    public function tree(): Response
+    {
+        return view('user/tree');
     }
 
     /**
@@ -109,4 +118,12 @@ class UserController extends Crud
             return $this->fail($e->getMessage());
         }
     }
+
+    function usertree()
+    {
+        $rows = $this->model->get();
+        return $this->success('', $rows->toArray());
+    }
+
+
 }

@@ -38,6 +38,9 @@ use plugin\admin\app\model\Base;
  * @property int $coupon_num 优惠券展示次数
  * @property int $kol 达人
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersDisburse> $userDisburse
+ * @property float $chance 额外中奖率
+ * @property int $parent_id
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $children
  * @mixin \Eloquent
  */
 class User extends Base
@@ -119,6 +122,11 @@ class User extends Base
     function userDisburse()
     {
         return $this->hasMany(UsersDisburse::class);
+    }
+
+    function children()
+    {
+        return $this->hasMany(self::class, 'parent_id');
     }
 
 

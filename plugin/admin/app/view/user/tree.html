@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>浏览页面</title>
+    <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css"/>
+    <link rel="stylesheet" href="/app/admin/admin/css/reset.css"/>
+</head>
+<body class="pear-container">
+
+
+<!-- 顶部查询表单 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form top-search-from">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">主键</label>
+                <div class="layui-input-block">
+                    <input type="number" name="id" value="" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">昵称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="nickname" value="" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">手机号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="mobile" value="" class="layui-input">
+                </div>
+            </div>
+
+
+            <div class="layui-form-item layui-inline">
+                <label class="layui-form-label"></label>
+                <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
+                    <i class="layui-icon layui-icon-search"></i>查询
+                </button>
+                <button type="reset" class="pear-btn pear-btn-md" lay-submit lay-filter="table-reset">
+                    <i class="layui-icon layui-icon-refresh"></i>重置
+                </button>
+            </div>
+            <div class="toggle-btn">
+                <a class="layui-hide">展开<i class="layui-icon layui-icon-down"></i></a>
+                <a class="layui-hide">收起<i class="layui-icon layui-icon-up"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="ID-treeTable-demo" lay-filter="ID-treeTable-demo"></table>
+    </div>
+</div>
+
+<script type="text/html" id="TPL-treeTable-demo">
+    <button class="pear-btn pear-btn-success pear-btn-md" lay-event="expandAll">
+        <i class="layui-icon layui-icon-spread-left"></i>
+        展开
+    </button>
+    <button class="pear-btn pear-btn-success pear-btn-md" lay-event="foldAll">
+        <i class="layui-icon layui-icon-shrink-right"></i>
+        折叠
+    </button>
+    <button class="pear-btn pear-btn-success pear-btn-md" lay-event="reload">
+        <i class="layui-icon layui-icon-refresh"></i>
+        重载
+    </button>
+</script>
+
+<script type="text/html" id="TPL-treeTable-demo-tools">
+    <button class="pear-btn pear-btn-xs tool-btn" lay-event="getwxacodeunlimit"
+            permission="app.admin.user.getwxacodeunlimit">生成小程序码
+    </button>
+    <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.user.update">编辑</button>
+    <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.user.delete">删除</button>-->
+</script>
+
+
+<script type="text/html" id="official">
+    {{#if (d.official == '1') { }}
+    <span>是</span>
+    {{# }else if(d.official == '2'){ }}
+    <span>否</span>
+    {{# }else if(d.official == '3'){ }}
+    <span>错误</span>
+    {{# } }}
+</script>
+
+<script type="text/html" id="kol">
+    {{#if (d.kol == '0') { }}
+    <span>否</span>
+    {{# }else if(d.kol == '1'){ }}
+    <span>是</span>
+    {{# }else if(d.kol == '2'){ }}
+    <span>错误</span>
+    {{# } }}
+</script>
+
+<!-- 请勿在项目正式环境中引用该 layui.js 地址 -->
+<script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+<script src="/app/admin/component/pear/pear.js"></script>
+<script src="/app/admin/admin/js/permission.js"></script>
+<script src="/app/admin/admin/js/common.js"></script>
+<script>
+
+
+    // 相关常量
+    const PRIMARY_KEY = "id";
+    const SELECT_API = "/app/admin/user/select";
+    const UPDATE_API = "/app/admin/user/update";
+    const DELETE_API = "/app/admin/user/delete";
+    const INSERT_URL = "/app/admin/user/insert";
+    const UPDATE_URL = "/app/admin/user/update";
+
+    layui.use(['table', 'form', 'common', 'jquery'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let common = layui.common;
+        var treeTable = layui.treeTable;
+        var layer = layui.layer;
+        // 渲染
+        var inst = treeTable.render({
+            elem: '#ID-treeTable-demo',
+            url: SELECT_API + '?parent_id=0', // 此处为静态模拟数据，实际使用时需换成真实接口
+            tree: {
+                customName: {
+                    'name': 'nickname',
+                },
+                // 异步加载子节点
+                async: {
+                    enable: true,
+                    url: SELECT_API, // 此处为静态模拟数据，实际使用时需换成真实接口
+                    autoParam: ["parent_id=id"],
+                    where:[]
+                }
+            },
+            toolbar: '#TPL-treeTable-demo',
+            cols: [
+                [{
+                    type: "checkbox",
+                    align: "center"
+                }, {
+                    title: "主键", align: "center", field: "id",
+
+                }, {
+                    title: "昵称", align: "left",
+                    field: "nickname",
+                }, {
+                    title: "头像", align: "center",
+                    field: "avatar",
+                    templet: function (d) {
+                        return '<img src="' + encodeURI(d['avatar']) + '" style="max-width:32px;max-height:32px;" alt="" />'
+                    }
+                }, {
+                    title: "手机", align: "center",
+                    field: "mobile",
+                }, {
+                    title: "水晶", align: "center",
+                    field: "money",
+                }, {
+                    title: "今日消费",align: "center",
+                    field: "today_user_disburse_sum_amount",
+                    templet: function (d) {
+                        let field = "today_user_disburse_sum_amount";
+                        if (typeof d[field] == "undefined") {
+                            return ""
+                        }
+                        if (d[field] == null){
+                            return 0;
+                        }else{
+                            return d[field];
+                        }
+                    }
+                },{
+                    title: "总消费",align: "center",
+                    field: "user_disburse_sum_amount",
+                    templet: function (d) {
+                        let field = "user_disburse_sum_amount";
+                        if (typeof d[field] == "undefined") {
+                            return ""
+                        }
+                        if (d[field] == null){
+                            return 0;
+                        }else{
+                            return d[field];
+                        }
+                    }
+                }, {
+                    title: "额外中奖率", align: "center",
+                    field: "chance",
+                }, {
+                    title: "官方", align: "center",
+                    field: "official",
+                    templet: '#official'
+                }, {
+                    title: "达人", align: "center",
+                    field: "kol",
+                    templet: '#kol'
+                }, {
+                    title: "操作",
+                    toolbar: "#TPL-treeTable-demo-tools",
+                    align: "center",
+                    fixed: "right",
+                    width: 200,
+                }]],
+            page: true
+        });
+
+        table.on('tool(ID-treeTable-demo)', function (obj) {
+            if (obj.event === 'edit') {
+                edit(obj);
+            } else if (obj.event === "getwxacodeunlimit") {
+                getwxacodeunlimit(obj);
+            }
+        })
+
+        table.on('toolbar(ID-treeTable-demo)', function (obj) {
+            if (obj.event === 'expandAll') {
+                treeTable.expandNode("ID-treeTable-demo", {
+                    index: 0, // 第一行
+                    expandFlag: true // 展开
+                });
+            } else if (obj.event === 'foldAll') {
+                treeTable.expandNode("ID-treeTable-demo", {
+                    index: 0, // 第一行
+                    expandFlag: false // 展开
+                });
+            } else if (obj.event === 'reload') {
+                treeTable.reload("ID-treeTable-demo");
+            }
+        });
+
+        // 表格顶部搜索事件
+        form.on("submit(table-query)", function (data) {
+            treeTable.reload("ID-treeTable-demo", {
+                page: {
+                    curr: 1
+                },
+                url: SELECT_API,
+                where: data.field
+            })
+            return false;
+        });
+
+        form.on("submit(table-reset)", function (data) {
+            table.reload("ID-treeTable-demo", {
+                where: {'parent_id':0}
+            })
+        });
+
+
+        let edit = function (obj) {
+            let value = obj.data[PRIMARY_KEY];
+            layer.open({
+                type: 2,
+                title: "修改",
+                shade: 0.1,
+                maxmin: true,
+                area: [common.isModile() ? "100%" : "500px", common.isModile() ? "100%" : "450px"],
+                content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
+            });
+        }
+
+        let getwxacodeunlimit = function (obj) {
+            let value = obj.data[PRIMARY_KEY];
+            let data = {};
+            data[PRIMARY_KEY] = value;
+            $.ajax({
+                url: '/app/admin/user/getwxacodeunlimit',
+                data: data,
+                dataType: "json",
+                type: "post",
+                success: function (res) {
+                    if (res.code) {
+                        return layui.popup.failure(res.msg);
+                    }
+                    layer.open({
+                        type: 5,
+                        title: obj.data.nickname + "小程序码",
+                        shade: 0.1,
+                        maxmin: true,
+                        area: [common.isModile() ? "100%" : "280px", common.isModile() ? "100%" : "340px"],
+                        content: `<img src="data:image/png;base64,` + res.data.base64 + `">`
+                    });
+
+                }
+            })
+        }
+
+
+    });
+</script>
+
+
+</body>
+</html>
