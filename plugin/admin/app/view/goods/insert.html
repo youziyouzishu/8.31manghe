@@ -155,7 +155,7 @@
 
                     // 通过 AJAX 请求获取对应省份的城市数据
                     $.ajax({
-                        url: '/app/admin/box-prize/select?format=select', // 请替换为实际的 API 地址
+                        url: '/app/admin/box-prize/select?format=normal', // 请替换为实际的 API 地址
                         method: 'GET',
                         data: { box_id: selectedbox_idId },
                         success: function(response) {
@@ -164,7 +164,7 @@
                             // 清空城市选择框并加载新的城市选项
                             $('#prize_id').html('<option value="">请选择奖品</option>');
                             $.each(data, function(index, item){
-                                $('#prize_id').append(new Option(item.name, item.value));
+                                $('#prize_id').append(new Option(item.name+'-'+item.price, item.id));
                             });
                             form.render('select'); // 重新渲染选择框
                         },

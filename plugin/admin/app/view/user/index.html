@@ -78,6 +78,13 @@
                 </div>
             </div>
 
+            <div class="layui-form-item">
+                <label class="layui-form-label">上级</label>
+                <div class="layui-input-block">
+                    <div name="parent_id" id="parent_id" value="" ></div>
+                </div>
+            </div>
+
             <div class="layui-form-item layui-inline">
                 <label class="layui-form-label"></label>
                 <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
@@ -251,6 +258,30 @@
         })
     });
 
+    layui.use(["jquery", "xmSelect", "popup"], function() {
+        layui.$.ajax({
+            url: "/app/admin/user/select?format=select",
+            dataType: "json",
+            success: function (res) {
+                let value = layui.$("#parent_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#parent_id",
+                    name: "parent_id",
+                    initValue: initValue,
+                    filterable: true,
+                    data: res.data,
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                });
+                if (res.code) {
+                    layui.popup.failure(res.msg);
+                }
+            }
+        });
+    });
+
 
     // 表格渲染
     layui.use(["table", "form", "common", "popup", "util" ], function () {
@@ -285,7 +316,7 @@
                 title: "水晶", align: "center",
                 field: "money",
             }, {
-                title: "今日流水", align: "center",
+                title: "今日支付", align: "center",
                 field: "today_user_disburse_sum_amount",
                 templet: function (d) {
                     let field = "today_user_disburse_sum_amount";
@@ -299,7 +330,7 @@
                     }
                 }
             }, {
-                title: "总流水", align: "center",
+                title: "总支付", align: "center",
                 field: "user_disburse_sum_amount",
                 templet: function (d) {
                     let field = "user_disburse_sum_amount";
@@ -313,6 +344,34 @@
                     }
                 }
             }, {
+                title: "今日流水", align: "center",
+                field: "today_user_disburse_sum_amount_amount",
+                templet: function (d) {
+                    let field = "today_user_disburse_sum_amount_amount";
+                    if (typeof d[field] == "undefined") {
+                        return ""
+                    }
+                    if (d[field] == null) {
+                        return 0;
+                    } else {
+                        return d[field];
+                    }
+                }
+            }, {
+                title: "总流水", align: "center",
+                field: "user_disburse_sum_amount_amount",
+                templet: function (d) {
+                    let field = "user_disburse_sum_amount_amount";
+                    if (typeof d[field] == "undefined") {
+                        return ""
+                    }
+                    if (d[field] == null) {
+                        return 0;
+                    } else {
+                        return d[field];
+                    }
+                }
+            },{
                 title: "赏袋价值", align: "center",
                 field: "user_prize_sum_price",
                 templet: function (d) {
@@ -327,6 +386,18 @@
                     }
                 }
             }, {
+                title: "上级",align: "center",
+                field: "parent_id",
+                templet: function (d) {
+                    let field = "parent_id";
+                    if (typeof d[field] == "undefined") return "";
+                    let items = [];
+                    layui.each((d[field] + "").split(","), function (k , v) {
+                        items.push(apiResults[field][v] || v);
+                    });
+                    return util.escape(items.join(","));
+                }
+            },{
                 title: "盈亏", align: "center",
                 field: "profit",
                 templet: function (d) {
@@ -467,7 +538,9 @@
         // 获取表格中下拉或树形组件数据
         let apis = [];
         apis.push(["sex", "/app/admin/dict/get/sex"]);
+        apis.push(["parent_id", "/app/admin/user/select?format=select"]);
         let apiResults = {};
+        apiResults["parent_id"] = [];
         apiResults["sex"] = [];
         apiResults["official"] = {"1": "是", "2": "否"};
         apiResults["kol"] = {"0": "否", "1": "是"};

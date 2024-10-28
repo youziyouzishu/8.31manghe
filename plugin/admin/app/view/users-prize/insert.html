@@ -118,32 +118,7 @@
                     }
                 });
             });
-            
-            // 字段 奖品 box_prize_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box-prize/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#box_prize_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#box_prize_id",
-                            name: "box_prize_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-            
+
             // 字段 保险箱 safe
             layui.use(["jquery", "xmSelect"], function() {
                 let value = layui.$("#safe").attr("value");
@@ -202,16 +177,16 @@
 
                     // 通过 AJAX 请求获取对应省份的城市数据
                     $.ajax({
-                        url: '/app/admin/box-prize/select?format=select', // 请替换为实际的 API 地址
+                        url: '/app/admin/box-prize/select?format=formatNormal', // 请替换为实际的 API 地址
                         method: 'GET',
                         data: { box_id: selectedbox_idId },
                         success: function(response) {
                             var data = response.data;
-
+                            console.log(data)
                             // 清空城市选择框并加载新的城市选项
                             $('#box_prize_id').html('<option value="">请选择奖品</option>');
                             $.each(data, function(index, item){
-                                $('#box_prize_id').append(new Option(item.name, item.value));
+                                $('#box_prize_id').append(new Option(item.name + '-' + item.price, item.id));
                             });
                             form.render('select'); // 重新渲染选择框
                         },

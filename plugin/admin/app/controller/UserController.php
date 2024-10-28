@@ -51,9 +51,15 @@ class UserController extends Crud
         $query = $this->doSelect($where, $field, $order)
             ->with(['children'])
             ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) {
+                $query->where('type', 1)->whereDate('created_at', date('Y-m-d'));
+            }], 'amount')
+            ->withSum(['userDisburse as user_disburse_sum_amount'=>function ($query) {
+                $query->where('type', 1);
+            }], 'amount')
+            ->withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) {
                 $query->whereDate('created_at', date('Y-m-d'));
             }], 'amount')
-            ->withSum('userDisburse as user_disburse_sum_amount', 'amount')
+            ->withSum(['userDisburse as user_disburse_sum_amount_amount'], 'amount')
             ->withSum('userPrize', 'price');
 
         return $this->doFormat($query, $format, $limit);

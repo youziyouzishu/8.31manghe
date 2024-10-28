@@ -50,7 +50,15 @@
                             <div name="status" id="status" value="" ></div>
                         </div>
                     </div>
-                    
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">支付类型</label>
+                        <div class="layui-input-block">
+                            <div name="pay_type" id="pay_type" value="" ></div>
+                        </div>
+                    </div>
+
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">支付时间</label>
                         <div class="layui-input-block">
@@ -132,6 +140,22 @@
                     type: "datetime",
                 });
             })
+
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#pay_type").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#pay_type",
+                    name: "pay_type",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"1","name":"微信"},{"value":"2","name":"余额"}],
+                    value: "1",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
             
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {

@@ -58,7 +58,7 @@ class GoodsController extends BaseController
         }
         $user = User::find($request->uid);
         $ordersn = Random::ordersn();
-        $amount = $goods->prize->price;
+        $amount = $goods->boxPrize->price;
 
 
         // 生成 1 到 9 之间的随机整数

@@ -470,7 +470,7 @@
             layer.open({
                 type: 1,
                 title: '填写快递信息',
-                area: ['400px', '250px'], // 宽高
+                area: ['400px', '400px'], // 宽高
                 content: `                <form class="layui-form">
                 <div class="main-container mr-5">
                     <div class="layui-form-item">
@@ -485,6 +485,12 @@
                             <input type="text" name="express" value="" required lay-verify="required" class="layui-input express">
                         </div>
                     </div>
+                      <div class="layui-form-item">
+                            <label class="layui-form-label required">备注</label>
+                            <div class="layui-input-block">
+                                <textarea  rows="4" cols="40" name="mark" value="" required lay-verify="required" class="layui-textarea mark"></textarea>
+                            </div>
+                        </div>
                     </div>
                 </form>
             `,
