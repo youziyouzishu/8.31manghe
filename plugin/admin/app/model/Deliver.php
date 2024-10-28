@@ -25,6 +25,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\Address|null $address
  * @property-read mixed $status_text
  * @property string $mark 备注
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $usersPrize
  * @mixin \Eloquent
  */
 class Deliver extends Base
@@ -67,6 +68,11 @@ class Deliver extends Base
     public function getStatusList()
     {
         return ['1' => '待发货', '2' => '待收货', '3' => '完成', '4'=>'取消发货'];
+    }
+
+    function usersPrize()
+    {
+        return $this->belongsToMany(UsersPrize::class, DeliverDetail::class, 'deliver_id', 'user_prize_id');
     }
 
 

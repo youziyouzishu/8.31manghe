@@ -33,7 +33,7 @@ class UsersDisburse extends Base
      * @var string
      */
     protected $primaryKey = 'id';
-    protected $fillable = ['user_id', 'amount','mark'];
-    
-    
+    protected $fillable = ['user_id', 'amount','mark','type'];
+
+
 }

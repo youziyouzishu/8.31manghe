@@ -98,7 +98,7 @@ class NotifyController extends BaseController
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
-                        if ($order->user->kol == 0){
+                        if ($order->user->kol == 0) {
                             $currentChance += $order->user->chance;
                         }
 
@@ -106,7 +106,7 @@ class NotifyController extends BaseController
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 //达人抽奖不减数量
-                                if ($order->user->kol == 0){
+                                if ($order->user->kol == 0) {
                                     $prize->decrement('num');
                                 }
                                 $winnerPrize[] = $prize;
@@ -145,13 +145,14 @@ class NotifyController extends BaseController
                     'winner_prize' => $winnerPrize
                 ]);
 
-                if ($paytype == 'wechat'){
-                    UsersDisburse::create([
-                        'user_id' => $order->user_id,
-                        'amount' => $order->pay_amount,
-                        'mark' => '抽奖'
-                    ]);
-                }
+
+                UsersDisburse::create([
+                    'user_id' => $order->user_id,
+                    'amount' => -$order->pay_amount,
+                    'mark'=> '购买盲盒',
+                    'type' => $paytype == 'wechat' ? 1 : 2,
+                ]);
+
 
                 break;
             case 'goods':
@@ -177,13 +178,14 @@ class NotifyController extends BaseController
                     'box_prize_id' => $order->goods->prize_id,
                     'mark' => '购买商品获得'
                 ]);
-                if ($paytype == 'wechat'){
-                    UsersDisburse::create([
-                        'user_id' => $order->user_id,
-                        'amount' => $order->pay_amount,
-                        'mark' => '购买商品'
-                    ]);
-                }
+
+                UsersDisburse::create([
+                    'user_id' => $order->user_id,
+                    'amount' => -$order->pay_amount,
+                    'mark' => '购买商品',
+                    'type' => $paytype == 'wechat' ? 1 : 2,
+                ]);
+
                 break;
             case 'freight':
                 $order = Deliver::where(['ordersn' => $out_trade_no, 'status' => 0])->first();
@@ -192,11 +194,11 @@ class NotifyController extends BaseController
                 }
                 $order->status = 1;
                 $order->save();
-                $order->detail->each(function (DeliverDetail $item){
+                $order->detail->each(function (DeliverDetail $item) {
                     //支付成功  删除用户的奖品
                     UsersPrizeLog::create([
                         'user_id' => $item->userPrize->user_id,
-                        'box_prize_id' => $item->prize_id,
+                        'box_prize_id' => $item->box_prize_id,
                         'mark' => '发货成功，删除奖品'
                     ]);
                     $item->userPrize()->delete();
@@ -266,13 +268,12 @@ class NotifyController extends BaseController
                 ]);
 
                 // 处理微信支付的额外逻辑
-                if ($paytype == 'wechat') {
-                    UsersDisburse::create([
-                        'user_id' => $order->user_id,
-                        'amount' => $order->pay_amount,
-                        'mark' => '梦想DIY抽奖'
-                    ]);
-                }
+                UsersDisburse::create([
+                    'user_id' => $order->user_id,
+                    'amount' => -$order->pay_amount,
+                    'mark' => '梦想DIY抽奖',
+                    'type' => $paytype == 'wechat' ? 1 : 2,
+                ]);
                 break;
             default:
                 return $this->fail('回调错误');

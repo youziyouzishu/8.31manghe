@@ -38,7 +38,8 @@
     "webman/push": "^1.0",
     "illuminate/pagination": "^11.29",
     "w7corp/easywechat": "^6.15",
-    "chance-fyi/operation-log": "^3.0"
+    "chance-fyi/operation-log": "^3.0",
+    "phpoffice/phpspreadsheet": "^3.3"
   },
   "suggest": {
     "ext-event": "For better performance. "
