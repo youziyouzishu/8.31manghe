@@ -4,18 +4,18 @@ namespace plugin\admin\app\controller;
 
 use support\Request;
 use support\Response;
-use plugin\admin\app\model\UsersPrizeLog;
+use plugin\admin\app\model\UsersDrawLog;
 use plugin\admin\app\controller\Crud;
 use support\exception\BusinessException;
 
 /**
- * 盲盒中奖记录 
+ * 抽奖记录 
  */
-class UsersPrizeLogController extends Crud
+class UsersDrawLogController extends Crud
 {
     
     /**
-     * @var UsersPrizeLog
+     * @var UsersDrawLog
      */
     protected $model = null;
 
@@ -25,7 +25,7 @@ class UsersPrizeLogController extends Crud
      */
     public function __construct()
     {
-        $this->model = new UsersPrizeLog;
+        $this->model = new UsersDrawLog;
     }
     
     /**
@@ -34,14 +34,7 @@ class UsersPrizeLogController extends Crud
      */
     public function index(): Response
     {
-        return view('users-prize-log/index');
-    }
-
-    public function select(Request $request): Response
-    {
-        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->with(['boxPrize.box']);
-        return $this->doFormat($query, $format, $limit);
+        return view('users-draw-log/index');
     }
 
     /**
@@ -55,7 +48,7 @@ class UsersPrizeLogController extends Crud
         if ($request->method() === 'POST') {
             return parent::insert($request);
         }
-        return view('users-prize-log/insert');
+        return view('users-draw-log/insert');
     }
 
     /**
@@ -69,7 +62,7 @@ class UsersPrizeLogController extends Crud
         if ($request->method() === 'POST') {
             return parent::update($request);
         }
-        return view('users-prize-log/update');
+        return view('users-draw-log/update');
     }
 
 }

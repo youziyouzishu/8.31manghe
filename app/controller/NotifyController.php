@@ -60,6 +60,10 @@ class NotifyController extends BaseController
                         $order->userCoupon->status = 2;
                         $order->userCoupon->save();
                     }
+                    if ($order->user->new == 0) {
+                        $order->user->new = 1;
+                        $order->user->save();
+                    }
 
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
@@ -110,7 +114,8 @@ class NotifyController extends BaseController
                                 UsersPrize::create([
                                     'user_id' => $order->user_id,
                                     'box_prize_id' => $prize->id,
-                                    'mark' => '抽奖获得'
+                                    'mark' => '抽奖获得',
+                                    'price' => $prize->price,
                                 ]);
 
                                 UsersPrizeLog::create([
@@ -118,6 +123,7 @@ class NotifyController extends BaseController
                                     'user_id' => $order->user_id,
                                     'box_prize_id' => $prize->id,
                                     'mark' => '抽奖获得',
+                                    'price' => $prize->price,
                                 ]);
                                 break;
                             }
@@ -156,6 +162,10 @@ class NotifyController extends BaseController
                 $order->status = 2;
                 $order->pay_at = date('Y-m-d H:i:s');
                 $order->save();
+                if ($order->user->new == 0) {
+                    $order->user->new = 1;
+                    $order->user->save();
+                }
                 //给用户发放赏袋
                 UsersPrize::create([
                     'user_id' => $order->user_id,
@@ -191,14 +201,6 @@ class NotifyController extends BaseController
                     ]);
                     $item->userPrize()->delete();
                 });
-
-                if ($paytype == 'wechat'){
-                    UsersDisburse::create([
-                        'user_id' => $order->user_id,
-                        'amount' => $order->freight,
-                        'mark' => '支付运费'
-                    ]);
-                }
                 break;
             case 'dream':
                 $order = DreamOrders::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
@@ -211,6 +213,10 @@ class NotifyController extends BaseController
                 $probability = $order->probability;
                 $big_prize_id = $order->big_prize_id;
                 $small_prize_id = $order->small_prize_id;
+                if ($order->user->new == 0) {
+                    $order->user->new = 1;
+                    $order->user->save();
+                }
 
                 // 生成奖品ID数组并创建订单奖品记录
                 $prize_ids = collect();

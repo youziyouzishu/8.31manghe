@@ -35,8 +35,8 @@ class BoxController extends BaseController
     {
         $type = $request->post('type', 1);
         $sort = $request->post('sort', 'asc');
-        $rows = Box::where(['type' => $type])
-            ->orderBy('id', $sort)
+        $rows = Box::where(['type' => $type,'status' => 1])
+            ->orderBy('weigh', $sort)
             ->paginate()
             ->items();
         return $this->success('成功', $rows);
@@ -328,7 +328,7 @@ class BoxController extends BaseController
 
             $ordersn = Random::ordersn();
 
-            BoxOrder::create([
+            $orderData = [
                 'user_id' => $request->uid,
                 'box_id' => $box->id,
                 'amount' => $amount,
@@ -338,7 +338,8 @@ class BoxController extends BaseController
                 'user_coupon_id' => $user_coupon_id,
                 'times' => $times,
                 'level_id' => $level_id
-            ]);
+            ];
+
             //先用余额支付 余额不足再用微信支付
             $ret = [];
 
@@ -363,12 +364,15 @@ class BoxController extends BaseController
                     Db::rollBack();
                     return $this->fail($res->msg);
                 }
+                $orderData['pay_type'] = 2;
 
             } else {
                 $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';
+                $orderData['pay_type'] = 1;
             }
+            BoxOrder::create($orderData);
             // 提交事务
             Db::commit();
             return $this->json($code, $msg, $ret);

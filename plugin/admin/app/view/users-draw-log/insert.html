@@ -15,58 +15,37 @@
                 <div class="main-container mr-5">
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label required">券名称</label>
+                        <label class="layui-form-label required">用户</label>
                         <div class="layui-input-block">
-                            <input type="text" name="name" value="" required lay-verify="required" class="layui-input">
+                            <input type="number" name="user_id" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label required">券类型</label>
+                        <label class="layui-form-label required">次数</label>
                         <div class="layui-input-block">
-                            <div name="type" id="type" required value="1" ></div>
-                        </div>
-                    </div>
-
-                    <div class="layui-form-item">
-                        <label class="layui-form-label required">状态</label>
-                        <div class="layui-input-block">
-                            <div name="status" id="status" required value="1" ></div>
+                            <input type="number" name="times" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">优惠金额</label>
+                        <label class="layui-form-label required">所属盲盒</label>
                         <div class="layui-input-block">
-                            <input type="number" name="amount" value="0.00" class="layui-input">
+                            <input type="number" name="box_id" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">满足金额</label>
+                        <label class="layui-form-label">所属关卡</label>
                         <div class="layui-input-block">
-                            <input type="number" name="with_amount" value="0.00" class="layui-input">
+                            <input type="number" name="level_id" value="0" class="layui-input">
                         </div>
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">券数量</label>
+                        <label class="layui-form-label">订单编号</label>
                         <div class="layui-input-block">
-                            <input type="number" name="num" value="1" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label required">备注</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="mark" value="" required lay-verify="required" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">失效日期</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="expire_at" id="expire_at" autocomplete="off" class="layui-input">
+                            <input type="text" name="ordersn" value="" class="layui-input">
                         </div>
                     </div>
                     
@@ -95,51 +74,7 @@
         <script>
 
             // 相关接口
-            const INSERT_API = "/app/admin/coupon/insert";
-            
-            // 字段 券类型 type
-            layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#type").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#type",
-                    name: "type",
-                    filterable: true,
-                    initValue: initValue,
-                    data: [{"value":"1","name":"无门槛"},{"value":"2","name":"满减"}],
-                    value: "1",
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
-                    layVerify: "required",
-                })
-            });
-
-            // 字段 券类型 status
-            layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#status").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#status",
-                    name: "status",
-                    filterable: true,
-                    initValue: initValue,
-                    data: [{"value":"0","name":"不可见"},{"value":"1","name":"可见"}],
-                    value: "0",
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
-                    layVerify: "required",
-                })
-            });
-            
-            // 字段 失效日期 expire_at
-            layui.use(["laydate"], function() {
-                layui.laydate.render({
-                    elem: "#expire_at",
-                    type: "datetime",
-                });
-            })
+            const INSERT_API = "/app/admin/users-draw-log/insert";
             
             //提交事件
             layui.use(["form", "popup"], function () {

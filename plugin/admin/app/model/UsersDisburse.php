@@ -15,6 +15,7 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse query()
+ * @property int $type 类型:1=微信,2=水晶
  * @mixin \Eloquent
  */
 class UsersDisburse extends Base

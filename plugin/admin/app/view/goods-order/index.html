@@ -267,6 +267,18 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "支付类型",align: "center",
+                        field: "pay_type",
+                        templet: function (d) {
+                            let field = "pay_type";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "订单金额",align: "center",
 						field: "amount",
 					},{
@@ -319,6 +331,7 @@
 				apiResults["user_id"] = [];
 				apiResults["goods_id"] = [];
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
+                apiResults["pay_type"] = {"1":"微信","2":"余额"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

@@ -27,6 +27,7 @@ use plugin\admin\app\model\Base;
  * @property int $times 抽奖次数
  * @property int $level_id 所属关卡
  * @property-read \plugin\admin\app\model\User|null $user
+ * @property int $pay_type 支付类型
  * @mixin \Eloquent
  */
 class BoxOrder extends Base
@@ -59,7 +60,8 @@ class BoxOrder extends Base
         'ordersn',
         'pay_at',
         'coupon_id',
-        'times'
+        'times',
+        'pay_type'
     ];
 
     function userCoupon()

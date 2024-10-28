@@ -27,6 +27,13 @@ class UsersPrizeController extends Crud
     {
         $this->model = new UsersPrize;
     }
+
+    public function select(Request $request): Response
+    {
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->with(['boxPrize.box']);
+        return $this->doFormat($query, $format, $limit);
+    }
     
     /**
      * 浏览

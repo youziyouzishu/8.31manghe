@@ -27,6 +27,7 @@ namespace plugin\admin\app\model;
  * @property string $probability 概率
  * @property string $pay_amount 支付金额
  * @property-read \plugin\admin\app\model\User|null $user
+ * @property int $pay_type 支付类型
  * @mixin \Eloquent
  */
 class DreamOrders extends Base

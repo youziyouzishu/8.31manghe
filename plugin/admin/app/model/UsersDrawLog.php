@@ -51,5 +51,5 @@ class UsersDrawLog extends Base
         return $this->belongsTo(Box::class, 'box_id', 'id');
     }
 
-    
+
 }

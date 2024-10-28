@@ -58,6 +58,13 @@
                             <div name="kol" id="kol" value="" ></div>
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">新用户</label>
+                        <div class="layui-input-block">
+                            <div name="new" id="new" value="" ></div>
+                        </div>
+                    </div>
                     
                     <div class="layui-form-item layui-inline">
                         <label class="layui-form-label"></label>
@@ -200,7 +207,23 @@
                     radio: true,
                 })
             });
-            
+
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#new").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#new",
+                    name: "new",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"0","name":"否"},{"value":"1","name":"是"}],
+                    value: "",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
+
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
                 let table = layui.table;
@@ -252,6 +275,20 @@
                         field: "user_disburse_sum_amount",
                         templet: function (d) {
                             let field = "user_disburse_sum_amount";
+                            if (typeof d[field] == "undefined") {
+                                return ""
+                            }
+                            if (d[field] == null){
+                                return 0;
+                            }else{
+                                return d[field];
+                            }
+                        }
+                    },{
+                        title: "赏袋价值",align: "center",
+                        field: "user_prize_sum_price",
+                        templet: function (d) {
+                            let field = "user_prize_sum_price";
                             if (typeof d[field] == "undefined") {
                                 return ""
                             }
@@ -318,6 +355,18 @@
                             return util.escape(items.join(","));
                         }
                     },{
+                        title: "新用户",align: "center",
+                        field: "new",
+                        templet: function (d) {
+                            let field = "new";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
                         title: "登录时间",align: "center",
                         field: "last_time",
                         hide: true,
@@ -368,6 +417,7 @@
 				apiResults["sex"] = [];
 				apiResults["official"] = {"1":"是","2":"否"};
 				apiResults["kol"] = {"0":"否","1":"是"};
+				apiResults["new"] = {"0":"否","1":"是"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

@@ -72,13 +72,15 @@ class GoodsController extends BaseController
         }
         Db::beginTransaction();
         try {
-            GoodsOrder::create([
+
+            $goodsData = [
                 'user_id' => $request->uid,
                 'goods_id' => $goods->id,
                 'amount' => $amount,
                 'pay_amount' => $pay_amount,
                 'ordersn' => $ordersn,
-            ]);
+            ];
+
             if ($user->money >= $pay_amount) {
                 $ret = [];
                 //余额支付
@@ -101,12 +103,15 @@ class GoodsController extends BaseController
                     Db::rollBack();
                     return $this->fail($res->msg);
                 }
+                $goodsData['pay_type'] = 2;
             } else {
                 //微信支付
                 $ret = Pay::pay($pay_amount, $ordersn, '购买商品', 'goods', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';
+                $goodsData['pay_type'] = 1;
             }
+            GoodsOrder::create($goodsData);
             Db::commit();
             return $this->json($code, $msg, $ret);
         } catch (\Throwable $e) {

@@ -38,6 +38,8 @@
                             <div name="user_id" id="user_id" value="" ></div>
                         </div>
                     </div>
+
+
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">奖品</label>
@@ -166,6 +168,8 @@
                     }
                 });
             });
+
+
             
             // 字段 保险箱 safe
             layui.use(["jquery", "xmSelect"], function() {
@@ -214,6 +218,17 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "所属盲盒",align: "center",
+                        field: "box_prize.box.name",
+                        templet: function (d) {
+                            let field = "box_prize.box.name";
+                            if (typeof d.box_prize == "undefined") return "";
+                            return d.box_prize.box.name;
+                        }
+                    },{
+                        title: "参考价",align: "center",
+                        field: "price",
+                    },{
 						title: "奖品",align: "center",
 						field: "box_prize_id",
 						templet: function (d) {

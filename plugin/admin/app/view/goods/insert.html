@@ -13,21 +13,30 @@
 
             <div class="mainBox">
                 <div class="main-container mr-5">
-                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required">盲盒</label>
+                        <div class="layui-input-block">
+                            <select  id="box_id" lay-filter="box_id">
+                                <option value="">请选择盲盒</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
-                            <div name="prize_id" id="prize_id" required value="" ></div>
+                            <select name="prize_id" id="prize_id">
+                                <option value="">请选择奖品</option>
+                            </select>
                         </div>
                     </div>
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">分类</label>
                         <div class="layui-input-block">
                             <div name="class_id" id="class_id" required value="" ></div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
 
@@ -42,45 +51,20 @@
                     </button>
                 </div>
             </div>
-            
+
         </form>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
         <script src="/app/admin/component/pear/pear.js"></script>
         <script src="/app/admin/component/jsoneditor/jsoneditor.js"></script>
         <script src="/app/admin/admin/js/permission.js"></script>
-        
+
         <script>
 
             // 相关接口
-            const INSERT_API = "/app/admin/good/insert";
+            const INSERT_API = "/app/admin/goods/insert";
             const class_id = layui.url().search['class_id'];
-            // 字段 奖品 prize_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box-prize/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#prize_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#prize_id",
-                            name: "prize_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                            layVerify: "required",
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-            
+
             // 字段 分类 class_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
                 layui.$.ajax({
@@ -94,7 +78,7 @@
                             name: "class_id",
                             initValue: initValue,
                             filterable: true,
-                            data: res.data, 
+                            data: res.data,
                             model: {"icon":"hidden","label":{"type":"text"}},
                             clickClose: true,
                             radio: true,
@@ -106,7 +90,7 @@
                     }
                 });
             });
-            
+
             //提交事件
             layui.use(["form", "popup"], function () {
                 // 字段验证允许为空
@@ -135,6 +119,59 @@
                         }
                     });
                     return false;
+                });
+            });
+
+            layui.use(['form', 'jquery'], function(){
+                var form = layui.form;
+                var $ = layui.jquery;
+
+                // 通过 AJAX 请求获取省份数据
+                $.ajax({
+                    url: '/app/admin/box/select?format=select', // 请替换为实际的 API 地址
+                    method: 'GET',
+                    success: function(response) {
+                        var data = response.data;
+                        // 动态加载省份
+                        $.each(data, function(index, item){
+                            $('#box_id').append(new Option(item.name, item.value));
+                        });
+                        form.render('select'); // 重新渲染选择框
+                    },
+                    error: function(error) {
+                        console.error('请求失败:', error);
+                    }
+                });
+
+                // 监听省份选择变化
+                form.on('select(box_id)', function(data){
+                    console.log(data);
+                    var selectedbox_idId = data.value;
+                    if (!selectedbox_idId) {
+                        $('#prize_id').html('<option value="">请选择奖品</option>');
+                        form.render('select');
+                        return;
+                    }
+
+                    // 通过 AJAX 请求获取对应省份的城市数据
+                    $.ajax({
+                        url: '/app/admin/box-prize/select?format=select', // 请替换为实际的 API 地址
+                        method: 'GET',
+                        data: { box_id: selectedbox_idId },
+                        success: function(response) {
+                            var data = response.data;
+
+                            // 清空城市选择框并加载新的城市选项
+                            $('#prize_id').html('<option value="">请选择奖品</option>');
+                            $.each(data, function(index, item){
+                                $('#prize_id').append(new Option(item.name, item.value));
+                            });
+                            form.render('select'); // 重新渲染选择框
+                        },
+                        error: function(error) {
+                            console.error('请求失败:', error);
+                        }
+                    });
                 });
             });
 

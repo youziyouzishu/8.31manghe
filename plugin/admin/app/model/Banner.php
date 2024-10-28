@@ -14,6 +14,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Banner newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Banner newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Banner query()
+ * @property string $leng_image 纵向图
  * @mixin \Eloquent
  */
 class Banner extends Base

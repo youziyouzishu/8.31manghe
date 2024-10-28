@@ -93,14 +93,37 @@
         
         <script>
 
+            const ordersn = layui.url().search['ordersn'];
+            let draw_id = 0;
+
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/users-prize-log/select";
+            let SELECT_API = "/app/admin/users-prize-log/select";
             const UPDATE_API = "/app/admin/users-prize-log/update";
             const DELETE_API = "/app/admin/users-prize-log/delete";
             const INSERT_URL = "/app/admin/users-prize-log/insert";
             const UPDATE_URL = "/app/admin/users-prize-log/update";
-            
+            if (typeof ordersn !== 'undefined' ) {
+                let data = {};
+                data["ordersn"] = ordersn;
+                layui.$.ajax({
+                    url: "/app/admin/users-draw-log/select?format=select",
+                    dataType: "json",
+                    data: data,
+                    success: function (res) {
+                        if (!res.code) {
+                            draw_id = res.data.id;
+                            if (typeof draw_id === 'undefined' ){
+                                SELECT_API = "/app/admin/users-prize-log/select?draw_id=999999999999";
+                            }else{
+                                SELECT_API = "/app/admin/users-prize-log/select?draw_id="+draw_id;
+                            }
+                        }else{
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            }
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
                 layui.laydate.render({
@@ -190,6 +213,17 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "所属盲盒",align: "center",
+                        field: "box_prize.box.name",
+                        templet: function (d) {
+                            let field = "box_prize.box.name";
+                            if (typeof d.box_prize == "undefined") return "";
+                            return d.box_prize.box.name;
+                        }
+                    },{
+                        title: "参考价",align: "center",
+                        field: "price",
+                    },{
 						title: "奖品",align: "center",
 						field: "box_prize_id",
 						templet: function (d) {

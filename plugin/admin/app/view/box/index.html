@@ -22,6 +22,13 @@
                     </div>
 
                     <div class="layui-form-item">
+                        <label class="layui-form-label">分类</label>
+                        <div class="layui-input-block">
+                            <div name="type" id="type" value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
                         <div class="layui-input-block">
                             <div class="layui-input-block" id="created_at">
@@ -101,6 +108,22 @@
                 });
             })
 
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#type").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#type",
+                    name: "type",
+                    filterable: true,
+                    initValue: initValue,
+                    data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"}],
+                    value: "",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
+
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
                 let table = layui.table;
@@ -142,6 +165,53 @@
                             return html;
 						}
 					},{
+                        title: "封面",align: "center",
+                        field: "image",
+                        templet: function (d) {
+                            return '<img src="'+encodeURI(d['image'])+'" style="max-width:32px;max-height:32px;" alt="" />'
+                        }
+                    },{
+                        title: "名称",align: "center",
+                        field: "name",
+                    },{
+                        title: "单价",align: "center",
+                        field: "price",
+                    },{
+                        title: "上下架",align: "center",
+                        field: "status",
+                        templet: function (d) {
+                            let field = "status";
+                            form.on("switch("+field+")", function (data) {
+                                let load = layer.load();
+                                let postData = {};
+                                postData[field] = data.elem.checked ? 1 : 2;
+                                postData[PRIMARY_KEY] = this.value;
+                                $.post(UPDATE_API, postData, function (res) {
+                                    layer.close(load);
+                                    if (res.code) {
+                                        return layui.popup.failure(res.msg, function () {
+                                            data.elem.checked = !data.elem.checked;
+                                            form.render();
+                                        });
+                                    }
+                                    return layui.popup.success("操作成功");
+                                })
+                            });
+                            let checked = d[field] === 1 ? "checked" : "";
+                            return '<input type="checkbox" value="'+util.escape(d[PRIMARY_KEY])+'" lay-filter="'+util.escape(field)+'" lay-skin="switch" lay-text="'+util.escape('')+'" '+checked+'/>';
+                        },
+                        hide:false
+                    },{
+                        title: "奖品价值",align: "center",
+                        field: "box_prize_sum_price",
+                    },{
+                        title: "奖品数量",align: "center",
+                        field: "box_prize_count",
+                    },{
+                        title: "权重",align: "center",
+                        field: "weigh",
+                        sort: true,
+                    },{
 						title: "创建时间",align: "center",
 						field: "created_at",
 						sort: true,
@@ -149,16 +219,10 @@
 						title: "更新时间",align: "center",
 						field: "updated_at",
 					},{
-						title: "名称",align: "center",
-						field: "name",
-					},{
-						title: "单价",align: "center",
-						field: "price",
-					},{
 						title: "操作",
 						toolbar: "#table-bar",
 						align: "center",
-						fixed: "right",
+                        width: 200,
 					},
 				];
 

@@ -19,6 +19,7 @@ class CouponController extends BaseController
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
+            ->where('status',1)
             ->whereNotIn('id', $coupon_id)
             ->get();
 

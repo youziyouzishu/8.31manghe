@@ -41,6 +41,9 @@ use plugin\admin\app\model\Base;
  * @property float $chance 额外中奖率
  * @property int $parent_id
  * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $children
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
+ * @property int $new 新用户
  * @mixin \Eloquent
  */
 class User extends Base
@@ -127,6 +130,16 @@ class User extends Base
     function children()
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    function boxPrize()
+    {
+        return $this->hasManyThrough(BoxPrize::class, UsersPrize::class, 'user_id', 'id', 'id', 'box_prize_id');
+    }
+
+    function userPrize()
+    {
+        return $this->hasMany(UsersPrize::class);
     }
 
 

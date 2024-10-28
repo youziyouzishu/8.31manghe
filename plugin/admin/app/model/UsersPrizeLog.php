@@ -21,6 +21,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property int $draw_id 抽奖
  * @property-read \plugin\admin\app\model\User|null $sourceUser
+ * @property string $price 参考价
  * @mixin \Eloquent
  */
 class UsersPrizeLog extends Base
@@ -39,7 +40,7 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','box_prize_id','mark'];
+    protected $fillable = ['user_id','box_prize_id','mark','price'];
 
     function boxPrize()
     {

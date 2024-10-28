@@ -5,6 +5,9 @@ namespace app\controller;
 use GuzzleHttp\Client;
 use plugin\admin\app\model\Area;
 use plugin\admin\app\model\Caiji;
+use plugin\admin\app\model\Room;
+use plugin\admin\app\model\User;
+use plugin\admin\app\model\UsersPrize;
 use support\Request;
 
 class IndexController extends BaseController
@@ -14,10 +17,8 @@ class IndexController extends BaseController
     {
 
 
-        $randomNumber = mt_rand() / mt_getrandmax() * 0.03;
-        dump($randomNumber);
-
-        return $this->success();
+        $room = UsersPrize::find(4);
+        return $this->success('',$room->box);
     }
 
 }

@@ -5,6 +5,7 @@ namespace plugin\admin\app\controller;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Option;
 use plugin\admin\app\model\User;
+use plugin\admin\app\model\UsersDisburse;
 use support\exception\BusinessException;
 use support\Request;
 use support\Response;
@@ -67,6 +68,13 @@ class IndexController
         $day30_user_count = User::where('created_at', '>', date('Y-m-d H:i:s', time() - 30 * 24 * 60 * 60))->count();
         // 总用户数
         $user_count = User::count();
+        // 今日充值
+        $today_recharge = UsersDisburse::where('created_at', '>', date('Y-m-d') . ' 00:00:00')->sum('amount');
+        // 昨日充值
+        $yesterday_recharge = UsersDisburse::where('created_at', '>', date('Y-m-d', strtotime('-1 day')) . ' 00:00:00')
+            ->where('created_at', '<', date('Y-m-d') . ' 00:00:00')->sum('amount');
+        // 总充值
+        $recharge = UsersDisburse::sum('amount');
         // mysql版本
         $version = Util::db()->select('select VERSION() as version');
         $mysql_version = $version[0]->version ?? 'unknown';
@@ -80,6 +88,9 @@ class IndexController
         }
 
         return raw_view('index/dashboard', [
+            'today_recharge' => $today_recharge,
+            'yesterday_recharge' => $yesterday_recharge,
+            'recharge' => $recharge,
             'today_user_count' => $today_user_count,
             'day7_user_count' => $day7_user_count,
             'day30_user_count' => $day30_user_count,

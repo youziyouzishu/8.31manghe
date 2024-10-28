@@ -16,7 +16,7 @@
                 <div class="main-container mr-5">
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">图片</label>
+                        <label class="layui-form-label">横向图</label>
                         <div class="layui-input-block">
                             <img class="img-3" src=""/>
                             <input type="text" style="display:none" name="image" value="" />
@@ -24,6 +24,20 @@
                                 <i class="layui-icon layui-icon-upload"></i>上传图片
                             </button>
                             <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="attachment-choose-image"  permission="app.admin.upload.attachment">
+                                <i class="layui-icon layui-icon-align-left"></i>选择图片
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">纵向图</label>
+                        <div class="layui-input-block">
+                            <img class="img-3" src=""/>
+                            <input type="text" style="display:none" name="leng_image" value="" />
+                            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="leng_image"  permission="app.admin.upload.image">
+                                <i class="layui-icon layui-icon-upload"></i>上传图片
+                            </button>
+                            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="attachment-choose-leng_image"  permission="app.admin.upload.attachment">
                                 <i class="layui-icon layui-icon-align-left"></i>选择图片
                             </button>
                         </div>
@@ -100,6 +114,34 @@
                             });
                             layui.upload.render({
                                 elem: "#image",
+                                acceptMime: "image/gif,image/jpeg,image/jpg,image/png",
+                                url: "/app/admin/upload/image",
+                                field: "__file__",
+                                done: function (res) {
+                                    if (res.code > 0) return layui.layer.msg(res.msg);
+                                    this.item.prev().val(res.data.url).prev().attr("src", res.data.url);
+                                }
+                            });
+                        });
+
+                        layui.use(["upload", "layer"], function() {
+                            let input = layui.$("#leng_image").prev();
+                            input.prev().attr("src", input.val());
+                            layui.$("#attachment-choose-leng_image").on("click", function() {
+                                parent.layer.open({
+                                    type: 2,
+                                    title: "选择附件",
+                                    content: "/app/admin/upload/attachment?ext=jpg,jpeg,png,gif,bmp",
+                                    area: ["95%", "90%"],
+                                    success: function (layero, index) {
+                                        parent.layui.$("#layui-layer" + index).data("callback", function (data) {
+                                            input.val(data.url).prev().attr("src", data.url);
+                                        });
+                                    }
+                                });
+                            });
+                            layui.upload.render({
+                                elem: "#leng_image",
                                 acceptMime: "image/gif,image/jpeg,image/jpg,image/png",
                                 url: "/app/admin/upload/image",
                                 field: "__file__",

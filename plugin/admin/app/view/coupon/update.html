@@ -28,6 +28,13 @@
                             <div name="type" id="type" required value="1" ></div>
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required">状态</label>
+                        <div class="layui-input-block">
+                            <div name="status" id="status" required value="1" ></div>
+                        </div>
+                    </div>
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">优惠金额</label>
@@ -133,7 +140,25 @@
                                 layVerify: "required",
                             })
                         });
-                        
+
+                        layui.use(["jquery", "xmSelect"], function() {
+                            let value = layui.$("#status").attr("value");
+                            let initValue = value ? value.split(",") : [];
+                            layui.xmSelect.render({
+                                el: "#status",
+                                name: "status",
+                                filterable: true,
+                                initValue: initValue,
+                                data: [{"value":"0","name":"不可见"},{"value":"1","name":"可见"}],
+                                value: "1",
+                                model: {"icon":"hidden","label":{"type":"text"}},
+                                clickClose: true,
+                                radio: true,
+                                layVerify: "required",
+                            })
+                        });
+
+
                         // 字段 失效日期 expire_at
                         layui.use(["laydate"], function() {
                             layui.laydate.render({

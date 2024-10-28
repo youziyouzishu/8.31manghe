@@ -10,11 +10,11 @@ use plugin\admin\app\model\User;
 use support\exception\BusinessException;
 
 /**
- * 用户 
+ * 用户
  */
 class UserController extends Crud
 {
-    
+
     /**
      * @var User
      */
@@ -39,9 +39,13 @@ class UserController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->with(['children'])->withSum(['userDisburse as today_user_disburse_sum_amount'=>function ($query) {
-            $query->whereDate('created_at',date('Y-m-d'));
-        }],'amount')->withSum('userDisburse as user_disburse_sum_amount','amount');
+        $query = $this->doSelect($where, $field, $order)
+            ->with(['children'])
+            ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) {
+                $query->whereDate('created_at', date('Y-m-d'));
+            }], 'amount')
+            ->withSum('userDisburse as user_disburse_sum_amount', 'amount')
+            ->withSum('userPrize', 'price');
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -82,7 +86,7 @@ class UserController extends Crud
      * @param Request $request
      * @return Response
      * @throws BusinessException
-    */
+     */
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
@@ -112,18 +116,11 @@ class UserController extends Crud
 
             ]);
             $response = base64_encode($response->getContent());
-            return $this->success('生成成功',['base64'=>$response]);
+            return $this->success('生成成功', ['base64' => $response]);
         } catch (\Throwable $e) {
             // 失败
             return $this->fail($e->getMessage());
         }
     }
-
-    function usertree()
-    {
-        $rows = $this->model->get();
-        return $this->success('', $rows->toArray());
-    }
-
 
 }

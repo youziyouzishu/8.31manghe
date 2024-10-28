@@ -2,40 +2,60 @@
 <html lang="zh-cn">
     <head>
         <meta charset="UTF-8">
-        <title>新增页面</title>
+        <title>更新页面</title>
         <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
         <link rel="stylesheet" href="/app/admin/component/jsoneditor/css/jsoneditor.css" />
         <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+        
     </head>
     <body>
 
-        <form class="layui-form" action="">
+        <form class="layui-form">
 
             <div class="mainBox">
                 <div class="main-container mr-5">
-
+                    
                     <div class="layui-form-item">
                         <label class="layui-form-label required">用户</label>
                         <div class="layui-input-block">
-                            <div name="user_id" id="user_id" required value="" ></div>
+                            <input type="number" name="user_id" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label required">优惠券</label>
+                        <label class="layui-form-label required">次数</label>
                         <div class="layui-input-block">
-                            <div name="coupon_id" id="coupon_id" required value="" ></div>
+                            <input type="number" name="times" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
-
+                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required">所属盲盒</label>
+                        <div class="layui-input-block">
+                            <input type="number" name="box_id" value="" required lay-verify="required" class="layui-input">
+                        </div>
+                    </div>
+                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">所属关卡</label>
+                        <div class="layui-input-block">
+                            <input type="number" name="level_id" value="" class="layui-input">
+                        </div>
+                    </div>
+                    
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">订单编号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="ordersn" value="" class="layui-input">
+                        </div>
+                    </div>
                     
                 </div>
             </div>
 
             <div class="bottom">
                 <div class="button-container">
-                    <button type="submit" class="pear-btn pear-btn-primary pear-btn-md" lay-submit=""
-                        lay-filter="save">
+                    <button type="submit" class="pear-btn pear-btn-primary pear-btn-md" lay-submit="" lay-filter="save">
                         提交
                     </button>
                     <button type="reset" class="pear-btn pear-btn-md">
@@ -54,55 +74,40 @@
         <script>
 
             // 相关接口
-            const INSERT_API = "/app/admin/users-coupon/insert";
+            const PRIMARY_KEY = "id";
+            const SELECT_API = "/app/admin/users-draw-log/select" + location.search;
+            const UPDATE_API = "/app/admin/users-draw-log/update";
 
-            // 字段 用户 user_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/user/select?format=select",
+            // 获取数据库记录
+            layui.use(["form", "util", "popup"], function () {
+                let $ = layui.$;
+                $.ajax({
+                    url: SELECT_API,
                     dataType: "json",
                     success: function (res) {
-                        let value = layui.$("#user_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#user_id",
-                            name: "user_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data,
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                            layVerify: "required",
+                        
+                        // 给表单初始化数据
+                        layui.each(res.data[0], function (key, value) {
+                            let obj = $('*[name="'+key+'"]');
+                            if (key === "password") {
+                                obj.attr("placeholder", "不更新密码请留空");
+                                return;
+                            }
+                            if (typeof obj[0] === "undefined" || !obj[0].nodeName) return;
+                            if (obj[0].nodeName.toLowerCase() === "textarea") {
+                                obj.val(value);
+                            } else {
+                                obj.attr("value", value);
+                                obj[0].value = value;
+                            }
                         });
+                        
+                        
+                        // ajax返回失败
                         if (res.code) {
                             layui.popup.failure(res.msg);
                         }
-                    }
-                });
-            });
-
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/coupon/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#coupon_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#coupon_id",
-                            name: "coupon_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data,
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                            layVerify: "required",
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
+                        
                     }
                 });
             });
@@ -119,8 +124,9 @@
                     identity: [/(^$)|(^\d{15}$)|(^\d{17}(x|X|\d)$)/, "请输入正确的身份证号"]
                 });
                 layui.form.on("submit(save)", function (data) {
+                    data.field[PRIMARY_KEY] = layui.url().search[PRIMARY_KEY];
                     layui.$.ajax({
-                        url: INSERT_API,
+                        url: UPDATE_API,
                         type: "POST",
                         dateType: "json",
                         data: data.field,
@@ -141,4 +147,5 @@
         </script>
 
     </body>
+
 </html>

@@ -21,6 +21,9 @@ use plugin\admin\app\model\Base;
  * @property-read mixed $type_text
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxLevel> $level
+ * @property string $image 封面
+ * @property int $status 状态
+ * @property int $weigh 权重
  * @mixin \Eloquent
  */
 class Box extends Base

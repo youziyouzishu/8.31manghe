@@ -23,6 +23,7 @@ use plugin\admin\app\model\Base;
  * @property int $status 订单状态:1=未支付,2=已支付
  * @property string $amount 订单金额
  * @property string $pay_at 支付时间
+ * @property int $pay_type 支付类型
  * @mixin \Eloquent
  */
 class GoodsOrder extends Base

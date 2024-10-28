@@ -13,11 +13,22 @@
 
             <div class="mainBox">
                 <div class="main-container mr-5">
-                    
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label required">盲盒</label>
+                        <div class="layui-input-block">
+                            <select  id="box_id" lay-filter="box_id">
+                                <option value="">请选择盲盒</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
-                            <div name="box_prize_id" id="box_prize_id" required value="" ></div>
+                            <select name="box_prize_id" id="box_prize_id">
+                                <option value="">请选择奖品</option>
+                            </select>
                         </div>
                     </div>
                     
@@ -127,6 +138,59 @@
                         }
                     });
                     return false;
+                });
+            });
+
+            layui.use(['form', 'jquery'], function(){
+                var form = layui.form;
+                var $ = layui.jquery;
+
+                // 通过 AJAX 请求获取省份数据
+                $.ajax({
+                    url: '/app/admin/box/select?format=select', // 请替换为实际的 API 地址
+                    method: 'GET',
+                    success: function(response) {
+                        var data = response.data;
+                        // 动态加载省份
+                        $.each(data, function(index, item){
+                            $('#box_id').append(new Option(item.name, item.value));
+                        });
+                        form.render('select'); // 重新渲染选择框
+                    },
+                    error: function(error) {
+                        console.error('请求失败:', error);
+                    }
+                });
+
+                // 监听省份选择变化
+                form.on('select(box_id)', function(data){
+                    console.log(data);
+                    var selectedbox_idId = data.value;
+                    if (!selectedbox_idId) {
+                        $('#box_prize_id').html('<option value="">请选择奖品</option>');
+                        form.render('select');
+                        return;
+                    }
+
+                    // 通过 AJAX 请求获取对应省份的城市数据
+                    $.ajax({
+                        url: '/app/admin/box-prize/select?format=select', // 请替换为实际的 API 地址
+                        method: 'GET',
+                        data: { box_id: selectedbox_idId },
+                        success: function(response) {
+                            var data = response.data;
+
+                            // 清空城市选择框并加载新的城市选项
+                            $('#box_prize_id').html('<option value="">请选择奖品</option>');
+                            $.each(data, function(index, item){
+                                $('#box_prize_id').append(new Option(item.name, item.value));
+                            });
+                            form.render('select'); // 重新渲染选择框
+                        },
+                        error: function(error) {
+                            console.error('请求失败:', error);
+                        }
+                    });
                 });
             });
 

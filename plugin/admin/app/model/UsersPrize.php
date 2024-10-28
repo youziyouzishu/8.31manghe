@@ -26,6 +26,7 @@ use support\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withoutTrashed()
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomPrize> $roomPrizes
+ * @property string $price 参考价
  * @mixin \Eloquent
  */
 class UsersPrize extends Base
@@ -45,7 +46,7 @@ class UsersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark'];
+    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price'];
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {
@@ -73,5 +74,8 @@ class UsersPrize extends Base
     {
         return $this->belongsTo(User::class,'user_id');
     }
+
+
+
     
 }

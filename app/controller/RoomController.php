@@ -164,9 +164,7 @@ class RoomController extends BaseController
             ->getCollection()
             ->transform(function (Room $room) {
                 $count = $room->roomPrize->count();
-                $price = $room->roomPrize->sum(function (RoomPrize $roomPrize) {
-                    return $roomPrize->userPrize->boxPrize->price;
-                });
+                $price = $room->roomPrize->sum('price');
                 $room->prize_count = $count;
                 $room->price = $price;
                 return $room;

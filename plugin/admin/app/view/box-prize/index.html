@@ -21,6 +21,13 @@
             </div>
 
             <div class="layui-form-item">
+                <label class="layui-form-label">评级</label>
+                <div class="layui-input-block">
+                    <div name="grade" id="grade" value="" ></div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
                 <label class="layui-form-label">创建时间</label>
                 <div class="layui-input-block">
                     <div class="layui-input-block" id="created_at">
@@ -101,6 +108,22 @@
         });
     })
 
+    layui.use(["jquery", "xmSelect"], function() {
+        let value = layui.$("#grade").attr("value");
+        let initValue = value ? value.split(",") : [];
+        layui.xmSelect.render({
+            el: "#grade",
+            name: "grade",
+            filterable: true,
+            initValue: initValue,
+            data: [{"value":"1","name":"通关赏"},{"value":"2","name":"N"},{"value":"3","name":"S级"},{"value":"4","name":"SS级"},{"value":"5","name":"SSS级"}],
+            value: "",
+            model: {"icon":"hidden","label":{"type":"text"}},
+            clickClose: true,
+            radio: true,
+        })
+    });
+
     // 表格渲染
     layui.use(["table", "form", "common", "popup", "util"], function () {
         let table = layui.table;
@@ -133,18 +156,6 @@
                     return util.escape(items.join(","));
                 }
             }, {
-                title: "所属盲盒", align: "center",
-                field: "box_id",
-                templet: function (d) {
-                    let field = "box_id";
-                    if (typeof d[field] == "undefined") return "";
-                    let items = [];
-                    layui.each((d[field] + "").split(","), function (k, v) {
-                        items.push(apiResults[field][v] || v);
-                    });
-                    return util.escape(items.join(","));
-                }
-            }, {
                 title: "所属关卡", align: "center",
                 field: "level_id",
                 templet: function (d) {
@@ -159,10 +170,16 @@
             }, {
                 title: "概率", align: "center",
                 field: "chance",
-            }, {
-                title: "数量", align: "center",
+            },{
+                title: "参考价", align: "center",
+                field: "price",
+            },  {
+                title: "剩余数量", align: "center",
                 field: "num",
             }, {
+                title: "总数量", align: "center",
+                field: "total",
+            },{
                 title: "图片", align: "center",
                 field: "image",
                 templet: function (d) {

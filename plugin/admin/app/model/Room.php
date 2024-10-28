@@ -54,7 +54,7 @@ class Room extends Base
 
     public function boxPrizes()
     {
-        return $this->hasManyThrough(BoxPrize::class, RoomPrize::class, 'room_id', 'id', 'id', 'user_prize_id');
+        return $this->hasManyThrough(BoxPrize::class, RoomPrize::class, 'room_id', 'id', 'id', 'box_prize_id');
     }
 
     function roomPrize()
