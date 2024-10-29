@@ -148,7 +148,7 @@ class NotifyController extends BaseController
 
                 UsersDisburse::create([
                     'user_id' => $order->user_id,
-                    'amount' => -$order->pay_amount,
+                    'amount' => $order->pay_amount,
                     'mark'=> '购买盲盒',
                     'type' => $paytype == 'wechat' ? 1 : 2,
                 ]);
@@ -181,7 +181,7 @@ class NotifyController extends BaseController
 
                 UsersDisburse::create([
                     'user_id' => $order->user_id,
-                    'amount' => -$order->pay_amount,
+                    'amount' => $order->pay_amount,
                     'mark' => '购买商品',
                     'type' => $paytype == 'wechat' ? 1 : 2,
                 ]);
@@ -270,7 +270,7 @@ class NotifyController extends BaseController
                 // 处理微信支付的额外逻辑
                 UsersDisburse::create([
                     'user_id' => $order->user_id,
-                    'amount' => -$order->pay_amount,
+                    'amount' => $order->pay_amount,
                     'mark' => '梦想DIY抽奖',
                     'type' => $paytype == 'wechat' ? 1 : 2,
                 ]);

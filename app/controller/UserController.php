@@ -5,6 +5,7 @@ namespace app\controller;
 use app\tool\Random;
 use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
+use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\GoodsOrder;
@@ -39,10 +40,6 @@ class UserController extends BaseController
 
         if (!$user) {
             // 获取下一个自增ID
-            do {
-                $invitecode = Random::alnum();
-            } while (User::where(['invitecode' => $invitecode])->exists());
-
             $nextId = User::max('id') + 1;
             $userData = [
                 'nickname' => '昵称' . $nextId,
@@ -52,7 +49,7 @@ class UserController extends BaseController
                 'join_ip' => $request->getRealIp(),
                 'last_time' => date('Y-m-d H:i:s'),
                 'last_ip' => $request->getRealIp(),
-                'invitecode' => $invitecode
+                'invitecode' => Util::createInvitecode()
             ];
             if ($parent){
                 $userData['parent_id'] = $parent->id;

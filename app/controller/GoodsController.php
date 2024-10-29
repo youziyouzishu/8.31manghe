@@ -6,6 +6,7 @@ use app\service\Coupon;
 use app\service\Pay;
 use app\tool\Random;
 use Illuminate\Database\Eloquent\Builder;
+use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Goods;
 use plugin\admin\app\model\GoodsClass;
 use plugin\admin\app\model\GoodsOrder;
@@ -57,7 +58,7 @@ class GoodsController extends BaseController
             return $this->fail('商品不存在');
         }
         $user = User::find($request->uid);
-        $ordersn = Random::ordersn();
+        $ordersn = Util::ordersn();
         $amount = $goods->boxPrize->price;
 
 

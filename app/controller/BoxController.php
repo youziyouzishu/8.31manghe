@@ -7,6 +7,7 @@ use app\service\Pay;
 use app\tool\Random;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Redirect;
+use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Box;
 use plugin\admin\app\model\BoxLevel;
 use plugin\admin\app\model\BoxPrize;
@@ -326,7 +327,7 @@ class BoxController extends BaseController
                 $pay_amount = 0.01;
             }
 
-            $ordersn = Random::ordersn();
+            $ordersn = Util::ordersn();
 
             $orderData = [
                 'user_id' => $request->uid,

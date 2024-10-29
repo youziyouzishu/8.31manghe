@@ -35,6 +35,20 @@
                 </div>
             </div>
 
+            <div class="layui-form-item">
+                <label class="layui-form-label">支付流水周期</label>
+                <div class="layui-input-block">
+                    <div class="layui-input-block" id="user_disburse_at">
+                        <input type="text" autocomplete="off" name="user_disburse_at[]"
+                               id="user_disburse_at-date-start" class="layui-input inline-block"
+                               placeholder="开始时间">
+                        -
+                        <input type="text" autocomplete="off" name="user_disburse_at[]" id="user_disburse_at-date-end"
+                               class="layui-input inline-block" placeholder="结束时间">
+                    </div>
+                </div>
+            </div>
+
 
             <div class="layui-form-item layui-inline">
                 <label class="layui-form-label"></label>
@@ -120,6 +134,14 @@
     const INSERT_URL = "/app/admin/user/insert";
     const UPDATE_URL = "/app/admin/user/update";
 
+    layui.use(["laydate"], function () {
+        layui.laydate.render({
+            elem: "#user_disburse_at",
+            range: ["#user_disburse_at-date-start", "#user_disburse_at-date-end"],
+            type: "datetime",
+        });
+    })
+
     layui.use(['table', 'form', 'common', 'jquery'], function () {
         let table = layui.table;
         let form = layui.form;
@@ -161,39 +183,39 @@
                         return '<img src="' + encodeURI(d['avatar']) + '" style="max-width:32px;max-height:32px;" alt="" />'
                     }
                 }, {
+                    title: "周期支付", align: "center",
+                    field: "user_disburse_sum_amount_at",
+                    templet: function (d) {
+                        let field = "user_disburse_sum_amount_at";
+                        if (typeof d[field] == "undefined") {
+                            return "NA"
+                        }
+                        if (d[field] == null) {
+                            return 0;
+                        } else {
+                            return d[field];
+                        }
+                    }
+                }, {
+                    title: "周期流水", align: "center",
+                    field: "user_disburse_sum_amount_amount_at",
+                    templet: function (d) {
+                        let field = "user_disburse_sum_amount_amount_at";
+                        if (typeof d[field] == "undefined") {
+                            return "NA"
+                        }
+                        if (d[field] == null) {
+                            return 0;
+                        } else {
+                            return d[field];
+                        }
+                    }
+                }, {
                     title: "手机", align: "center",
                     field: "mobile",
                 }, {
                     title: "水晶", align: "center",
                     field: "money",
-                }, {
-                    title: "今日消费",align: "center",
-                    field: "today_user_disburse_sum_amount",
-                    templet: function (d) {
-                        let field = "today_user_disburse_sum_amount";
-                        if (typeof d[field] == "undefined") {
-                            return ""
-                        }
-                        if (d[field] == null){
-                            return 0;
-                        }else{
-                            return d[field];
-                        }
-                    }
-                },{
-                    title: "总消费",align: "center",
-                    field: "user_disburse_sum_amount",
-                    templet: function (d) {
-                        let field = "user_disburse_sum_amount";
-                        if (typeof d[field] == "undefined") {
-                            return ""
-                        }
-                        if (d[field] == null){
-                            return 0;
-                        }else{
-                            return d[field];
-                        }
-                    }
                 }, {
                     title: "额外中奖率", align: "center",
                     field: "chance",

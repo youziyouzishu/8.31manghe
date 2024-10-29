@@ -4,6 +4,7 @@ namespace app\controller;
 
 use app\service\Pay;
 use app\tool\Random;
+use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\User;
@@ -118,7 +119,7 @@ class PrizeController extends BaseController
             return $this->fail('达人不能发货');
         }
 
-        $ordersn = Random::ordersn();
+        $ordersn = Util::ordersn();
 
         $freight = 0;
         $rows = UsersPrize::whereIn('id', $ids)

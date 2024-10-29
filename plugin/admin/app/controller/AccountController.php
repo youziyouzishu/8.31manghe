@@ -3,11 +3,14 @@
 namespace plugin\admin\app\controller;
 
 use app\tool\Random;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use plugin\admin\app\common\Auth;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Admin;
 use plugin\admin\app\model\Sms;
+use plugin\admin\app\model\User;
+use Respect\Validation\Validator;
 use support\exception\BusinessException;
 use support\Request;
 use support\Response;
@@ -63,7 +66,6 @@ class AccountController extends Crud
      */
     public function login(Request $request): Response
     {
-        dump($request->post());
         $this->checkDatabaseAvailable();
         $captcha = $request->post('captcha', '');
         $mobilecaptcha = $request->post('mobilecaptcha', '');
@@ -84,9 +86,9 @@ class AccountController extends Crud
         if ($admin->status != 0) {
             return $this->json(1, '当前账户暂时无法登录');
         }
-        $sms = Sms::where('mobile', $admin->mobile)->where('created_at', '>', date('Y-m-d H:i:s', time() - 60 * 5))->orderByDesc('id')->first();
-        if (!$sms || $sms->code != $mobilecaptcha) {
-            return $this->json(1, '短信验证码不正确');
+        $sms = \app\library\Sms::check($admin->mobile, $mobilecaptcha,'login');
+        if (!$sms) {
+            return $this->fail('短信验证码不正确');
         }
 
         $admin->login_at = date('Y-m-d H:i:s');
@@ -267,41 +269,36 @@ class AccountController extends Crud
         }
     }
 
-    function sendcaptcha(Request $request)
+    function send(Request $request)
     {
-        $client = new Client();
-        $code = Random::numeric();
-        $mobile = Admin::where('id', 1)->value('mobile');
-        // 定义请求的 URL 和数据
-        $url = 'http://sms.lifala.com.cn/api/KehuSms/send';
-        $data = [
-            'appid' => 'apsms7193292067',
-            'key' => 'itmqkuN5UfHbQO8n0IGFT9oqJnWhGh7n',
-            'mobile' => $mobile,
-            'code' => $code,
-        ];
-        try {
-            // 发送 POST 请求
-            $response = $client->post($url, [
-                'headers' => [
-                    'Content-Type' => 'application/json'
-                ],
-                'json' => $data
-            ]);
-            // 获取响应体
-            $ret = $response->getBody()->getContents();
-            $ret = json_decode($ret);
-            if ($ret->code != 1) {
-                return $this->fail($ret->msg);
-            }
-            Sms::create([
-                'mobile' => $mobile,
-                'code' => $code
-            ]);
-        } catch (\Throwable $e) {
-            return $this->fail($e->getMessage());
+        $username = $request->post("username");
+        $password = $request->post("password");
+        $event = $request->post("event");
+        $event = $event ?: 'register';
+
+
+        $admin = Admin::where('username', $username)->first();
+        if (!$admin || !Util::passwordVerify($password, $admin->password)) {
+            return $this->fail('账户不存在或密码错误');
         }
-        return $this->success($ret->msg);
+
+        $last = \app\library\Sms::get($admin->mobile, $event);
+        if ($last && time() - $last->created_at->timestamp < 60) {
+            return $this->fail('发送频繁');
+        }
+        // 获取当前小时的开始和结束时间
+        $startTime = Carbon::now()->startOfHour();
+        $endTime = Carbon::now()->endOfHour();
+        $ipSendTotal = Sms::where(['ip' => $request->getRealIp()])->whereBetween('created_at', [$startTime, $endTime])->count();
+        if ($ipSendTotal >= 5) {
+            return $this->fail('发送频繁');
+        }
+        $ret = \app\library\Sms::send($admin->mobile, null, $event);
+        if ($ret) {
+            return $this->success('发送成功');
+        } else {
+            return $this->fail('发送失败，请检查短信配置是否正确');
+        }
 
     }
 

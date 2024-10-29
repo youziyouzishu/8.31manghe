@@ -5,6 +5,7 @@ namespace app\controller;
 use app\service\Pay;
 use app\tool\Random;
 use Illuminate\Database\Query\Builder;
+use plugin\admin\app\common\Util;
 use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\Dream;
@@ -101,7 +102,7 @@ class DreamController extends BaseController
 
             $pay_amount = number_format($price * $times, 2);
             $user = User::find($request->uid);
-            $ordersn = Random::ordersn();
+            $ordersn = Util::ordersn();
             DreamOrders::create([
                 'user_id' => $request->uid,
                 'pay_amount' => $pay_amount,

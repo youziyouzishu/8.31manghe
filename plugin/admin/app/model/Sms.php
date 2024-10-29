@@ -14,6 +14,9 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|Sms newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Sms query()
  * @property string $mobile 手机号
+ * @property string|null $event 事件
+ * @property int $times 验证次数
+ * @property string|null $ip IP
  * @mixin \Eloquent
  */
 class Sms extends Base
@@ -32,7 +35,7 @@ class Sms extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['code','mobile'];
+    protected $fillable = ['code','mobile','event','times','ip'];
     
     
 }
