@@ -17,7 +17,11 @@ class IndexController extends BaseController
     protected array $noNeedLogin = ['*'];
     public function index(Request $request)
     {
+        return $this->success('成功');
+    }
 
+    function log()
+    {
         return (new \Wolfcode\PhpLogviewer\webman\laravel\LogViewer())->fetch();
     }
 

@@ -18,6 +18,7 @@ use Webman\Route;
 
 
 Route::any('/', [\app\controller\IndexController::class, 'index']);
+Route::any('/log', [\app\controller\IndexController::class, 'log']);
 
 Route::group('/box', function () {
     Route::post('/index', [\app\controller\BoxController::class, 'index']);
