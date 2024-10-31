@@ -22,6 +22,6 @@ return [
     'public_path' =>     base_path(false) . DIRECTORY_SEPARATOR . 'public',
     'runtime_path' => base_path(false) . DIRECTORY_SEPARATOR . 'runtime',
     'controller_suffix' => 'Controller',
-    'controller_reuse' => true,
+    'controller_reuse' => false,
     'host' =>'https://0831manghe.62.hzgqapp.com'
 ];

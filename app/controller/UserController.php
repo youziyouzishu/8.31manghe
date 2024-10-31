@@ -2,6 +2,7 @@
 
 namespace app\controller;
 
+use app\library\Sms;
 use app\tool\Random;
 use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,38 +28,51 @@ class UserController extends BaseController
     {
         // 处理父级关系
         $parentInviteCode = $request->post('invitecode');
-        $parent = User::where('invitecode', $parentInviteCode)->first();
-        try {
-            $app = new Application(config('wechat'));
-            $res = $app->getUtils()->codeToSession((string)$request->post('code'));
-            $openid = $res['openid'];
-        } catch (\Throwable $e) {
-            return $this->fail($e->getMessage());
+        $login_type = $request->post('login_type'); # 1微信登录 2手机号
+        $code = $request->post('code');
+        $mobile = $request->post('mobile');
+        $captcha = $request->post('captcha');
+        $openid = '';
+        if ($login_type == 1) {
+            try {
+                $app = new Application(config('wechat'));
+                $res = $app->getUtils()->codeToSession($code);
+                $openid = $res['openid'];
+            } catch (\Throwable $e) {
+                return $this->fail($e->getMessage());
+            }
+            $user = User::where('openid', $openid)->first();
+        } else {
+            $captchaResult = Sms::check($mobile, $captcha, 'login');
+            if (!$captchaResult) {
+                return $this->fail('验证码错误');
+            }
+            $user = User::where('mobile', $mobile)->first();
         }
-
-        $user = User::where('openid', $openid)->first();
-
+        if (!empty($parentInviteCode)){
+            $parent = User::where('invitecode', $parentInviteCode)->first();
+        }else{
+            $parent = null;
+        }
         if (!$user) {
             // 获取下一个自增ID
             $nextId = User::max('id') + 1;
             $userData = [
                 'nickname' => '昵称' . $nextId,
                 'avatar' => '/app/admin/upload/files/20241014/670c7690a977.jpg',
-                'openid' => $openid,
+                'openid' => $openid??'',
+                'mobile' => $mobile??'',
                 'join_time' => date('Y-m-d H:i:s'),
                 'join_ip' => $request->getRealIp(),
                 'last_time' => date('Y-m-d H:i:s'),
                 'last_ip' => $request->getRealIp(),
                 'invitecode' => Util::createInvitecode()
             ];
-            if ($parent){
+            if ($parent) {
                 $userData['parent_id'] = $parent->id;
             }
             // 创建新用户
             $user = User::create($userData);
-
-
-
             if ($parent) {
                 // 增加直推关系
                 UsersLayer::create([
@@ -80,7 +94,7 @@ class UserController extends BaseController
                 }
             }
         } else {
-            if ($user->status == 1){
+            if ($user->status == 1) {
                 return $this->fail('账号已被禁用');
             }
             // 更新现有用户的最后登录时间和IP
@@ -103,10 +117,9 @@ class UserController extends BaseController
     {
         $safe = $request->post('safe', 0);
 
-        $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])
+        $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])->with(['boxPrize'])
             ->paginate()
-            ->getCollection()
-            ->pluck('boxPrize');
+            ->items();
         return $this->success('成功', $rows);
     }
 
@@ -135,7 +148,7 @@ class UserController extends BaseController
     function getDeliverInfo(Request $request)
     {
         $deliver_id = $request->post('deliver_id');
-        $row = Deliver::with(['detail'=>function (DeliverDetail $builder) {
+        $row = Deliver::with(['detail' => function (DeliverDetail $builder) {
             $builder->with('boxPrize');
         }, 'address'])
             ->where(['user_id' => $request->uid, 'id' => $deliver_id])

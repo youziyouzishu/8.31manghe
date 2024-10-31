@@ -31,6 +31,15 @@ Route::group('/box', function () {
     Route::post('/prizeLog', [\app\controller\BoxController::class, 'prizeLog']); //中奖记录
 });
 
+Route::group('/sms', function () {
+    Route::post('/send', [\app\controller\SmsController::class, 'send']);
+
+});
+
+Route::group('/upload', function () {
+    Route::post('/file', [\app\controller\UploadController::class, 'file']);
+});
+
 Route::group('/goods', function () {
     Route::post('/class', [\app\controller\GoodsController::class, 'class']);
     Route::post('/index', [\app\controller\GoodsController::class, 'index']);

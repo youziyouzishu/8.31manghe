@@ -47,7 +47,7 @@ class Room extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['name','content','type','password','status','num','user_id'];
+    protected $fillable = ['name','content','type','password','status','num','user_id','start_at','end_at'];
 
     protected $appends = ['status_text'];
 
@@ -70,7 +70,7 @@ class Room extends Base
 
     public function roomUserUser()
     {
-        return $this->hasManyThrough(User::class, roomUsers::class, 'room_id', 'id', 'id', 'user_id');
+        return $this->hasManyThrough(User::class, RoomUsers::class, 'room_id', 'id', 'id', 'user_id');
     }
 
 

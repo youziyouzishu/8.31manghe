@@ -68,6 +68,7 @@ class User extends Base
 
     protected $fillable = ['username', 'nickname', 'password', 'sex', 'avatar', 'email', 'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip', 'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official', 'invitecode'];
 
+    protected $appends = ['official_text'];
     /**
      * 变更会员余额
      * @param int $money 余额
@@ -142,5 +143,17 @@ class User extends Base
         return $this->hasMany(UsersPrize::class);
     }
 
+    function getOfficialTextAttribute($value)
+    {
+        $value = $value ?: ($this->official ?? '');
+        $list = $this->getOfficialList();
+        return $list[$value] ?? '';
+    }
+
+
+    public function getOfficialList()
+    {
+        return ['1' => '是', '2' => '否'];
+    }
 
 }

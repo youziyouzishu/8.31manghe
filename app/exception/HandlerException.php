@@ -2,8 +2,6 @@
 
 namespace app\exception;
 
-use Next\VarDumper\Dumper;
-use Next\VarDumper\DumperHandler;
 use support\exception\BusinessException;
 use Tinywan\Jwt\Exception\JwtRefreshTokenExpiredException;
 use Tinywan\Jwt\Exception\JwtTokenException;
@@ -15,7 +13,6 @@ use Throwable;
 
 class HandlerException extends ExceptionHandler
 {
-    use DumperHandler;
     public $dontReport = [
         BusinessException::class,
     ];
@@ -27,18 +24,11 @@ class HandlerException extends ExceptionHandler
 
     public function render(Request $request, Throwable $exception): Response
     {
-        if ($exception instanceof JwtTokenExpiredException) {
-            #token过期重新刷新
-            return json([
-                'code' => 400,
-                'msg' => $exception->getMessage()
-            ]);
-        }
 
-        if ($exception instanceof JwtTokenException || $exception instanceof JwtRefreshTokenExpiredException) {
+        if ($exception instanceof JwtTokenException || $exception instanceof JwtRefreshTokenExpiredException || $exception instanceof JwtTokenExpiredException) {
             #token无效或刷新失败  重新登录
             return json([
-                'code' => 401,
+                'code' => 400,
                 'msg' => $exception->getMessage()
             ]);
         }
@@ -48,9 +38,7 @@ class HandlerException extends ExceptionHandler
             return $response;
         }
 
-        if ($exception instanceof Dumper) {
-            return \response(self::convertToHtml($exception));
-        }
+
 
         return parent::render($request, $exception);
     }

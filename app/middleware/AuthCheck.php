@@ -18,7 +18,6 @@ class AuthCheck implements MiddlewareInterface
         if (!empty($request->controller)){  #路由中return无实际controller
             $controller = new ReflectionClass($request->controller);
             $noNeedLogin = $controller->getDefaultProperties()['noNeedLogin'] ?? [];
-
             $arr = array_map('strtolower', $noNeedLogin);
             // 是否存在
             if (!in_array(strtolower($request->action), $arr) && !in_array('*', $arr)) {

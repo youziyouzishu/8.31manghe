@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\BoxPrize;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\UsersPrize;
@@ -53,6 +54,14 @@ class UsersPrizeController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            dump($request->post());
+            $boxPrize = BoxPrize::find($request->post('box_prize_id'));
+            $request->set([
+                '_data' => [
+                    'post' => ['price'=>$boxPrize->price]
+                ]
+            ]);
+            dump($request->post());
             return parent::insert($request);
         }
         return view('users-prize/insert');

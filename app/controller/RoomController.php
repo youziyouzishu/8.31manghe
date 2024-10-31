@@ -3,10 +3,12 @@
 namespace app\controller;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\model\Room;
 use plugin\admin\app\model\RoomPrize;
 use plugin\admin\app\model\RoomUsers;
 use plugin\admin\app\model\RoomWinprize;
+use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersPrize;
 use support\Db;
@@ -89,13 +91,23 @@ class RoomController extends BaseController
     function roomDetail(Request $request)
     {
         $room_id = $request->post('room_id');
-        $rows = Room::with([
+        $row = Room::with([
             'boxPrizes',
             'user',
-            'roomUserUser'
+            'roomUserUser'=>function (Builder $query) {
+                $query->limit(10);
+            }
         ])->find($room_id);
-
-        return $this->success('成功', $rows);
+        $start_time = strtotime($row->start_at);
+        $end_time = strtotime($row->end_at);
+        $now_time = time();
+        if ($row->status == 1){
+            $row->time = $end_time - $now_time;
+        }
+        if ($row->status == 2){
+            $row->time = $start_time - $now_time;
+        }
+        return $this->success('成功', $row);
     }
 
     function roomUsers(Request $request)
