@@ -11,6 +11,7 @@ use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersMoneyLog;
+use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
 use support\exception\BusinessException;
@@ -128,11 +129,11 @@ class UserController extends Crud
                     $deliver_amount += $item->users_prize_sum_price;
                 });
                 //赠送好友的赏品价值
-                $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price');
+                $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price')??0;
                 //水晶余额
-                $money = $item->money;
+                $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()->value('after')??0;
                 //赏袋和保险箱剩余商品价值
-                $user_prize_sum_price = $item->user_prize_sum_price;
+                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price')??0;
                 //活动赠送部分
                 $give_prize = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->get();
                 $give_prize_price = $give_prize->sum('price');

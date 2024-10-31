@@ -65,8 +65,8 @@ class BoxLevelController extends Crud
     {
         if ($request->method() === 'POST') {
             $box_id = $request->post('box_id');
-            $level = $request->post('level');
-            if ($this->model->where(['box_id' => $box_id,'level'=>$level])->exists()){
+            $name = $request->post('name');
+            if ($this->model->where(['box_id' => $box_id,'name'=>$name])->exists()){
                 return $this->fail('该关卡已存在');
             }
 

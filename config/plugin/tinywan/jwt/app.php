@@ -19,7 +19,7 @@ return [
         'refresh_exp' => 604800,
 
         /** refresh 令牌是否禁用，默认不禁用 false */
-        'refresh_disable' => false,
+        'refresh_disable' => true,
 
         /** 令牌签发者 */
         'iss' => 'webman.tinywan.cn',

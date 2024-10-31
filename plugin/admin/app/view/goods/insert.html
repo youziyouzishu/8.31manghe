@@ -21,6 +21,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
@@ -34,6 +35,13 @@
                         <label class="layui-form-label required">分类</label>
                         <div class="layui-input-block">
                             <div name="class_id" id="class_id" required value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">详情</label>
+                        <div class="layui-input-block">
+                            <textarea id="content" name="content" class="layui-textarea"></textarea>
                         </div>
                     </div>
 
@@ -64,6 +72,19 @@
             // 相关接口
             const INSERT_API = "/app/admin/goods/insert";
             const class_id = layui.url().search['class_id'];
+
+            // 字段 名称 name
+            layui.use(["tinymce"], function() {
+                var tinymce = layui.tinymce
+                var edit = tinymce.render({
+                    elem: "#content",
+                    value: "",
+                    images_upload_url: "/app/admin/upload/image",
+                });
+                edit.on("blur", function(){
+                    layui.$("#content").val(edit.getContent());
+                });
+            });
 
             // 字段 分类 class_id
             layui.use(["jquery", "xmSelect", "popup"], function() {

@@ -22,7 +22,7 @@ Route::any('/log', [\app\controller\IndexController::class, 'log']);
 
 Route::group('/box', function () {
     Route::post('/index', [\app\controller\BoxController::class, 'index']);
-    Route::post('/boxPrize', [\app\controller\BoxController::class, 'prize']);
+    Route::post('/boxPrize', [\app\controller\BoxController::class, 'boxPrize']);
     Route::post('/canuseCoupon', [\app\controller\BoxController::class, 'canuseCoupon']);
     Route::post('/getPrice', [\app\controller\BoxController::class, 'getPrice']);
     Route::post('/draw', [\app\controller\BoxController::class, 'draw']);

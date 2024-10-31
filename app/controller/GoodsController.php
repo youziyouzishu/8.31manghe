@@ -43,11 +43,7 @@ class GoodsController extends BaseController
     {
         $goods_id = $request->post('goods_id');
         $row = Goods::with(['boxPrize'])->find($goods_id);
-
-        // 只返回 boxPrize 关联数据
-        $boxPrize = optional($row)->boxPrize ?? [];
-
-        return $this->success('成功', $boxPrize);
+        return $this->success('成功', $row);
     }
 
     function pay(Request $request)

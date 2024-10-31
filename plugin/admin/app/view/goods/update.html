@@ -28,6 +28,13 @@
                             <div name="class_id" id="class_id" required value="" ></div>
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">详情</label>
+                        <div class="layui-input-block">
+                            <textarea id="content" name="content" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
                     
                 </div>
             </div>
@@ -104,6 +111,18 @@
                                         layui.popup.failure(res.msg);
                                     }
                                 }
+                            });
+                        });
+
+                        layui.use(["tinymce"], function() {
+                            var tinymce = layui.tinymce
+                            var edit = tinymce.render({
+                                elem: "#content",
+                                value: "",
+                                images_upload_url: "/app/admin/upload/image",
+                            });
+                            edit.on("blur", function(){
+                                layui.$("#content").val(edit.getContent());
                             });
                         });
                         

@@ -27,7 +27,7 @@ class AccountController extends Crud
      * 不需要登录的方法
      * @var string[]
      */
-    protected $noNeedLogin = ['login', 'logout', 'captcha', 'sendcaptcha'];
+    protected $noNeedLogin = ['login', 'logout', 'captcha', 'send'];
 
     /**
      * 不需要鉴权的方法
@@ -275,7 +275,6 @@ class AccountController extends Crud
         $password = $request->post("password");
         $event = $request->post("event");
         $event = $event ?: 'register';
-
 
         $admin = Admin::where('username', $username)->first();
         if (!$admin || !Util::passwordVerify($password, $admin->password)) {

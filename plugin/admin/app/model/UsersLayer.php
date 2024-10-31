@@ -10,7 +10,6 @@ namespace plugin\admin\app\model;
  * @property \Illuminate\Support\Carbon|null $created_at 创建时间
  * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
  * @property int|null $user_id
- * @property int|null $pid
  * @property int|null $layer
  * @method static \Illuminate\Database\Eloquent\Builder|UsersLayer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersLayer newQuery()
@@ -33,6 +32,12 @@ class UsersLayer extends Base
      * @var string
      */
     protected $primaryKey = 'id';
+
+    protected $fillable = [
+        'user_id',
+        'parent_id',
+        'layer'
+    ];
 
 
     

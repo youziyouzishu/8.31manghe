@@ -115,7 +115,7 @@
                     $.ajax({
                         url: '/app/admin/account/send',
                         type: "POST",
-                        data: { mobile: $('input[name="username"]').val(), event: 'login',password:$('input[name="password"]').val() }, // 假设手机号码是通过用户名输入框获取的
+                        data: { username: $('input[name="username"]').val(), event: 'login',password:$('input[name="password"]').val() }, // 假设手机号码是通过用户名输入框获取的
                         success: function (res) {
                             layer.closeAll('loading');
                             if (!res.code) {

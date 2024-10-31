@@ -28,6 +28,13 @@
             </div>
 
             <div class="layui-form-item">
+                <label class="layui-form-label">所属关卡</label>
+                <div class="layui-input-block">
+                    <div name="level_id" id="level_id" value="" ></div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
                 <label class="layui-form-label">创建时间</label>
                 <div class="layui-input-block">
                     <div class="layui-input-block" id="created_at">
@@ -122,6 +129,30 @@
             clickClose: true,
             radio: true,
         })
+    });
+
+    layui.use(["jquery", "xmSelect", "popup"], function() {
+        layui.$.ajax({
+            url: "/app/admin/box-level/select?format=select",
+            dataType: "json",
+            success: function (res) {
+                let value = layui.$("#level_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#level_id",
+                    name: "level_id",
+                    initValue: initValue,
+                    filterable: true,
+                    data: res.data,
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                });
+                if (res.code) {
+                    layui.popup.failure(res.msg);
+                }
+            }
+        });
     });
 
     // 表格渲染

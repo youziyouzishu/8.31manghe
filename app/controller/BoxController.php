@@ -43,7 +43,7 @@ class BoxController extends BaseController
         return $this->success('成功', $rows);
     }
 
-    function prize(Request $request)
+    function boxPrize(Request $request)
     {
         $box_id = $request->post('box_id');
         $box = Box::find($box_id);
