@@ -44,6 +44,7 @@ use plugin\admin\app\model\Base;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
  * @property int $new 新用户
+ * @property-read mixed $official_text
  * @mixin \Eloquent
  */
 class User extends Base

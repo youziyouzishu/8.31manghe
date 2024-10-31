@@ -4,6 +4,7 @@ namespace app\controller;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use plugin\admin\app\model\Room;
 use plugin\admin\app\model\RoomPrize;
 use plugin\admin\app\model\RoomUsers;
@@ -58,7 +59,7 @@ class RoomController extends BaseController
         // 使用 each 方法批量创建关联模型
 
         $user_prizes->each(function (UsersPrize $user_prize) use ($room) {
-            $room->roomPrize()->create(['user_prize_id' => $user_prize->id,'box_prize_id'=>$user_prize->box_prize_id]);
+            $room->roomPrize()->create(['user_prize_id' => $user_prize->id, 'box_prize_id' => $user_prize->box_prize_id]);
             //软删除用户奖品  取消时恢复
             $user_prize->delete();
         });
@@ -66,7 +67,7 @@ class RoomController extends BaseController
         //加入队列倒计时开始
         // 队列名
         $queue = 'create-room';
-        // 投递延迟消息，消息会在60秒后处理
+        // 投递延迟消息
         Client::send($queue, ['id' => $room->id, 'event' => 'start'], $start_time - time());
 
         return $this->success();
@@ -92,19 +93,20 @@ class RoomController extends BaseController
     {
         $room_id = $request->post('room_id');
         $row = Room::with([
-            'boxPrizes',
+            'userPrize' => function ($query) {
+                $query->with(['boxPrize'])->withTrashed();
+            },
             'user',
-            'roomUserUser'=>function (Builder $query) {
+            'roomUserUser' => function (HasManyThrough $query) {
                 $query->limit(10);
-            }
-        ])->find($room_id);
+            }])->find($room_id);
         $start_time = strtotime($row->start_at);
         $end_time = strtotime($row->end_at);
         $now_time = time();
-        if ($row->status == 1){
+        if ($row->status == 1) {
             $row->time = $end_time - $now_time;
         }
-        if ($row->status == 2){
+        if ($row->status == 2) {
             $row->time = $start_time - $now_time;
         }
         return $this->success('成功', $row);

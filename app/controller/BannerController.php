@@ -21,7 +21,7 @@ class BannerController extends BaseController
     {
         $param = $request->post();
 
-        $request->set('post', ['bbb'=>2]);
+        $request->set('post', ['cccc'=>2]);
         dump($request->post());
         $rows = Banner::orderBy('id','desc')->get();
         return $this->success('获取成功',$rows);

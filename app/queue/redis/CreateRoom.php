@@ -24,14 +24,18 @@ class CreateRoom implements Consumer
     {
         $room = Room::find($data['id']);
         if ($data['event'] == 'start') {
+            dump('房间'.$data['id'].'创建开始计时');
             if ($room->status == 2) {
+                dump('房间'.$data['id'].'停止开始计时');
                 $room->status = 1;
                 $room->save();
                 $queue = 'create-room';
                 Client::send($queue, ['id' => $room->id, 'event' => 'stop'], strtotime($room->end_at) - time());
             }
         } elseif ($data['event'] == 'stop') {
+            dump('房间'.$data['id'].'进入停止');
             if ($room->status == 1) {
+                dump('房间'.$data['id'].'执行停止');
                 $room->status = 3;
                 $room->save();
                 //开始发奖

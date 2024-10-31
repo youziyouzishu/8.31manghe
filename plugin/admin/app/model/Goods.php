@@ -16,6 +16,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Goods newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Goods newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Goods query()
+ * @property string|null $content 详情
  * @mixin \Eloquent
  */
 class Goods extends Base

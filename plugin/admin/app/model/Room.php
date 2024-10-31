@@ -29,6 +29,7 @@ use plugin\admin\app\model\Base;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomUsers> $roomUser
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrizes
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\User> $roomUserUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
  * @mixin \Eloquent
  */
 class Room extends Base
@@ -55,6 +56,11 @@ class Room extends Base
     public function boxPrizes()
     {
         return $this->hasManyThrough(BoxPrize::class, RoomPrize::class, 'room_id', 'id', 'id', 'box_prize_id');
+    }
+
+    function userPrize()
+    {
+        return $this->belongsToMany(UsersPrize::class, RoomPrize::class, 'room_id', 'user_prize_id');
     }
 
     function roomPrize()

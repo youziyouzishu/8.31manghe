@@ -28,9 +28,8 @@ class Request extends \Webman\Http\Request
     function set(string $method, array $data)
     {
         $method = strtolower($method);
-        $rawData = $this->_data ?: [];// 获取原数据
-        $newData = $rawData; // 复制原始数据
-        $newData[$method] = array_merge($newData[$method] ?? [], $data); // 合并特定方法的数据
-        $this->_data = $newData; // 更新对象数据
+        $newData = $this->_data; // 复制原始数据
+        $newMethodData = array_merge($newData[$method] ?? [], $data); // 合并特定方法的数据
+        $this->_data[$method] = $newMethodData; // 更新对象数据
     }
 }
