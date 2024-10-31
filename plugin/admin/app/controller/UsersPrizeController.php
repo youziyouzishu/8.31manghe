@@ -54,14 +54,8 @@ class UsersPrizeController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
-            dump($request->post());
             $boxPrize = BoxPrize::find($request->post('box_prize_id'));
-            $request->set([
-                '_data' => [
-                    'post' => ['price'=>$boxPrize->price]
-                ]
-            ]);
-            dump($request->post());
+            $request->set('post',['price'=>$boxPrize->price]);
             return parent::insert($request);
         }
         return view('users-prize/insert');

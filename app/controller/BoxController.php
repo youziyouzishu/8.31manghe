@@ -352,11 +352,7 @@ class BoxController extends BaseController
 
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
-                $request->set([
-                    '_data' => [
-                        'get' => ['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']
-                    ]
-                ]);
+                $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']);
                 $res = $notify->pay($request);
                 $res = json_decode($res);
                 if ($res->code == 1) {
