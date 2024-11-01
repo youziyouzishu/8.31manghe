@@ -63,9 +63,9 @@ class NotifyController extends BaseController
                         $order->user->new = 1;
                         $order->user->save();
                     }
-
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
+                        'user_id' => $order->user_id,
                         'times' => $order->times,
                         'box_id' => $order->box_id,
                         'level_id' => $order->level_id,
@@ -282,7 +282,7 @@ class NotifyController extends BaseController
                 $pay->success();
                 break;
             case 'balance':
-                return true;
+                return $this->success();
             default:
                 return $this->fail('支付类型错误');
         }

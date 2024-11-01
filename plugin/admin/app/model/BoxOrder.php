@@ -66,7 +66,7 @@ class BoxOrder extends Base
 
     function userCoupon()
     {
-        return $this->hasOne(UsersCoupon::class);
+        return $this->belongsTo(UsersCoupon::class);
     }
 
     function box()

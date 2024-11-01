@@ -354,7 +354,7 @@ class BoxController extends BaseController
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']);
                 $res = $notify->pay($request);
-                $res = json_decode($res);
+                $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
                     //支付失败
                     // 回滚事务
