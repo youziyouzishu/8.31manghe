@@ -100,6 +100,9 @@ class RoomController extends BaseController
             'roomUserUser' => function (HasManyThrough $query) {
                 $query->limit(10);
             }])->find($room_id);
+        if (empty($row)){
+            return $this->fail('房间不存在');
+        }
         $start_time = strtotime($row->start_at);
         $end_time = strtotime($row->end_at);
         $now_time = time();

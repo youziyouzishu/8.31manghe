@@ -26,6 +26,7 @@ use plugin\admin\app\model\Base;
  * @property-read mixed $status_text
  * @property string $mark 备注
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $usersPrize
+ * @property int $pay_type 支付方式:0=无,1=微信,2=余额
  * @mixin \Eloquent
  */
 class Deliver extends Base

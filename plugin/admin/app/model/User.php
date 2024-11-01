@@ -2,8 +2,8 @@
 
 namespace plugin\admin\app\model;
 
-use Illuminate\Support\Facades\DB;
-use plugin\admin\app\model\Base;
+
+use support\Db;
 
 /**
  * 
@@ -79,7 +79,7 @@ class User extends Base
      */
     public static function money($money, $user_id, $memo)
     {
-        DB::beginTransaction();
+        Db::beginTransaction();
         try {
             $user = self::lockForUpdate()->find($user_id);
             if ($user && $money != 0) {

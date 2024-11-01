@@ -84,7 +84,8 @@ class GoodsController extends BaseController
                 User::money(-$pay_amount, $request->uid, '购买商品');
                 $code = 3;
                 $msg = '支付成功';
-
+                $goodsData['pay_type'] = 2;
+                GoodsOrder::create($goodsData);
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'goods']);
@@ -96,15 +97,16 @@ class GoodsController extends BaseController
                     Db::rollBack();
                     return $this->fail($res->msg);
                 }
-                $goodsData['pay_type'] = 2;
+
             } else {
                 //微信支付
                 $ret = Pay::pay($pay_amount, $ordersn, '购买商品', 'goods', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';
                 $goodsData['pay_type'] = 1;
+                GoodsOrder::create($goodsData);
             }
-            GoodsOrder::create($goodsData);
+
             Db::commit();
             return $this->json($code, $msg, $ret);
         } catch (\Throwable $e) {

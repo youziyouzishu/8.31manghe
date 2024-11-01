@@ -26,7 +26,6 @@ class NotifyController extends BaseController
     function pay(Request $request)
     {
         $paytype = $request->input('paytype');
-
         $pay = Pay::wechat(config('payment'));
         if ($paytype == 'wechat') {
             try {
@@ -39,8 +38,8 @@ class NotifyController extends BaseController
             $out_trade_no = $res['out_trade_no'];
             $attach = $res['attach'];
         } elseif ($paytype == 'balance') {
-            $out_trade_no = $paytype->input('out_trade_no');
-            $attach = $paytype->input('attach');
+            $out_trade_no = $request->input('out_trade_no');
+            $attach = $request->input('attach');
         } else {
             return $this->fail('支付方式错误');
         }
@@ -134,7 +133,6 @@ class NotifyController extends BaseController
                     DB::rollBack();
                     return $this->fail($e->getMessage());
                 }
-
                 $api = new Api(
                     'http://127.0.0.1:3232',
                     config('plugin.webman.push.app.app_key'),

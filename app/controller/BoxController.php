@@ -4,9 +4,7 @@ namespace app\controller;
 
 use app\service\Coupon;
 use app\service\Pay;
-use app\tool\Random;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\Redirect;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Box;
 use plugin\admin\app\model\BoxLevel;
@@ -169,8 +167,8 @@ class BoxController extends BaseController
         $box = Box::find($box_id);
         $amount = $box->price * $times; #需要支付金额
 
-        $rows = UsersCoupon::where(['user_id' => $request->uid, 'status' => 1])
-            ->whereDoesntHave('coupon', function (Builder $query) use ($amount) {
+        $rows = UsersCoupon::with(['coupon'])->where(['user_id' => $request->uid, 'status' => 1])
+            ->whereDoesntHave('coupon', function ($query) use ($amount) {
                 $query->where([
                     ['type', '=', 2],
                     ['with_amount', '>', $amount]
@@ -250,7 +248,7 @@ class BoxController extends BaseController
                         // 如果没有可用奖品，返回提示
 
                         if ($prizes->isEmpty()) {
-                            BoxPrize::query()->update(['num' => DB::raw('total')]);
+                            BoxPrize::query()->update(['num' => Db::raw('total')]);
                             $prizes = BoxPrize::where([['num', '>', 0], 'level_id' => $level_id])->get(); // 重新获取奖品列表
                             if ($prizes->isEmpty()) {
                                 return $this->fail('没有设置奖池');
@@ -340,12 +338,14 @@ class BoxController extends BaseController
                 'times' => $times,
                 'level_id' => $level_id
             ];
-
+            $order = BoxOrder::create($orderData);
             //先用余额支付 余额不足再用微信支付
             $ret = [];
 
             $user = User::find($request->uid);
             if ($user->money >= $pay_amount) {
+                $order->pay_type = 2;
+                $order->save();
                 User::money(-$pay_amount, $request->uid, '购买盲盒');
                 $code = 3;
                 $msg = '支付成功';
@@ -361,15 +361,14 @@ class BoxController extends BaseController
                     Db::rollBack();
                     return $this->fail($res->msg);
                 }
-                $orderData['pay_type'] = 2;
-
             } else {
+                $order->pay_type = 1;
+                $order->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';
-                $orderData['pay_type'] = 1;
+
             }
-            BoxOrder::create($orderData);
             // 提交事务
             Db::commit();
             return $this->json($code, $msg, $ret);

@@ -103,7 +103,7 @@ class DreamController extends BaseController
             $pay_amount = number_format($price * $times, 2);
             $user = User::find($request->uid);
             $ordersn = Util::ordersn();
-            DreamOrders::create([
+            $orders = DreamOrders::create([
                 'user_id' => $request->uid,
                 'pay_amount' => $pay_amount,
                 'ordersn' => $ordersn,
@@ -114,6 +114,8 @@ class DreamController extends BaseController
             ]);
 
             if ($user->money >= $pay_amount) {
+                $orders->pay_type = 2;
+                $orders->save();
                 //水晶支付
                 $ret = [];
                 User::money(-$pay_amount, $request->uid, '梦想DIY抽奖');
@@ -132,6 +134,8 @@ class DreamController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
+                $orders->pay_type = 1;
+                $orders->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '梦想DIY抽奖', 'dream', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';

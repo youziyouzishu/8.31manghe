@@ -49,7 +49,7 @@ class UserController extends Crud
     {
 
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        if (!empty(request()->get('user_disburse_at'))) {
+        if (!empty(request()->get('user_disburse_at')[0])) {
             $user_disburse_at = request()->get('user_disburse_at');
         } else {
             $user_disburse_at = null;
@@ -118,8 +118,9 @@ class UserController extends Crud
     protected function afterQuery($items)
     {
 
+
         return collect($items)->each(function ($item) {
-            if (!empty(request()->get('profit_created_at'))) {
+            if (!empty(request()->get('profit_created_at')[0])) {
                 $where['profit_created_at'] = request()->get('profit_created_at');
                 //微信支付的金额
                 $profit_sum_amount = UsersDisburse::where(['type' => 1, 'user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('amount');
@@ -131,7 +132,7 @@ class UserController extends Crud
                 //赠送好友的赏品价值
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price')??0;
                 //水晶余额
-                $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()->value('after')??0;
+                $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()?->value('after')??0;
                 //赏袋和保险箱剩余商品价值
                 $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price')??0;
                 //活动赠送部分

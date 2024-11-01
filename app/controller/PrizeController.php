@@ -125,10 +125,15 @@ class PrizeController extends BaseController
         $rows = UsersPrize::whereIn('id', $ids)
             ->where(['user_id' => $request->uid])
             ->get();
-        $rows->each(function (UsersPrize $item) use (&$freight) {
+        $detailData = [];
+        $rows->each(function (UsersPrize $item) use (&$freight,&$detailData) {
             if ($item->boxPrize->price < 30) {
                 $freight += 10;
             }
+            $detailData[] = [
+                'user_prize_id' => $item->id,
+                'box_prize_id' => $item->box_prize_id,
+            ];
         });
         $deliver = Deliver::create([
             'user_id' => $request->uid,
@@ -136,21 +141,28 @@ class PrizeController extends BaseController
             'freight' => $freight,
             'address_id' => $address_id,
         ]);
+        $deliver->detail()->createMany($detailData);
+
+
         if ($freight == 0) {
             $deliver->status = 1;
             $deliver->save();
+            $deliver->detail->each(function (DeliverDetail $item) {
+                //支付成功  删除用户的奖品
+                UsersPrizeLog::create([
+                    'user_id' => $item->userPrize->user_id,
+                    'box_prize_id' => $item->box_prize_id,
+                    'mark' => '发货成功，删除奖品'
+                ]);
+                $item->userPrize()->delete();
+            });
             return $this->success();
         } else {
 
-            $rows->each(function (UsersPrize $item) use ($deliver) {
-                $deliver->detail()->create([
-                    'box_prize_id' => $item->box_prize_id,
-                    'user_prize_id' => $item->id
-                ]);
-            });
-
             $user = User::find($request->uid);
             if ($user->money >= $freight) {
+                $deliver->pay_type = 2;
+                $deliver->save();
                 $ret = [];
                 User::money(-$freight, $request->uid, '支付运费');
                 $code = 3;
@@ -167,8 +179,9 @@ class PrizeController extends BaseController
                     Db::rollBack();
                     return $this->fail($res->msg);
                 }
-
             } else {
+                $deliver->pay_type = 1;
+                $deliver->save();
                 $ret = Pay::pay($freight, $ordersn, '支付运费', 'freight', JwtToken::getUser()->openid);
                 $code = 4;
                 $msg = '开始微信支付';
