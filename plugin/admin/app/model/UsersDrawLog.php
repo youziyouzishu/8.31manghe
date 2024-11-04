@@ -21,6 +21,7 @@ use plugin\admin\app\model\Base;
  * @property int $level_id 所属关卡
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property string $ordersn 订单编号
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\GoodsOrder> $orders
  * @mixin \Eloquent
  */
 class UsersDrawLog extends Base
@@ -39,7 +40,7 @@ class UsersDrawLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id', 'times', 'box_id', 'level_id'];
+    protected $fillable = ['user_id', 'times', 'box_id', 'level_id','ordersn'];
 
     function prizeLog()
     {

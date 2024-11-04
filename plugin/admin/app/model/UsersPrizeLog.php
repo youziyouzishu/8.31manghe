@@ -22,6 +22,7 @@ use plugin\admin\app\model\Base;
  * @property int $draw_id 抽奖
  * @property-read \plugin\admin\app\model\User|null $sourceUser
  * @property string $price 参考价
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class UsersPrizeLog extends Base
@@ -40,7 +41,7 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','box_prize_id','mark','price'];
+    protected $fillable = ['user_id','box_prize_id','mark','price','draw_id'];
 
     function boxPrize()
     {
@@ -50,6 +51,11 @@ class UsersPrizeLog extends Base
     function sourceUser()
     {
         return $this->belongsTo(User::class,'source_user_id','id');
+    }
+
+    function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     

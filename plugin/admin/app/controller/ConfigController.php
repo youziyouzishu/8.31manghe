@@ -81,6 +81,7 @@ class ConfigController extends Base
                     $data[$section]['icp'] = htmlspecialchars($items['icp'] ?? '');
                     $data[$section]['beian'] = htmlspecialchars($items['beian'] ?? '');
                     $data[$section]['footer_txt'] = htmlspecialchars($items['footer_txt'] ?? '');
+                    $data[$section]['pre_sale'] = htmlspecialchars($items['pre_sale'] ?? '');
                     break;
                 case 'menu':
                     $data[$section]['data'] = Util::filterUrlPath($items['data'] ?? '');

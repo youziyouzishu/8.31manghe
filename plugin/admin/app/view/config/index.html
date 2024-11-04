@@ -48,6 +48,7 @@
                                     </button>
                                 </div>
                             </div>
+
                             <div class="layui-form-item">
                                 <label class="layui-form-label">ICP备案号</label>
                                 <div class="layui-input-block">
@@ -66,6 +67,24 @@
                                     <input type="text" name="footer_txt" placeholder="其它展示在页面底部的内容" autocomplete="off" class="layui-input">
                                 </div>
                             </div>
+
+
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">购买须知</label>
+                                <div class="layui-input-block">
+                                    <img class="img-3" src=""/>
+                                    <input type="text" style="display:none" name="pre_sale" value="" />
+                                    <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="pre_sale" permission="app.admin.upload.image">
+                                        <i class="layui-icon layui-icon-upload"></i>上传文件
+                                    </button>
+                                    <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="attachment-choose-pre_sale" permission="app.admin.upload.attachment">
+                                        <i class="layui-icon layui-icon-align-left"></i>选择图片
+                                    </button>
+                                </div>
+                            </div>
+
+
+
 
                             <div class="layui-form-item">
                                 <div class="layui-input-block">
@@ -212,6 +231,36 @@
                         }
                     });
                 });
+
+                layui.upload.render({
+                    elem: "#pre_sale",
+                    url: "/app/admin/upload/image",
+                    acceptMime: "image/gif,image/jpeg,image/jpg,image/png",
+                    done: function (res) {
+                        if (res.code) {
+                            return layui.popup.failure(res.msg);
+                        }
+                        this.item.prev().val(res.data.url).prev().attr("src", res.data.url);
+                    }
+                });
+
+                let pre_sale = $("#pre_sale").prev();
+                pre_sale.prev().attr("src", pre_sale.val());
+                layui.$("#attachment-choose-pre_sale").on("click", function() {
+                    parent.layer.open({
+                        type: 2,
+                        title: "选择附件",
+                        content: "/app/admin/upload/attachment?ext=jpg,jpeg,png,gif,bmp",
+                        area: ["95%", "90%"],
+                        success: function (layero, index) {
+                            parent.layui.$("#layui-layer" + index).data("callback", function (data) {
+                                input.val(data.url).prev().attr("src", data.url);
+                            });
+                        }
+                    });
+                });
+
+
                 layui.upload.render({
                     elem: "#image",
                     url: "/app/admin/upload/avatar",
@@ -307,6 +356,7 @@
                         }
                         form.val("baseInfo", res.logo);
                         $("#image").prev().val(res.logo.image).prev().attr("src", res.logo.image);
+                        $("#pre_sale").prev().val(res.logo.pre_sale).prev().attr("src", res.logo.pre_sale);
                         form.val("menuInfo", res.menu);
                         let tab = res.tab;
                         let index = tab.index;

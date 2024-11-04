@@ -304,7 +304,7 @@ class BoxController extends BaseController
                     $api->trigger("private-user-{$request->uid}", 'prize_draw', [
                         'winner_prize' => $winnerPrize
                     ]);
-                    return $this->json(2, '抽奖成功');
+                    return $this->success('成功',['code'=>2]);
                 }
             }
 
@@ -348,8 +348,6 @@ class BoxController extends BaseController
                 $order->save();
                 User::money(-$pay_amount, $request->uid, '购买盲盒');
                 $code = 3;
-                $msg = '支付成功';
-
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']);
@@ -366,12 +364,13 @@ class BoxController extends BaseController
                 $order->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
                 $code = 4;
-                $msg = '开始微信支付';
-
             }
             // 提交事务
             Db::commit();
-            return $this->json($code, $msg, $ret);
+            return $this->success('成功',[
+                'code' => $code,
+                'ret' => $ret,
+            ]);
         } catch (\Throwable $e) {
             // 回滚事务
             Db::rollBack();
@@ -399,9 +398,9 @@ class BoxController extends BaseController
         } else {
             $prize_ids = $box->boxPrize()->pluck('id');
         }
-        $list = UsersPrizeLog::with(['boxPrize'])
-            ->where(['user_id' => $request->uid])
+        $list = UsersPrizeLog::with(['boxPrize','user'])
             ->whereIn('box_prize_id', $prize_ids)
+            ->where('type',0)
             ->orderBy('id', 'desc')
             ->paginate()
             ->items();

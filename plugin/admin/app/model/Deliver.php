@@ -27,6 +27,8 @@ use plugin\admin\app\model\Base;
  * @property string $mark 备注
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $usersPrize
  * @property int $pay_type 支付方式:0=无,1=微信,2=余额
+ * @property string|null $pay_time 付款时间
+ * @property string|null $complete_time 收货时间
  * @mixin \Eloquent
  */
 class Deliver extends Base
@@ -45,7 +47,9 @@ class Deliver extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['freight', 'ordersn', 'waybill', 'express','status'];
+    protected $fillable = [
+        'user_id', 'status', 'freight', 'ordersn', 'waybill', 'express', 'address_id', 'pay_type', 'mark', 'pay_time', 'complete_time'
+    ];
 
     protected $appends = ['status_text'];
 

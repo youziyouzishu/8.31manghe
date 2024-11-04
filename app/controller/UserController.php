@@ -3,7 +3,6 @@
 namespace app\controller;
 
 use app\library\Sms;
-use app\tool\Random;
 use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
@@ -127,32 +126,33 @@ class UserController extends BaseController
     {
         $status = $request->post('status', 0);
 
-        $rows = Deliver::with(['detail'])
-            ->where(['user_id' => $request->uid])
-            ->when(!empty($status), function (Builder $query) use ($status) {
-                if ($status == 1) {
-                    $query->where('status', 2);
-                }
-                if ($status == 2) {
-                    $query->where('status', 3);
-                }
-                if ($status == 3) {
-                    $query->where('status', 4);
-                }
+        $rows = Deliver::where(['user_id' => $request->uid])
+            ->when(!empty($status), function ($query) use ($status) {
+                $query->where('status', $status);
+            },function ($query){
+                $query->whereIn('status', [1,2,3]);
             })
-            ->paginate()
-            ->items();
+            ->paginate()->getCollection()->each(function ($item){
+                $item->detail->map(function ($detail){
+                    $detail->boxPrize->freight = $detail->boxPrize->price < 30 ? 10 : 0;
+                    return $detail->boxPrize;
+                });
+            });
         return $this->success('成功', $rows);
     }
 
     function getDeliverInfo(Request $request)
     {
         $deliver_id = $request->post('deliver_id');
-        $row = Deliver::with(['detail' => function (DeliverDetail $builder) {
+        $row = Deliver::with(['detail' => function ($builder) {
             $builder->with('boxPrize');
         }, 'address'])
             ->where(['user_id' => $request->uid, 'id' => $deliver_id])
             ->first();
+        $row->detail->map(function ($detail){
+            $detail->boxPrize->freight = $detail->boxPrize->price < 30 ? 10 : 0;
+            return $detail->boxPrize;
+        });
         return $this->success('成功', $row);
     }
 
@@ -161,6 +161,7 @@ class UserController extends BaseController
         $deliver_id = $request->post('deliver_id');
         $row = Deliver::where(['user_id' => $request->uid, 'id' => $deliver_id])->first();
         $row->status = 3;
+        $row->complete_time = date('Y-m-d H:i:s');
         $row->save();
         return $this->success();
     }
@@ -248,6 +249,23 @@ class UserController extends BaseController
         return $this->success('成功', $rows);
     }
 
+    function consumeDetail(Request $request)
+    {
+        $type = $request->post('type');
+        $id = $request->post('id');
+        if ($type == 1) {
+            $row = UsersDrawLog::with(['box','prizeLog'])
+                ->where(['user_id' => $request->uid, 'id' => $id])
+                ->first();
+        } elseif ($type == 2) {
+            $row = GoodsOrder::where(['user_id' => $request->uid, 'id' => $id])
+                ->first();
+        }else{
+            return $this->fail('参数错误');
+        }
+        return $this->success('成功', $row);
+    }
+
     function couponList(Request $request)
     {
         $status = $request->post('status');# 状态:1=未使用,2=已使用,3=已过期
@@ -256,6 +274,13 @@ class UserController extends BaseController
             ->getCollection()
             ->pluck('coupon');
         return $this->success('成功', $rows);
+    }
+
+    function getUserInfoById(Request $request)
+    {
+        $user_id = $request->post('user_id');
+        $row = User::select(['id','avatar','nickname'])->find($user_id);
+        return $this->success('成功', $row);
     }
 
 

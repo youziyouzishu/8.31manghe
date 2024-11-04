@@ -71,9 +71,10 @@ Route::group('/user', function () {
     Route::post('/receiveLog', [\app\controller\UserController::class, 'receiveLog']);
     Route::post('/consumeLog', [\app\controller\UserController::class, 'consumeLog']);
     Route::post('/couponList', [\app\controller\UserController::class, 'couponList']);
+    Route::post('/getUserInfoById', [\app\controller\UserController::class, 'getUserInfoById']);
 });
 
-Route::group('/boxPrize', function () {
+Route::group('/prize', function () {
     Route::post('/dissolve', [\app\controller\PrizeController::class, 'dissolve']);
     Route::post('/give', [\app\controller\PrizeController::class, 'give']);
     Route::post('/changesafe', [\app\controller\PrizeController::class, 'changesafe']);

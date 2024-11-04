@@ -3,7 +3,6 @@
 namespace app\controller;
 
 use app\service\Pay;
-use app\tool\Random;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
@@ -35,7 +34,7 @@ class PrizeController extends BaseController
     function give(Request $request)
     {
         $ids = $request->post('ids');
-        $to_user_id = $request->get('to_user_id');
+        $to_user_id = $request->post('to_user_id');
         $to_user = User::find($to_user_id);
         if (!$to_user) {
             return $this->fail('转增对象不存在');
@@ -110,10 +109,6 @@ class PrizeController extends BaseController
         $ids = $request->post('ids');
         $address_id = $request->post('address_id');
         $ids = explode(',', $ids);
-        if (empty($ids)){
-            return $this->fail('请选择奖品');
-        }
-
         $user = User::find($request->uid);
         if ($user->kol == 1){
             return $this->fail('达人不能发货');
@@ -125,6 +120,9 @@ class PrizeController extends BaseController
         $rows = UsersPrize::whereIn('id', $ids)
             ->where(['user_id' => $request->uid])
             ->get();
+        if ($rows->isEmpty()){
+            return $this->fail('奖品不存在');
+        }
         $detailData = [];
         $rows->each(function (UsersPrize $item) use (&$freight,&$detailData) {
             if ($item->boxPrize->price < 30) {
@@ -146,6 +144,7 @@ class PrizeController extends BaseController
 
         if ($freight == 0) {
             $deliver->status = 1;
+            $deliver->pay_time = date('Y-m-d H:i:s');
             $deliver->save();
             $deliver->detail->each(function (DeliverDetail $item) {
                 //支付成功  删除用户的奖品
@@ -158,7 +157,6 @@ class PrizeController extends BaseController
             });
             return $this->success();
         } else {
-
             $user = User::find($request->uid);
             if ($user->money >= $freight) {
                 $deliver->pay_type = 2;
@@ -166,13 +164,11 @@ class PrizeController extends BaseController
                 $ret = [];
                 User::money(-$freight, $request->uid, '支付运费');
                 $code = 3;
-                $msg = '支付成功';
-
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'freight']);
                 $res = $notify->pay($request);
-                $res = json_decode($res);
+                $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
                     //支付失败
                     // 回滚事务
@@ -184,9 +180,11 @@ class PrizeController extends BaseController
                 $deliver->save();
                 $ret = Pay::pay($freight, $ordersn, '支付运费', 'freight', JwtToken::getUser()->openid);
                 $code = 4;
-                $msg = '开始微信支付';
             }
-            return $this->json($code, $msg, $ret);
+            return $this->success('成功',[
+                'code'=>$code,
+                'ret'=>$ret
+            ]);
         }
 
 

@@ -48,12 +48,12 @@ class DeliverDetail extends Base
 
     function boxPrize()
     {
-        return $this->belongsTo(BoxPrize::class, 'prize_id');
+        return $this->belongsTo(BoxPrize::class);
     }
 
     function userPrize()
     {
-        return $this->hasOne(UsersPrize::class, 'user_prize_id');
+        return $this->belongsTo(UsersPrize::class);
     }
 
 }
