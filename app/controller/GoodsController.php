@@ -96,7 +96,7 @@ class GoodsController extends BaseController
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'goods']);
-                $res = $notify->pay($request);
+                $res = $notify->balance($request);
 
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {

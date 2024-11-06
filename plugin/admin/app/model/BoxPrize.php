@@ -60,7 +60,7 @@ class BoxPrize extends Base
 
     public function getGradeList()
     {
-        return ['1' => '通关赏', '2' => 'N', '3' => 'S级', '4' => 'SS级', '5' => 'SSS级'];
+        return ['1' => '通关赏', '2' => 'N级', '3' => 'S级', '4' => 'SS级', '5' => 'SSS级'];
     }
 
     function level()

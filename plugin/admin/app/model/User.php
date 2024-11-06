@@ -87,7 +87,8 @@ class User extends Base
                 //$after = $user->money + $money;
                 $after = function_exists('bcadd') ? bcadd($user->money, $money, 2) : $user->money + $money;
                 //更新会员信息
-                $user->save(['money' => $after]);
+                $user->money = $after;
+                $user->save();
                 //写入日志
                 UsersMoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
             }

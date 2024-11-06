@@ -9,6 +9,7 @@ use plugin\admin\app\model\Banner;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersPrize;
+use support\Db;
 use support\Request;
 use Webman\Route\Route;
 

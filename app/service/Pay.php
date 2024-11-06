@@ -2,6 +2,7 @@
 
 namespace app\service;
 
+use Exception;
 use Yansongda\Artful\Rocket;
 use Yansongda\Supports\Collection;
 
@@ -36,7 +37,7 @@ class Pay
     #退款
     public static function refund($pay_type, $pay_amount, $order_no, $refund_order_no, $reason)
     {
-        $config = config('pay');
+        $config = config('payment');
         return match ($pay_type) {
             1 => \Yansongda\Pay\Pay::wechat($config)->refund([
                 'out_trade_no' => $order_no,

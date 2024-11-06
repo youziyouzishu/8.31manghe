@@ -48,7 +48,7 @@ class ConfigController extends Base
         $name = 'system_config';
         $config = Option::where('name', $name)->value('value');
         if (empty($config)) {
-            $config = file_get_contents(base_path('plugin/admin/public/config/pear.config.json'));
+            $config = file_get_contents(base_path(false) . DIRECTORY_SEPARATOR . 'public/config/pear.config.json');
             if ($config) {
                 $option = new Option();
                 $option->name = $name;
@@ -82,6 +82,13 @@ class ConfigController extends Base
                     $data[$section]['beian'] = htmlspecialchars($items['beian'] ?? '');
                     $data[$section]['footer_txt'] = htmlspecialchars($items['footer_txt'] ?? '');
                     $data[$section]['pre_sale'] = htmlspecialchars($items['pre_sale'] ?? '');
+                    $data[$section]['user_agreement'] = $items['user_agreement'] ?? '';
+                    $data[$section]['privacy_agreement'] = $items['privacy_agreement'] ?? '';
+                    $data[$section]['pay_agreement'] = $items['pay_agreement'] ?? '';
+                    $data[$section]['box_explain'] = $items['box_explain'] ?? '';
+                    $data[$section]['diy_explain'] = $items['diy_explain'] ?? '';
+                    $data[$section]['newfuli'] = htmlspecialchars($items['newfuli'] ?? '');
+                    $data[$section]['start_page'] = htmlspecialchars($items['start_page'] ?? '');
                     break;
                 case 'menu':
                     $data[$section]['data'] = Util::filterUrlPath($items['data'] ?? '');

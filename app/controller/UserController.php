@@ -3,9 +3,11 @@
 namespace app\controller;
 
 use app\library\Sms;
+use Carbon\Carbon;
 use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
+use plugin\admin\app\model\Coupon;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\GoodsOrder;
@@ -108,7 +110,14 @@ class UserController extends BaseController
 
     function getinfo(Request $request)
     {
-        $row = User::find($request->uid);
+        $weekStart = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
+        $row = User::withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) {
+            $query->where('mark', '<>', '购买商品')->whereDate('created_at', date('Y-m-d'));
+        }], 'amount')->withSum(['userDisburse as week_user_disburse_sum_amount_amount' => function ($query)use($weekStart,$weekEnd) {
+            $query->where('mark', '<>', '购买商品')->whereBetween('created_at', [$weekStart, $weekEnd]);
+        }], 'amount')->find($request->uid);
+        $row->week_text = $weekStart->format('m.d') . '~' . $weekEnd->format('m.d日');
         return $this->success('成功', $row);
     }
 
@@ -183,8 +192,10 @@ class UserController extends BaseController
 
     function getMoneyLog(Request $request)
     {
-        $month = $request->post('month', date('Y-m'));
+        $month = $request->post('month');
+        list($year, $month) = explode('-', $month);
         $rows = UsersMoneyLog::where(['user_id' => $request->uid])
+            ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
             ->paginate()
@@ -192,8 +203,6 @@ class UserController extends BaseController
             ->each(function (UsersMoneyLog $item) {
                 if ($item->money >= 0) {
                     $item->money = '+' . $item->money;
-                } else {
-                    $item->money = '-' . $item->money;
                 }
             });
         return $this->success('成功', $rows);
@@ -241,6 +250,7 @@ class UserController extends BaseController
                     return [
                         'boxPrize' => $order->goods->boxPrize,
                         'ordersn' => $order->ordersn,
+                        'id'=>$order->id
                     ];
                 });
         } else {
@@ -254,11 +264,13 @@ class UserController extends BaseController
         $type = $request->post('type');
         $id = $request->post('id');
         if ($type == 1) {
-            $row = UsersDrawLog::with(['box','prizeLog'])
+            $row = UsersDrawLog::with(['box','prizeLog'=>function ($query) {
+                $query->with(['boxPrize']);
+            },'orders'])
                 ->where(['user_id' => $request->uid, 'id' => $id])
                 ->first();
         } elseif ($type == 2) {
-            $row = GoodsOrder::where(['user_id' => $request->uid, 'id' => $id])
+            $row = GoodsOrder::with(['goods.boxPrize'])->where(['user_id' => $request->uid, 'id' => $id])
                 ->first();
         }else{
             return $this->fail('参数错误');
@@ -281,6 +293,45 @@ class UserController extends BaseController
         $user_id = $request->post('user_id');
         $row = User::select(['id','avatar','nickname'])->find($user_id);
         return $this->success('成功', $row);
+    }
+
+    function receive(Request $request)
+    {
+        $invitecode = $request->post('invitecode');
+        $row = User::where(['invitecode' => $invitecode])->first();
+        if (!$row) {
+            return $this->fail('邀请码不存在');
+        }
+        $user = User::find($request->uid);
+
+        if ($user->parent_id!=0 || $user->new!=1 ){
+            return $this->fail('不属于新用户');
+        }
+
+        $user->parent_id = $row->id;
+        $user->save();
+        $coupon = Coupon::where(['fuli' => 1])->get();
+        foreach ($coupon as $item){
+            UsersCoupon::create([
+                'user_id' => $request->uid,
+                'coupon_id' => $item->id,
+            ]);
+        }
+        return $this->success();
+    }
+
+    function changeMobile(Request $request)
+    {
+        $mobile = $request->post('mobile');
+        $captcha = $request->post('captcha');
+        $smsResult = Sms::check($mobile, $captcha, 'changemobile');
+        if (!$smsResult) {
+            return $this->fail('验证码错误');
+        }
+        $user = User::find($request->uid);
+        $user->mobile = $mobile;
+        $user->save();
+        return $this->success();
     }
 
 

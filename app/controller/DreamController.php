@@ -3,10 +3,7 @@
 namespace app\controller;
 
 use app\service\Pay;
-use app\tool\Random;
-use Illuminate\Database\Query\Builder;
 use plugin\admin\app\common\Util;
-use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\Dream;
 use plugin\admin\app\model\DreamOrders;
@@ -25,16 +22,16 @@ class DreamController extends BaseController
             return $this->fail('参数错误');
         }
         // 加载 dreams 并按 boxPrize 的 price 排序
-        $dreams = Dream::with(['boxPrize' => function (Builder $query) use ($type) {
-            $query->when($type == 1, function (Builder $query) {
+        $dreams = Dream::with(['boxPrize' => function ($query) use ($type) {
+            $query->when($type == 1, function ($query) {
                 $query->orderByDesc('price');
-            }, function (Builder $query) {
+            }, function ($query) {
                 $query->orderBy('price');
             });
         }])->where('type', $type)->get();
 
         // 提取 boxPrize 数据
-        $boxPrizes = $dreams->flatMap(function (Dream $dream) {
+        $boxPrizes = $dreams->map(function ($dream) {
             return $dream->boxPrize;
         });
         return $this->success('成功', $boxPrizes);
@@ -120,12 +117,11 @@ class DreamController extends BaseController
                 $ret = [];
                 User::money(-$pay_amount, $request->uid, '梦想DIY抽奖');
                 $code = 3;
-                $msg = '支付成功';
 
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
                 $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'dream']);
-                $res = $notify->pay($request);
+                $res = $notify->balance($request);
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
                     //支付失败
@@ -138,10 +134,9 @@ class DreamController extends BaseController
                 $orders->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '梦想DIY抽奖', 'dream', JwtToken::getUser()->openid);
                 $code = 4;
-                $msg = '开始微信支付';
             }
             Db::commit();
-            return $this->json($code, $msg, $ret);
+            return $this->success('成功',['code'=>$code,'ret'=>$ret]);
         } catch (\Throwable $e) {
             Db::rollBack();
             return $this->fail($e->getMessage());

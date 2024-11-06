@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use Carbon\Carbon;
 use EasyWeChat\MiniApp\Application;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
@@ -54,17 +55,18 @@ class UserController extends Crud
         } else {
             $user_disburse_at = null;
         }
-
+        $todayStart = Carbon::today()->startOfDay(); // 今天的开始时间
+        $todayEnd = Carbon::today()->endOfDay(); // 今天的结束时间
         $query = $this->doSelect($where, $field, $order)
             ->with(['children'])
-            ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) use ($where) {
-                $query->where('type', 1)->whereDate('created_at', date('Y-m-d'));
+            ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) use ($where,$todayStart,$todayEnd) {
+                $query->where('type', 1)->whereBetween('created_at', [$todayStart, $todayEnd]);
             }], 'amount')
             ->withSum(['userDisburse as user_disburse_sum_amount' => function ($query) {
                 $query->where('type', 1);
             }], 'amount')
-            ->withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) {
-                $query->where('mark', '<>', '购买商品')->whereDate('created_at', date('Y-m-d'));
+            ->withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query)use($todayStart,$todayEnd) {
+                $query->where('mark', '<>', '购买商品')->whereBetween('created_at', [$todayStart, $todayEnd]);
             }], 'amount')
             ->withSum(['userDisburse as user_disburse_sum_amount_amount' => function ($query) {
                 $query->where('mark', '<>', '购买商品');

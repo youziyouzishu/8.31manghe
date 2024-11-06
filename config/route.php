@@ -20,6 +20,12 @@ use Webman\Route;
 Route::any('/', [\app\controller\IndexController::class, 'index']);
 Route::any('/log', [\app\controller\IndexController::class, 'log']);
 
+Route::group('/notify', function () {
+    Route::any('/wechat', [\app\controller\NotifyController::class, 'wechat']);
+    Route::any('/balance', [\app\controller\NotifyController::class, 'balance']);
+
+});
+
 Route::group('/box', function () {
     Route::post('/index', [\app\controller\BoxController::class, 'index']);
     Route::post('/boxPrize', [\app\controller\BoxController::class, 'boxPrize']);
@@ -57,6 +63,10 @@ Route::group('/banner', function () {
     Route::post('/index', [\app\controller\BannerController::class, 'index']);
 });
 
+Route::group('/config', function () {
+    Route::post('/getAgreement', [\app\controller\ConfigController::class, 'getAgreement']);
+});
+
 Route::group('/user', function () {
     Route::post('/login', [\app\controller\UserController::class, 'login']);
     Route::post('/boxPrize', [\app\controller\UserController::class, 'boxPrize']);
@@ -70,8 +80,11 @@ Route::group('/user', function () {
     Route::post('/getMoneyLog', [\app\controller\UserController::class, 'getMoneyLog']);
     Route::post('/receiveLog', [\app\controller\UserController::class, 'receiveLog']);
     Route::post('/consumeLog', [\app\controller\UserController::class, 'consumeLog']);
+    Route::post('/consumeDetail', [\app\controller\UserController::class, 'consumeDetail']);
     Route::post('/couponList', [\app\controller\UserController::class, 'couponList']);
     Route::post('/getUserInfoById', [\app\controller\UserController::class, 'getUserInfoById']);
+    Route::post('/receive', [\app\controller\UserController::class, 'receive']);
+    Route::post('/changeMobile', [\app\controller\UserController::class, 'changeMobile']);
 });
 
 Route::group('/prize', function () {

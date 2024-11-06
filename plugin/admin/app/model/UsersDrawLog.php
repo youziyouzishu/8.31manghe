@@ -52,5 +52,10 @@ class UsersDrawLog extends Base
         return $this->belongsTo(Box::class, 'box_id', 'id');
     }
 
+    function orders()
+    {
+        return $this->belongsTo(BoxOrder::class, 'ordersn', 'ordersn');
+    }
+
 
 }

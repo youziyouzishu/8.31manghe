@@ -34,7 +34,7 @@ class BoxController extends BaseController
     {
         $type = $request->post('type', 1);
         $sort = $request->post('sort', 'asc');
-        $rows = Box::where(['type' => $type,'status' => 1])
+        $rows = Box::where(['type' => $type, 'status' => 1])
             ->orderBy('weigh', $sort)
             ->paginate()
             ->items();
@@ -63,7 +63,7 @@ class BoxController extends BaseController
         $grades->each(function ($grade) use ($box_id, &$prizeData) {
             $prizes = BoxPrize::where(['box_id' => $box_id, 'grade' => $grade])->get();
             $prizeData[] = [
-                'name' => (new BoxPrize())->getGradeList()[$grade],
+                'name' => $grade,
                 'chance' => $prizes->sum('chance'),
                 'boxPrize' => $prizes,
             ];
@@ -115,6 +115,8 @@ class BoxController extends BaseController
     {
         $level_id = $request->post('level_id');
         $level = BoxLevel::with(['box'])->find($level_id);
+        $parentlevel = BoxLevel::where(['box_id' => $level->box_id])->where('name', '<', $level->name)->exists();
+
         if (!$level) {
             return $this->fail('关卡不存在');
         }
@@ -132,7 +134,7 @@ class BoxController extends BaseController
         $grades->each(function ($grade) use ($level_id, &$prizeData) {
             $prizes = BoxPrize::where(['level_id' => $level_id, 'grade' => $grade])->get();
             $prizeData[] = [
-                'name' => (new BoxPrize())->getGradeList()[$grade],
+                'name' => $grade,
                 'chance' => $prizes->sum('chance'),
                 'boxPrize' => $prizes,
             ];
@@ -140,7 +142,7 @@ class BoxController extends BaseController
 
         // 将 boxPrize 数据嵌套在 level 对象中
         $level->grade = $prizeData;
-
+        $level->hasparent = $parentlevel;
         $ticket_count = UsersPrize::getUserPresentLevelTicketCount($level->box_id, $level->name, $request->uid);
         if ($ticket_count > 0 && !UsersLevelLog::existsUsersLevelLog($level_id, $request->uid)) {
             //如果查看的关卡是未通关并且有通关票  则进入这一关
@@ -165,6 +167,10 @@ class BoxController extends BaseController
         $box_id = $request->post('box_id');
         $times = $request->post('times');
         $box = Box::find($box_id);
+        if (!$box){
+            return $this->fail('盲盒不存在');
+        }
+
         $amount = $box->price * $times; #需要支付金额
 
         $rows = UsersCoupon::with(['coupon'])->where(['user_id' => $request->uid, 'status' => 1])
@@ -187,6 +193,9 @@ class BoxController extends BaseController
         $times = $request->post('times');
         $coupon_id = $request->post('coupon_id');
         $row = Box::find($box_id);
+        if (!$row){
+            return $this->fail('盲盒不存在');
+        }
         $amount = $row->price * $times;
         $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
 
@@ -238,7 +247,7 @@ class BoxController extends BaseController
                     }
 
                     //开始抽奖
-                    $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id,'ordersn' => '000000000000']); #创建抽奖记录
+                    $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '000000000000']); #创建抽奖记录
                     $winnerPrize = [];
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
@@ -262,14 +271,14 @@ class BoxController extends BaseController
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
-                        if ($user->kol == 0){
+                        if ($user->kol == 0) {
                             $currentChance += $user->chance;
                         }
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 //达人不减数量
-                                if ($user->kol == 0){
+                                if ($user->kol == 0) {
                                     $prize->decrement('num');
                                 }
                                 $winnerPrize[] = $prize;
@@ -304,7 +313,8 @@ class BoxController extends BaseController
                     $api->trigger("private-user-{$request->uid}", 'prize_draw', [
                         'winner_prize' => $winnerPrize
                     ]);
-                    return $this->success('成功',['code'=>2]);
+                    $ret = [];
+                    return $this->success('成功', ['code' => 2,'ret'=>$ret]);
                 }
             }
 
@@ -350,8 +360,8 @@ class BoxController extends BaseController
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
-                $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']);
-                $res = $notify->pay($request);
+                $request->set('get', ['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'box']);
+                $res = $notify->balance($request);
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
                     //支付失败
@@ -367,7 +377,7 @@ class BoxController extends BaseController
             }
             // 提交事务
             Db::commit();
-            return $this->success('成功',[
+            return $this->success('成功', [
                 'code' => $code,
                 'ret' => $ret,
             ]);
@@ -398,9 +408,9 @@ class BoxController extends BaseController
         } else {
             $prize_ids = $box->boxPrize()->pluck('id');
         }
-        $list = UsersPrizeLog::with(['boxPrize','user'])
+        $list = UsersPrizeLog::with(['boxPrize', 'user'])
             ->whereIn('box_prize_id', $prize_ids)
-            ->where('type',0)
+            ->where('type', 0)
             ->orderBy('id', 'desc')
             ->paginate()
             ->items();

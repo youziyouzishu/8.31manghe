@@ -13,7 +13,6 @@ use plugin\admin\app\model\UsersDrawLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
-use support\exception\BusinessException;
 use support\Request;
 use Webman\Push\Api;
 use Yansongda\Pay\Pay;
@@ -23,7 +22,19 @@ class NotifyController extends BaseController
     protected array $noNeedLogin = ['*'];
 
 
-    function pay(Request $request)
+    function wechat(Request $request)
+    {
+        $request->set('get',['paytype'=>'wechat']);
+        return $this->pay($request);
+    }
+
+    function balance(Request $request)
+    {
+        $request->set('get',['paytype'=>'balance']);
+        return $this->pay($request);
+    }
+    
+    private function pay(Request $request)
     {
         $paytype = $request->input('paytype');
         $pay = Pay::wechat(config('payment'));
@@ -276,16 +287,17 @@ class NotifyController extends BaseController
             default:
                 return $this->fail('回调错误');
         }
-
-        switch ($paytype) {
-            case 'wechat':
-                $pay->success();
-                break;
-            case 'balance':
-                return $this->success();
-            default:
-                return $this->fail('支付类型错误');
+        if ($paytype == 'wechat'){
+            return json(['code' => 'SUCCESS', 'message' => '成功']);
         }
+        if ($paytype == 'alipay'){
+            return response('success');
+        }
+        if ($paytype == 'balance'){
+            return $this->success();
+        }
+        return  $this->fail('支付类型错误');
+
     }
 
 }

@@ -154,6 +154,31 @@
 						title: "失效日期",align: "center",
 						field: "expire_at",
 					},{
+                        title: "新人优惠券", align: "center",
+                        field: "fuli",
+                        templet: function (d) {
+                            let field = "fuli";
+                            form.on("switch(" + field + ")", function (data) {
+                                let load = layer.load();
+                                let postData = {};
+                                postData[field] = data.elem.checked ? 1 : 0;
+                                postData[PRIMARY_KEY] = this.value;
+                                $.post(UPDATE_API, postData, function (res) {
+                                    layer.close(load);
+                                    if (res.code) {
+                                        return layui.popup.failure(res.msg, function () {
+                                            data.elem.checked = !data.elem.checked;
+                                            form.render();
+                                        });
+                                    }
+                                    return layui.popup.success("操作成功");
+                                })
+                            });
+                            let checked = d[field] === 1 ? "checked" : "";
+                            return '<input type="checkbox" value="' + util.escape(d[PRIMARY_KEY]) + '" lay-filter="' + util.escape(field) + '" lay-skin="switch" lay-text="' + util.escape('') + '" ' + checked + '/>';
+                        },
+                        hide: false
+                    },{
                         title: "创建时间",align: "center",
                         field: "created_at",
                         sort: true,
