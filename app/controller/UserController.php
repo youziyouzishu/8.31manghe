@@ -60,7 +60,7 @@ class UserController extends BaseController
             $nextId = User::max('id') + 1;
             $userData = [
                 'nickname' => '昵称' . $nextId,
-                'avatar' => '/app/admin/upload/files/20241014/670c7690a977.jpg',
+                'avatar' => '/app/admin/admin/images/logo.png',
                 'openid' => $openid??'',
                 'mobile' => $mobile??'',
                 'join_time' => date('Y-m-d H:i:s'),
@@ -89,7 +89,7 @@ class UserController extends BaseController
                         UsersLayer::create([
                             'user_id' => $user->id,
                             'parent_id' => $position->parent_id,
-                            'layer' => $position->layer + 1
+                            'level' => $position->layer + 1
                         ]);
                     }
                 }

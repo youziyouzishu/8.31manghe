@@ -22,7 +22,7 @@ Route::any('/log', [\app\controller\IndexController::class, 'log']);
 
 Route::group('/notify', function () {
     Route::any('/wechat', [\app\controller\NotifyController::class, 'wechat']);
-    Route::any('/balance', [\app\controller\NotifyController::class, 'balance']);
+//    Route::any('/balance', [\app\controller\NotifyController::class, 'balance']);
 
 });
 
@@ -35,6 +35,7 @@ Route::group('/box', function () {
     Route::post('/level', [\app\controller\BoxController::class, 'level']); //闯关赏查看关卡
     Route::post('/levelPrize', [\app\controller\BoxController::class, 'levelPrize']); //闯关赏关卡详情
     Route::post('/prizeLog', [\app\controller\BoxController::class, 'prizeLog']); //中奖记录
+    Route::post('/getDrawLog', [\app\controller\BoxController::class, 'getDrawLog']); //中奖记录
 });
 
 Route::group('/sms', function () {

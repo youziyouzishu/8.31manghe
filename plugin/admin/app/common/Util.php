@@ -28,7 +28,7 @@ class Util
     public static function createInvitecode()
     {
         do {
-            $invitecode = self::alnum();
+            $invitecode = self::numeric(6);
         } while (User::where(['invitecode' => $invitecode])->exists());
         return $invitecode;
     }

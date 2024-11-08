@@ -218,7 +218,8 @@ class UploadController extends Crud
             $height = $image->height();
             $size = min($width, $height);
             $relative_path = 'upload/avatar/' . date('Ym');
-            $real_path = base_path() . "/plugin/admin/public/$relative_path";
+            $real_path =  base_path(false) . "/public/";
+
             if (!is_dir($real_path)) {
                 mkdir($real_path, 0777, true);
             }
@@ -226,19 +227,18 @@ class UploadController extends Crud
             $ext = $file->getUploadExtension();
 
             $image->crop($size, $size)->resize(300, 300);
-            $path = base_path() . "/plugin/admin/public/$relative_path/$name.lg.$ext";
+            $path = $real_path.$relative_path."/$name.lg.$ext";
             $image->save($path);
 
             $image->resize(120, 120);
-            $path = base_path() . "/plugin/admin/public/$relative_path/$name.md.$ext";
+            $path = $real_path.$relative_path."/$name.md.$ext";
             $image->save($path);
 
             $image->resize(60, 60);
-            $path = base_path() . "/plugin/admin/public/$relative_path/$name.$ext";
+            $path = $real_path.$relative_path."/$name.$ext";
             $image->save($path);
-
             $image->resize(30, 30);
-            $path = base_path() . "/plugin/admin/public/$relative_path/$name.sm.$ext";
+            $path = $real_path.$relative_path."/$name.sm.$ext";
             $image->save($path);
 
             return json([

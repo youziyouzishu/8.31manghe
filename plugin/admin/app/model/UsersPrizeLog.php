@@ -14,6 +14,7 @@ use plugin\admin\app\model\Base;
  * @property integer $source_user_id 来源对象
  * @property integer $box_prize_id 奖品
  * @property integer $type 类型
+ * @property integer $grade 评级:1=通关赏,2=N级,3=S级,4=SS级,5=SSS级
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrizeLog query()
@@ -41,7 +42,7 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','box_prize_id','mark','price','draw_id'];
+    protected $fillable = ['user_id','box_prize_id','mark','price','draw_id','type','grade'];
 
     function boxPrize()
     {

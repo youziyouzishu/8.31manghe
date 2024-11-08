@@ -2,6 +2,7 @@
 
 namespace app\controller;
 
+use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\Deliver;
@@ -22,46 +23,67 @@ class NotifyController extends BaseController
     protected array $noNeedLogin = ['*'];
 
 
+    function alipay(Request $request)
+    {
+        $request->set('get', ['paytype' => 'alipay']);
+        try {
+            $this->pay($request);
+        } catch (\Throwable $e) {
+            return response($e->getMessage());
+        }
+        return response('success');
+    }
+
     function wechat(Request $request)
     {
-        $request->set('get',['paytype'=>'wechat']);
-        return $this->pay($request);
+        $request->set('get', ['paytype' => 'wechat']);
+        try {
+            $this->pay($request);
+        } catch (\Throwable $e) {
+            return json(['code' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+        return json(['code' => 'SUCCESS', 'message' => '成功']);
     }
 
     function balance(Request $request)
     {
-        $request->set('get',['paytype'=>'balance']);
-        return $this->pay($request);
+        $request->set('get', ['paytype' => 'balance']);
+        try {
+            $this->pay($request);
+        } catch (\Throwable $e) {
+            return $this->fail($e->getMessage());
+        }
+        return $this->success();
     }
-    
+
+    /**
+     * @throws \Exception
+     */
     private function pay(Request $request)
     {
-        $paytype = $request->input('paytype');
-        $pay = Pay::wechat(config('payment'));
-        if ($paytype == 'wechat') {
-            try {
-                $res = $pay->callback();
-            } catch (\Throwable $e) {
-                return $this->fail($e->getMessage());
-            }
-            $res = $res->resource;
-            $res = $res['ciphertext'];
-            $out_trade_no = $res['out_trade_no'];
-            $attach = $res['attach'];
-        } elseif ($paytype == 'balance') {
-            $out_trade_no = $request->input('out_trade_no');
-            $attach = $request->input('attach');
-        } else {
-            return $this->fail('支付方式错误');
-        }
+        Db::beginTransaction();
+        try {
+            $paytype = $request->input('paytype');
+            $pay = Pay::wechat(config('payment'));
 
-        switch ($attach) {
-            case 'box':
-                Db::beginTransaction();
-                try {
+            if ($paytype == 'wechat') {
+                $res = $pay->callback($request->post());
+                $res = $res->resource;
+                $res = $res['ciphertext'];
+                $out_trade_no = $res['out_trade_no'];
+                $attach = $res['attach'];
+            } elseif ($paytype == 'balance') {
+                $out_trade_no = $request->input('out_trade_no');
+                $attach = $request->input('attach');
+            } else {
+                throw new \Exception('支付类型错误');
+            }
+
+            switch ($attach) {
+                case 'box':
                     $order = BoxOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
-                        return $this->fail('订单不存在');
+                        throw new \Exception('订单不存在');
                     }
                     $order->status = 2;
                     $order->pay_at = date('Y-m-d H:i:s');
@@ -88,18 +110,29 @@ class NotifyController extends BaseController
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                         $prizes = BoxPrize::where([['num', '>', 0]])
                             ->where(['box_id' => $order->box_id])
+                            ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                                $query->where('level_id', $order->level_id);
+                            })
                             ->get();
                         // 如果没有可用奖品，返回提示
                         if ($prizes->isEmpty()) {
-                            BoxPrize::query()->update(['num' => DB::raw('total')]);
+                            BoxPrize::query()
+                                ->where(['box_id' => $order->box_id])
+                                ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                                    $query->where('level_id', $order->level_id);
+                                })
+                                ->update(['num' => DB::raw('total')]);
+
                             $prizes = BoxPrize::where([['num', '>', 0]])
                                 ->where(['box_id' => $order->box_id])
+                                ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                                    $query->where('level_id', $order->level_id);
+                                })
                                 ->get(); // 重新获取奖品列表
                             if ($prizes->isEmpty()) {
-                                return $this->fail('没有设置奖池');
+                                throw new \Exception('没有设置奖池');
                             }
                         }
-
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
@@ -121,12 +154,16 @@ class NotifyController extends BaseController
                                 }
                                 $winnerPrize[] = $prize;
                                 // 发放奖品并且记录
-                                UsersPrize::create([
-                                    'user_id' => $order->user_id,
-                                    'box_prize_id' => $prize->id,
-                                    'mark' => '抽奖获得',
-                                    'price' => $prize->price,
-                                ]);
+
+                                if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
+                                    $userPrize->increment('num');
+                                } else {
+                                    UsersPrize::create([
+                                        'user_id' => $order->user_id,
+                                        'box_prize_id' => $prize->id,
+                                        'price' => $prize->price,
+                                    ]);
+                                }
 
                                 UsersPrizeLog::create([
                                     'draw_id' => $draw->id,
@@ -134,170 +171,188 @@ class NotifyController extends BaseController
                                     'box_prize_id' => $prize->id,
                                     'mark' => '抽奖获得',
                                     'price' => $prize->price,
+                                    'type' => 0,
+                                    'grade' => $prize->grade,
                                 ]);
                                 break;
                             }
                         }
                     }
-                    DB::commit();
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    return $this->fail($e->getMessage());
-                }
-                $api = new Api(
-                    'http://127.0.0.1:3232',
-                    config('plugin.webman.push.app.app_key'),
-                    config('plugin.webman.push.app.app_secret')
-                );
-                // 给客户端推送私有 prize_draw 事件的消息
-                $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
-                    'winner_prize' => $winnerPrize
-                ]);
-
-
-                UsersDisburse::create([
-                    'user_id' => $order->user_id,
-                    'amount' => $order->pay_amount,
-                    'mark'=> '购买盲盒',
-                    'type' => $paytype == 'wechat' ? 1 : 2,
-                ]);
-
-
-                break;
-            case 'goods':
-                $order = GoodsOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
-                if (!$order) {
-                    return $this->fail('订单不存在');
-                }
-                $order->status = 2;
-                $order->pay_at = date('Y-m-d H:i:s');
-                $order->save();
-                if ($order->user->new == 0) {
-                    $order->user->new = 1;
-                    $order->user->save();
-                }
-                //给用户发放赏袋
-                UsersPrize::create([
-                    'user_id' => $order->user_id,
-                    'box_prize_id' => $order->goods->prize_id,
-                    'mark' => '购买商品获得'
-                ]);
-                UsersPrizeLog::create([
-                    'user_id' => $order->user_id,
-                    'box_prize_id' => $order->goods->prize_id,
-                    'mark' => '购买商品获得'
-                ]);
-
-                UsersDisburse::create([
-                    'user_id' => $order->user_id,
-                    'amount' => $order->pay_amount,
-                    'mark' => '购买商品',
-                    'type' => $paytype == 'wechat' ? 1 : 2,
-                ]);
-
-                break;
-            case 'freight':
-                $order = Deliver::where(['ordersn' => $out_trade_no, 'status' => 0])->first();
-                if (!$order) {
-                    return $this->fail('订单不存在');
-                }
-                $order->status = 1;
-                $order->save();
-                $order->detail->each(function (DeliverDetail $item) {
-                    //支付成功  删除用户的奖品
-                    UsersPrizeLog::create([
-                        'user_id' => $item->userPrize->user_id,
-                        'box_prize_id' => $item->box_prize_id,
-                        'mark' => '发货成功，删除奖品'
+                    $api = new Api(
+                        'http://127.0.0.1:3232',
+                        config('plugin.webman.push.app.app_key'),
+                        config('plugin.webman.push.app.app_secret')
+                    );
+                    // 给客户端推送私有 prize_draw 事件的消息
+                    $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                        'winner_prize' => $winnerPrize
                     ]);
-                    $item->userPrize()->delete();
-                });
-                break;
-            case 'dream':
-                $order = DreamOrders::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
-                if (!$order) {
-                    return $this->fail('订单不存在');
-                }
-                $order->status = 2;
-                $order->pay_at = date('Y-m-d H:i:s');
 
-                $probability = $order->probability;
-                $big_prize_id = $order->big_prize_id;
-                $small_prize_id = $order->small_prize_id;
-                if ($order->user->new == 0) {
-                    $order->user->new = 1;
-                    $order->user->save();
-                }
 
-                // 生成奖品ID数组并创建订单奖品记录
-                $prize_ids = collect();
-                for ($i = 0; $i < $order->times; $i++) {
-                    $is_big_prize = mt_rand(1, 100) <= $probability;
-                    $prize_id = $is_big_prize ? $big_prize_id : $small_prize_id;
-                    $prize_ids->push($prize_id);
-
-                    $order->orderPrize()->create(['box_prize_id' => $prize_id]);
-
-                    UsersPrize::create([
+                    UsersDisburse::create([
                         'user_id' => $order->user_id,
-                        'box_prize_id' => $prize_id,
-                        'mark' => '梦想DIY抽奖获得'
+                        'amount' => $order->pay_amount,
+                        'mark' => '购买盲盒',
+                        'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
+
+
+                    break;
+                case 'goods':
+                    $order = GoodsOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
+                    if (!$order) {
+                        throw new \Exception('订单不存在');
+                    }
+                    $order->status = 2;
+                    $order->pay_at = date('Y-m-d H:i:s');
+                    $order->save();
+                    if ($order->user->new == 0) {
+                        $order->user->new = 1;
+                        $order->user->save();
+                    }
+
+                    if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $order->goods->prize_id, 'price' => $order->goods->boxPrize->price])->first()) {
+                        $userPrize->increment('num');
+                    } else {
+                        //给用户发放赏袋
+                        UsersPrize::create([
+                            'user_id' => $order->user_id,
+                            'box_prize_id' => $order->goods->prize_id,
+                            'price' => $order->goods->boxPrize->price,
+                            'mark' => '购买商品获得',
+                        ]);
+                    }
+
+
                     UsersPrizeLog::create([
                         'user_id' => $order->user_id,
-                        'box_prize_id' => $prize_id,
-                        'mark' => '梦想DIY抽奖获得'
+                        'box_prize_id' => $order->goods->prize_id,
+                        'mark' => '购买商品获得',
+                        'type' => 5,
+                        'price' => $order->goods->boxPrize->price,
+                        'grade' => $order->goods->boxPrize->grade,
                     ]);
-                }
 
-                // 查询奖品信息
-                $prizes = BoxPrize::whereIn('id', $prize_ids)->get()->keyBy('id');
+                    UsersDisburse::create([
+                        'user_id' => $order->user_id,
+                        'amount' => $order->pay_amount,
+                        'mark' => '购买商品',
+                        'type' => $paytype == 'wechat' ? 1 : 2,
+                    ]);
 
-                // 计算利润
-                $order->profit = $order->pay_amount - $prizes->sum('price');
+                    break;
+                case 'freight':
+                    $order = Deliver::where(['ordersn' => $out_trade_no, 'status' => 0])->first();
+                    if (!$order) {
+                        throw new \Exception('订单不存在');
+                    }
+                    $order->status = 1;
+                    $order->pay_time = date('Y-m-d H:i:s');
+                    $order->save();
+                    $order->detail->each(function (DeliverDetail $item) {
+                        //支付成功  删除用户的奖品
+                        UsersPrizeLog::create([
+                            'user_id' => $item->userPrize->user_id,
+                            'box_prize_id' => $item->box_prize_id,
+                            'mark' => '发货成功，删除奖品',
+                            'type' => 4,
+                            'price' => $item->boxPrize->price,
+                            'grade' => $item->boxPrize->grade,
+                        ]);
+                        $item->userPrize->decrement('num');
+                        if ($item->userPrize <= 0) {
+                            $item->userPrize->delete();
+                        }
+                    });
+                    break;
+                case 'dream':
+                    $order = DreamOrders::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
+                    if (!$order) {
+                        throw new \Exception('订单不存在');
+                    }
+                    $order->status = 2;
+                    $order->pay_at = date('Y-m-d H:i:s');
 
-                // 保存订单信息
-                $order->save();
+                    $probability = $order->probability;
+                    $big_prize_id = $order->big_prize_id;
+                    $small_prize_id = $order->small_prize_id;
+                    if ($order->user->new == 0) {
+                        $order->user->new = 1;
+                        $order->user->save();
+                    }
 
-                // 构建最终结果数组，保留重复的条目
-                $winnerPrize = $prize_ids->map(function ($prize_id) use ($prizes) {
-                    return $prizes[$prize_id];
-                })->all();
+                    // 生成奖品ID数组并创建订单奖品记录
+                    $prize_ids = collect();
+                    for ($i = 0; $i < $order->times; $i++) {
+                        $is_big_prize = mt_rand(1, 100) <= $probability;
+                        $prize_id = $is_big_prize ? $big_prize_id : $small_prize_id;
+                        $prize_ids->push($prize_id);
 
-                // 初始化API客户端
-                $api = new Api(
-                    'http://127.0.0.1:3232',
-                    config('plugin.webman.push.app.app_key'),
-                    config('plugin.webman.push.app.app_secret')
-                );
+                        $order->orderPrize()->create(['box_prize_id' => $prize_id]);
 
-                // 给客户端推送私有 prize_draw 事件的消息
-                $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
-                    'winner_prize' => $winnerPrize
-                ]);
+                        $prize = BoxPrize::find($prize_id);
+                        if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
+                            $userPrize->increment('num');
+                        } else {
+                            UsersPrize::create([
+                                'user_id' => $order->user_id,
+                                'box_prize_id' => $prize_id,
+                                'price' => $prize->price,
+                            ]);
+                        }
 
-                // 处理微信支付的额外逻辑
-                UsersDisburse::create([
-                    'user_id' => $order->user_id,
-                    'amount' => $order->pay_amount,
-                    'mark' => '梦想DIY抽奖',
-                    'type' => $paytype == 'wechat' ? 1 : 2,
-                ]);
-                break;
-            default:
-                return $this->fail('回调错误');
+
+                        UsersPrizeLog::create([
+                            'user_id' => $order->user_id,
+                            'box_prize_id' => $prize_id,
+                            'mark' => '梦想DIY抽奖获得',
+                            'type' => 6
+                        ]);
+                    }
+
+                    // 查询奖品信息
+                    $prizes = BoxPrize::whereIn('id', $prize_ids)->get()->keyBy('id');
+
+                    // 计算利润
+                    $order->profit = $order->pay_amount - $prizes->sum('price');
+
+                    // 保存订单信息
+                    $order->save();
+
+                    // 构建最终结果数组，保留重复的条目
+                    $winnerPrize = $prize_ids->map(function ($prize_id) use ($prizes) {
+                        return $prizes[$prize_id];
+                    })->all();
+
+                    // 初始化API客户端
+                    $api = new Api(
+                        'http://127.0.0.1:3232',
+                        config('plugin.webman.push.app.app_key'),
+                        config('plugin.webman.push.app.app_secret')
+                    );
+
+                    // 给客户端推送私有 prize_draw 事件的消息
+                    $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                        'winner_prize' => $winnerPrize
+                    ]);
+
+                    // 处理微信支付的额外逻辑
+                    UsersDisburse::create([
+                        'user_id' => $order->user_id,
+                        'amount' => $order->pay_amount,
+                        'mark' => '梦想DIY抽奖',
+                        'type' => $paytype == 'wechat' ? 1 : 2,
+                    ]);
+                    break;
+                default:
+                    throw new \Exception('回调错误');
+            }
+            Db::commit();
+        } catch (\Throwable $e) {
+            Db::rollBack();
+            dump($e->getMessage());
+            throw new \Exception($e->getMessage());
         }
-        if ($paytype == 'wechat'){
-            return json(['code' => 'SUCCESS', 'message' => '成功']);
-        }
-        if ($paytype == 'alipay'){
-            return response('success');
-        }
-        if ($paytype == 'balance'){
-            return $this->success();
-        }
-        return  $this->fail('支付类型错误');
-
     }
 
 }

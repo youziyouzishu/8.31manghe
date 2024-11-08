@@ -230,11 +230,12 @@ class UserController extends Crud
     function getwxacodeunlimit(Request $request)
     {
         $id = $request->post('id');
+        $user = $this->model->find($id);
         $app = new Application(config('wechat'));
         try {
             $response = $app->getClient()->postJson('/wxa/getwxacodeunlimit', [
-                'scene' => 'login',
-                'page' => 'pages/index/index',
+                'scene' => $user->invitecode,
+                'page' => 'pages/login',
                 'width' => 280,
                 'check_path' => !config('app.debug'),
 

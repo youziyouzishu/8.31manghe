@@ -14,6 +14,7 @@ use support\Request;
  * @property string $updated_at 更新时间
  * @property integer $user_id 用户
  * @property integer $box_prize_id 奖品
+ * @property integer $num 数量
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize query()
@@ -21,7 +22,6 @@ use support\Request;
  * @property int $safe 保险箱
  * @property string $mark 备注
  * @property-read \plugin\admin\app\model\User|null $user
- * @property \Illuminate\Support\Carbon $deleted_at 删除时间
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withoutTrashed()
@@ -31,7 +31,6 @@ use support\Request;
  */
 class UsersPrize extends Base
 {
-    use SoftDeletes;
     /**
      * The table associated with the model.
      *
@@ -46,7 +45,7 @@ class UsersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price'];
+    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price','num'];
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {
@@ -54,7 +53,7 @@ class UsersPrize extends Base
         $getLastLevel = BoxLevel::getLastLevel($level_box_id, $level_name);
         if ($getLastLevel) {
             $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
-            return self::where(['user_id' => $user_id])->whereIn('box_prize_id', $lastPrizes)->get()->count();//获取用户拥有的上一关通关券
+            return self::where(['user_id' => $user_id])->whereIn('box_prize_id', $lastPrizes)->sum('num');//获取用户拥有的上一关通关券
         }else{
             return 0;
         }

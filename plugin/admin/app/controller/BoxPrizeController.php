@@ -58,6 +58,7 @@ class BoxPrizeController extends Crud
             if ($params['chance'] + $row > 100) {
                 return $this->fail('概率不能超过100%');
             }
+            $request->set('post',['num'=>$request->post('total')]);
 
             return parent::insert($request);
         }

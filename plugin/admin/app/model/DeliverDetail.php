@@ -13,6 +13,9 @@ use plugin\admin\app\model\Base;
  * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
  * @property int $deliver_id 发货
  * @property int $box_prize_id 奖品
+ * @property int $num 数量
+ * @property string $freight 运费
+ * @property string $price 市场价
  * @method static \Illuminate\Database\Eloquent\Builder|DeliverDetail newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DeliverDetail newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DeliverDetail query()
@@ -39,7 +42,7 @@ class DeliverDetail extends Base
     protected $primaryKey = 'id';
 
 
-    protected $fillable = ['deliver_id', 'box_prize_id', 'user_prize_id'];
+    protected $fillable = ['deliver_id', 'box_prize_id', 'user_prize_id','num','freight','price'];
 
     function deliver()
     {

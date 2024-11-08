@@ -14,28 +14,14 @@
 
             <div class="mainBox">
                 <div class="main-container mr-5">
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">昵称</label>
                         <div class="layui-input-block">
                             <input type="text" name="nickname" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">密码</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="password" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">性别</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <div name="sex" id="sex" value="" ></div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">头像</label>
                         <div class="layui-input-block">
@@ -50,34 +36,15 @@
                         </div>
                     </div>
                     
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">邮箱</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="email" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">手机</label>
                         <div class="layui-input-block">
                             <input type="text" name="mobile" value="" class="layui-input">
                         </div>
                     </div>
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">等级</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="number" name="level" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">生日</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="birthday" id="birthday" autocomplete="off" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
+
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">水晶</label>
                         <div class="layui-input-block">
@@ -86,57 +53,8 @@
                     </div>
 
 
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">积分</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="number" name="score" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">登录时间</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="last_time" id="last_time" autocomplete="off" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    -->
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">登录ip</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="last_ip" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    -->
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">注册时间</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="join_time" id="join_time" autocomplete="off" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    -->
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">注册ip</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="join_ip" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    -->
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">创建时间</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="created_at" id="created_at" autocomplete="off" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
 
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">微信公众标识</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="openid" value="" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label">官方</label>
                         <div class="layui-input-block">
@@ -170,7 +88,7 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">上级</label>
                         <div class="layui-input-block">
-                            <div name="parent_id" id="parent_id" value="" ></div>
+                            <div name="parent_id" id="parent_id" value="0" ></div>
                         </div>
                     </div>
                     
@@ -295,7 +213,8 @@
                                 dataType: "json",
                                 success: function (res) {
                                     let value = layui.$("#parent_id").attr("value");
-                                    let initValue = value ? value.split(",") : [];
+                                    res.data.push({name: '无', value: 0});
+                                    let initValue = value ? value.split(",") : [0];
                                     layui.xmSelect.render({
                                         el: "#parent_id",
                                         name: "parent_id",
@@ -305,7 +224,6 @@
                                         model: {"icon":"hidden","label":{"type":"text"}},
                                         clickClose: true,
                                         radio: true,
-                                        layVerify: "required",
                                     });
                                     if (res.code) {
                                         layui.popup.failure(res.msg);

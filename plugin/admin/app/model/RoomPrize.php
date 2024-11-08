@@ -19,6 +19,10 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\UsersPrize|null $userPrize
  * @property-read \plugin\admin\app\model\Room|null $room
  * @property int $box_prize_id 奖品
+ * @property int $num 数量
+ * @property int $total 总数量
+ * @property string $price 价格
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @mixin \Eloquent
  */
 class RoomPrize extends Base
@@ -37,7 +41,7 @@ class RoomPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['room_id','user_prize_id','box_prize_id'];
+    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total'];
 
 
     public function room()
@@ -48,6 +52,11 @@ class RoomPrize extends Base
     function userPrize()
     {
         return $this->belongsTo(UsersPrize::class,'user_prize_id');
+    }
+
+    function boxPrize()
+    {
+        return $this->belongsTo(BoxPrize::class,'box_prize_id');
     }
 
 

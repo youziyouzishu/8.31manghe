@@ -27,15 +27,11 @@ class RoomController extends BaseController
         $start_at = $request->post('start_at');
         $end_at = $request->post('end_at');
         $num = $request->post('num');
-        $user_prize_ids = $request->post('user_prize_ids');
-        $user_prize_ids = explode(',', $user_prize_ids);
-        if (empty($user_prize_ids)) {
+        $prizes = $request->post('prizes');
+        if (empty($prizes)) {
             return $this->fail('奖品不能为空');
         }
-        $user_prizes = UsersPrize::where(['user_id' => $request->uid])->whereIn('id', $user_prize_ids)->get();
-        if ($user_prizes->isEmpty()) {
-            return $this->fail('奖品不存在');
-        }
+
         $start_time = strtotime($start_at);
         $end_time = strtotime($end_at);
         if ($start_time >= $end_time) {
@@ -44,6 +40,25 @@ class RoomController extends BaseController
 
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
+        }
+
+        $roomPrizesData = [];
+        foreach ($prizes as $prize) {
+            $res = UsersPrize::find($prize['id']);
+            if (!$res) {
+                return $this->fail('奖品不存在');
+            }
+            if ($res->safe == 1) {
+                return $this->fail('奖品已锁定');
+            }
+            if ($res->num < $prize['num']) {
+                return $this->fail('奖品数量不足');
+            }
+            $res->decrement('num', $prize['num']);
+            if ($res->num <= 0) {
+                $res->delete();
+            }
+            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price,'total'=>$prize['num']];
         }
 
         $room = Room::create([
@@ -56,13 +71,8 @@ class RoomController extends BaseController
             'end_at' => $end_at,
             'num' => $num,
         ]);
-        // 使用 each 方法批量创建关联模型
-
-        $user_prizes->each(function (UsersPrize $user_prize) use ($room) {
-            $room->roomPrize()->create(['user_prize_id' => $user_prize->id, 'box_prize_id' => $user_prize->box_prize_id]);
-            //软删除用户奖品  取消时恢复
-            $user_prize->delete();
-        });
+        // 批量创建关联模型
+        $room->roomPrize()->createMany($roomPrizesData);
 
         //加入队列倒计时开始
         // 队列名
@@ -94,13 +104,13 @@ class RoomController extends BaseController
         $room_id = $request->post('room_id');
         $row = Room::with([
             'userPrize' => function ($query) {
-                $query->with(['boxPrize'])->withTrashed();
+                $query->with(['boxPrize']);
             },
             'user',
             'roomUserUser' => function (HasManyThrough $query) {
                 $query->limit(10);
             }])->find($room_id);
-        if (empty($row)){
+        if (empty($row)) {
             return $this->fail('房间不存在');
         }
         $start_time = strtotime($row->start_at);
@@ -179,8 +189,8 @@ class RoomController extends BaseController
         $rooms = Room::where(['user_id' => $request->uid])
             ->paginate()
             ->getCollection()
-            ->transform(function (Room $room) {
-                $count = $room->roomPrize->count();
+            ->map(function (Room $room) {
+                $count = $room->roomPrize->sum('num');
                 $price = $room->roomPrize->sum('price');
                 $room->prize_count = $count;
                 $room->price = $price;
@@ -208,7 +218,19 @@ class RoomController extends BaseController
             $room->save();
             // 恢复所有关联的用户奖品
             $room->roomPrize->each(function (RoomPrize $roomPrize) {
-                $roomPrize->userPrize->restore();
+                if ($res = UsersPrize::where(['user_id' => $roomPrize->room->user_id, 'box_prize_id' => $roomPrize->box_prize_id, 'price' => $roomPrize->price])->first()) {
+                    $res->increment('num', $roomPrize->num);
+                } else {
+                    UsersPrize::create([
+                        'user_id' => $roomPrize->room->user_id,
+                        'box_prize_id' => $roomPrize->box_prize_id,
+                        'room_prize_id' => $roomPrize->id,
+                        'num' => $roomPrize->num,
+                        'price' => $roomPrize->price,
+                        'mark' => '撤销房间恢复奖品'
+                    ]);
+                }
+
             });
             // 提交事务
             DB::commit();
@@ -230,8 +252,8 @@ class RoomController extends BaseController
         $start_at = $request->post('start_at');
         $end_at = $request->post('end_at');
         $num = $request->post('num');
-        $user_prize_ids = $request->post('user_prize_ids');
-        $user_prize_ids = collect(explode(',', $user_prize_ids));
+        $prizes = $request->post('prizes');
+
         // 查找房间
         $room = Room::with('roomPrize.userPrize')->find($room_id);
 
@@ -242,12 +264,6 @@ class RoomController extends BaseController
         // 检查房间状态
         if ($room->status != 2) {
             return $this->fail('房间已开奖，无法编辑');
-        }
-
-        // 处理奖品 ID 列表
-        $user_prize_ids = collect(explode(',', $user_prize_ids));
-        if ($user_prize_ids->isEmpty()) {
-            return $this->fail('奖品不能为空');
         }
 
         // 检查时间范围
@@ -275,26 +291,48 @@ class RoomController extends BaseController
                 'end_at' => $end_at,
                 'num' => $num,
             ]);
-
-            // 获取当前房间的所有奖品 ID
-            $current_user_prize_ids = $room->roomPrize->pluck('user_prize_id');
-
-            // 计算需要删除的奖品 ID
-            $to_delete = $current_user_prize_ids->diff($user_prize_ids);
-
-            // 计算需要新增的奖品 ID
-            $to_add = $user_prize_ids->diff($current_user_prize_ids);
-
-            // 删除旧的奖品关联并恢复用户奖品
-            $to_delete->each(function ($user_prize_id) use ($room) {
-                $room->roomPrize()->where('user_prize_id', $user_prize_id)->delete();
-                UsersPrize::where('id', $user_prize_id)->restore();
+            $room->roomPrize->each(function (RoomPrize $item) {
+                //先恢复用户奖品
+                if ($res = UsersPrize::where(['user_id' => $item->room->user_id, 'box_prize_id' => $item->box_prize_id, 'price' => $item->price])->first()) {
+                    $res->increment('num', $item->num);
+                } else {
+                    UsersPrize::create([
+                        'user_id' => $item->room->user_id,
+                        'box_prize_id' => $item->box_prize_id,
+                        'num' => $item->num,
+                        'price' => $item->price,
+                        'mark' => '房间编辑恢复'
+                    ]);
+                }
+                //删除房间奖品
+                $item->delete();
             });
-            // 创建新的奖品关联并软删除用户奖品
-            $to_add->each(function ($user_prize_id) use ($room) {
-                $room->roomPrize()->create(['user_prize_id' => $user_prize_id]);
-                UsersPrize::where('id', $user_prize_id)->delete();
-            });
+
+            $roomPrizes = [];
+            foreach ($prizes as $prize) {
+                $res = UsersPrize::find($prize['id']);
+                if (!$res) {
+                    return $this->fail('奖品不存在');
+                }
+                if ($res->safe == 1) {
+                    return $this->fail('奖品已锁定');
+                }
+                if ($res->num < $prize['num']) {
+                    return $this->fail('奖品数量不足');
+                }
+                $res->decrement('num', $prize['num']);
+                if ($res->num <= 0) {
+                    $res->delete();
+                }
+                $roomPrizes[] = [
+                    'user_prize_id' => $res->id,
+                    'box_prize_id' => $res->box_prize_id,
+                    'num' => $prize['num'],
+                    'price' => $res->price,
+                    'total'=>$prize['num']
+                ];
+            }
+            $room->roomPrize()->createMany($roomPrizes);
             // 提交事务
             DB::commit();
         } catch (\Exception $e) {
