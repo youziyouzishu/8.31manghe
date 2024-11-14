@@ -29,6 +29,19 @@ class BoxLevelController extends Crud
     }
 
     /**
+     * 查询
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function select(Request $request): Response
+    {
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->withSum('boxPrize','chance');
+        return $this->doFormat($query, $format, $limit);
+    }
+
+    /**
      * 格式化下拉列表
      * @param $items
      * @return Response
@@ -45,6 +58,7 @@ class BoxLevelController extends Crud
         }
         return  $this->json(0, 'ok', $formatted_items);
     }
+
     
     /**
      * 浏览

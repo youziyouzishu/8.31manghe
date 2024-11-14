@@ -82,6 +82,7 @@ class CreateRoom implements Consumer
                             'box_prize_id' => $prize->box_prize_id,
                             'price'=>$prize->price,
                             'num'=>1,
+                            'mark' => '房间获得'
                         ]);
                     }
                 });

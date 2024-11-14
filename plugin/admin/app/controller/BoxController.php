@@ -37,7 +37,7 @@ class BoxController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->withCount('boxPrize')->withSum(['boxPrize'], 'total');
+        $query = $this->doSelect($where, $field, $order)->withCount('boxPrize')->withSum(['boxPrize'], 'total')->withSum(['boxPrize'], 'chance');;
         return $this->doFormat($query, $format, $limit);
     }
 

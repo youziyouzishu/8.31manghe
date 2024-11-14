@@ -28,6 +28,13 @@
                 </div>
             </div>
 
+            <div class="layui-form-item">
+                <label class="layui-form-label">邀请码</label>
+                <div class="layui-input-block">
+                    <input type="text" name="invitecode" value="" class="layui-input">
+                </div>
+            </div>
+
 
             <div class="layui-form-item">
                 <label class="layui-form-label">手机</label>
@@ -82,6 +89,17 @@
                 <label class="layui-form-label">上级</label>
                 <div class="layui-input-block">
                     <div name="parent_id" id="parent_id" value="" ></div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">取消新人时间</label>
+                <div class="layui-input-block">
+                    <div class="layui-input-block" id="new_time">
+                        <input type="text" autocomplete="off" name="new_time[]" id="new_time-date-start" class="layui-input inline-block" placeholder="开始时间">
+                        -
+                        <input type="text" autocomplete="off" name="new_time[]" id="new_time-date-end" class="layui-input inline-block" placeholder="结束时间">
+                    </div>
                 </div>
             </div>
 
@@ -204,6 +222,15 @@
         layui.laydate.render({
             elem: "#join_time",
             range: ["#join_time-date-start", "#join_time-date-end"],
+            type: "datetime",
+        });
+    })
+
+    // 字段 创建时间 created_at
+    layui.use(["laydate"], function() {
+        layui.laydate.render({
+            elem: "#new_time",
+            range: ["#new_time-date-start", "#new_time-date-end"],
             type: "datetime",
         });
     })

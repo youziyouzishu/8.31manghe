@@ -42,7 +42,6 @@ class DreamController extends BaseController
         $big_prize_id = $request->post('big_prize_id');
         $small_prize_id = $request->post('small_prize_id');
         $probability = $request->post('probability');//高价值中奖概率
-
         $big_prize = BoxPrize::find($big_prize_id);
         $small_prize = BoxPrize::find($small_prize_id);
 
@@ -58,14 +57,15 @@ class DreamController extends BaseController
 
 
         $r = 0.27; //期望利润率
-        $small_probability = 1 - $probability / 100;//低价值中奖概率
+        $big_probability = $probability / 100;
+        $small_probability = 1 - $big_probability;//低价值中奖概率
 
-        $price = ($big_prize_price * $probability + $small_prize_price * $small_probability) * (1 + $r); //单抽价格
+        $price = round(($big_prize_price * $big_probability + $small_prize_price * $small_probability) * (1 + $r),2); //单抽价格
 
         $data = [
-            'one_times_price' => number_format($price, 2),
-            'three_times_price' => number_format($price * 3, 2),
-            'ten_times_price' => number_format($price * 10, 2),
+            'one_times_price' => round($price, 2),
+            'three_times_price' => round($price * 3, 2),
+            'ten_times_price' => round($price * 10, 2),
         ];
         return $this->success('成功', $data);
     }
@@ -77,7 +77,6 @@ class DreamController extends BaseController
         $small_prize_id = $request->post('small_prize_id');
         $probability = $request->post('probability');//高价值中奖概率
         // 启动事务
-        Db::beginTransaction();
         try {
             $big_prize = BoxPrize::find($big_prize_id);
             $small_prize = BoxPrize::find($small_prize_id);
@@ -93,11 +92,13 @@ class DreamController extends BaseController
             $small_prize_price = $small_prize->price;
 
             $r = 0.27; //期望利润率
-            $small_probability = 1 - $probability;//低价值中奖概率
+            $big_probability = $probability / 100;
+            $small_probability = 1 - $big_probability;//低价值中奖概率
 
-            $price = ($big_prize_price * $probability + $small_prize_price * $small_probability) * (1 + $r); //单抽价格
+            $price = ($big_prize_price * $big_probability + $small_prize_price * $small_probability) * (1 + $r); //单抽价格
 
-            $pay_amount = number_format($price * $times, 2);
+            $pay_amount = round($price * $times, 2);
+
             $user = User::find($request->uid);
             $ordersn = Util::ordersn();
             $orders = DreamOrders::create([
@@ -126,7 +127,6 @@ class DreamController extends BaseController
                 if ($res->code == 1) {
                     //支付失败
                     // 回滚事务
-                    Db::rollBack();
                     return $this->fail($res->msg);
                 }
             } else {
@@ -135,10 +135,8 @@ class DreamController extends BaseController
                 $ret = Pay::pay($pay_amount, $ordersn, '梦想DIY抽奖', 'dream', JwtToken::getUser()->openid);
                 $code = 4;
             }
-            Db::commit();
             return $this->success('成功',['code'=>$code,'ret'=>$ret]);
         } catch (\Throwable $e) {
-            Db::rollBack();
             return $this->fail($e->getMessage());
         }
     }

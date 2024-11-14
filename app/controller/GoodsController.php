@@ -64,16 +64,8 @@ class GoodsController extends BaseController
         $ordersn = Util::ordersn();
         $amount = $goods->boxPrize->price;
 
+        $pay_amount = $amount;
 
-        // 生成 1 到 9 之间的随机整数
-        $randomCents = rand(1, 9);
-        // 将随机整数转换为小数（0.01 到 0.09）
-        $randomDecimal = $randomCents / 100;
-        // 从原价中减去随机小数
-        $pay_amount = function_exists('bcsub') ? bcsub($amount, $randomDecimal, 2) : $amount - $randomDecimal;
-        if ($pay_amount <= 0) {
-            $pay_amount = 0.01;
-        }
         Db::beginTransaction();
         try {
 
@@ -81,11 +73,15 @@ class GoodsController extends BaseController
                 'user_id' => $request->uid,
                 'goods_id' => $goods->id,
                 'amount' => $amount,
-                'pay_amount' => $pay_amount,
+                'pay_amount' => 0,
                 'ordersn' => $ordersn,
             ];
             $order = GoodsOrder::create($goodsData);
             if ($user->money >= $pay_amount) {
+                if ($pay_amount <= 0) {
+                    $pay_amount = 0.01;
+                }
+                $order->pay_amount = $pay_amount;
                 $order->pay_type = 2;
                 $order->save();
                 $ret = [];
@@ -107,6 +103,16 @@ class GoodsController extends BaseController
                 }
 
             } else {
+                // 生成 1 到 9 之间的随机整数
+                $randomCents = rand(1, 9);
+                // 将随机整数转换为小数（0.01 到 0.09）
+                $randomDecimal = $randomCents / 100;
+                // 从原价中减去随机小数
+                $pay_amount = function_exists('bcsub') ? bcsub($amount, $randomDecimal, 2) : $amount - $randomDecimal;
+                if ($pay_amount <= 0) {
+                    $pay_amount = 0.01;
+                }
+                $order->pay_amount = $pay_amount;
                 $order->pay_type = 1;
                 $order->save();
                 //微信支付

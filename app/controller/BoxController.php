@@ -4,6 +4,7 @@ namespace app\controller;
 
 use app\service\Coupon;
 use app\service\Pay;
+use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Box;
 use plugin\admin\app\model\BoxLevel;
@@ -62,7 +63,7 @@ class BoxController extends BaseController
             $prizes = BoxPrize::where(['box_id' => $box_id, 'grade' => $grade])->get();
             $prizeData[] = [
                 'name' => $grade,
-                'chance' => $prizes->sum('chance'),
+                'chance' => round($prizes->sum('chance'), 3),
                 'boxPrize' => $prizes,
             ];
         });
@@ -165,7 +166,7 @@ class BoxController extends BaseController
         $box_id = $request->post('box_id');
         $times = $request->post('times');
         $box = Box::find($box_id);
-        if (!$box){
+        if (!$box) {
             return $this->fail('盲盒不存在');
         }
 
@@ -191,7 +192,7 @@ class BoxController extends BaseController
         $times = $request->post('times');
         $coupon_id = $request->post('coupon_id');
         $row = Box::find($box_id);
-        if (!$row){
+        if (!$row) {
             return $this->fail('盲盒不存在');
         }
         $amount = $row->price * $times;
@@ -218,8 +219,7 @@ class BoxController extends BaseController
         if (empty($box)) {
             return $this->fail('盲盒不存在');
         }
-        // 启动事务
-        Db::beginTransaction();
+
         try {
             if (!empty($level_id)) {
                 $level = BoxLevel::find($level_id);
@@ -234,18 +234,22 @@ class BoxController extends BaseController
                     return $this->fail('盲盒不存在关卡');
                 }
                 if ($level->id != $firstLevel->id) {
+
                     //非第一关 进行抽奖
                     //找出上一关判断是否有这一关的通关券
                     $getLastLevel = BoxLevel::getLastLevel($box_id, $level->name);
+
                     $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
                     $lastTicket = UsersPrize::where(['user_id' => $request->uid])->whereIn('box_prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
+
                     $lastTicketCount = $lastTicket->sum('num');
+
                     if ($times > $lastTicketCount) {
                         return $this->fail('通关券不足');
                     }
 
                     //开始抽奖
-                    $draw = UsersDrawLog::create(['times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '000000000000']); #创建抽奖记录
+                    $draw = UsersDrawLog::create(['user_id' => $request->uid, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
                     $winnerPrize = [];
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
@@ -255,7 +259,7 @@ class BoxController extends BaseController
                         // 如果没有可用奖品，返回提示
 
                         if ($prizes->isEmpty()) {
-                            BoxPrize::query()->update(['num' => Db::raw('total')]);
+                            BoxPrize::where(['level_id' => $level_id])->update(['num' => Db::raw('total')]);
                             $prizes = BoxPrize::where([['num', '>', 0], 'level_id' => $level_id])->get(); // 重新获取奖品列表
                             if ($prizes->isEmpty()) {
                                 return $this->fail('没有设置奖池');
@@ -282,13 +286,15 @@ class BoxController extends BaseController
                                 $winnerPrize[] = $prize;
                                 // 发放奖品并且记录
 
-                                if ($userPrize = UsersPrize::where(['user_id'=> $request->uid,'box_prize_id'=>$prize->id,'price' => $prize->price])->first()){
+                                if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
                                     $userPrize->increment('num');
-                                }else{
+                                } else {
                                     UsersPrize::create([
                                         'user_id' => $request->uid,
                                         'box_prize_id' => $prize->id,
                                         'price' => $prize->price,
+                                        'num' => 1,
+                                        'mark' => '抽奖获得',
                                     ]);
                                 }
 
@@ -297,23 +303,22 @@ class BoxController extends BaseController
                                     'user_id' => $request->uid,
                                     'box_prize_id' => $prize->id,
                                     'mark' => '抽奖获得',
-                                    'price'=>$prize->price,
-                                    'type'=>0,
-                                    'grade'=>$prize->grade,
+                                    'price' => $prize->price,
+                                    'type' => 0,
+                                    'grade' => $prize->grade,
                                 ]);
                                 //删除用户通关券
-                                $ticketToDelete = $lastTicket->shift(); // 移除并返回第一个元素
-                                if ($ticketToDelete) {
-                                    $ticketToDelete->decrement('num');
-                                    if ($ticketToDelete->num <= 0) {
-                                        $ticketToDelete->delete();
+                                $ticket = $lastTicket->first(); // 返回第一个元素
+                                if ($ticket) {
+                                    $ticket->decrement('num');
+                                    if ($ticket->num <= 0) {
+                                        $ticket->delete();
                                     }
                                 }
                                 break;
                             }
                         }
                     }
-                    Db::commit();
                     $api = new Api(
                         'http://127.0.0.1:3232',
                         config('plugin.webman.push.app.app_key'),
@@ -324,7 +329,7 @@ class BoxController extends BaseController
                         'winner_prize' => $winnerPrize
                     ]);
                     $ret = [];
-                    return $this->success('成功', ['code' => 2,'ret'=>$ret]);
+                    return $this->success('成功', ['code' => 2, 'ret' => $ret]);
                 }
             }
 
@@ -333,23 +338,14 @@ class BoxController extends BaseController
             $coupon_amount = Coupon::getCouponAmount($amount, $user_coupon_id);
 
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
-            // 生成 1 到 9 之间的随机整数
-            $randomCents = rand(1, 9);
-            // 将随机整数转换为小数（0.01 到 0.09）
-            $randomDecimal = $randomCents / 100;
-            // 从原价中减去随机小数
-            $pay_amount = function_exists('bcsub') ? bcsub($pay_amount, $randomDecimal, 2) : $pay_amount - $randomDecimal;
-            if ($pay_amount <= 0) {
-                $pay_amount = 0.01;
-            }
+
 
             $ordersn = Util::ordersn();
-
             $orderData = [
                 'user_id' => $request->uid,
                 'box_id' => $box->id,
                 'amount' => $amount,
-                'pay_amount' => $pay_amount,
+                'pay_amount' => 0,
                 'coupon_amount' => $coupon_amount,
                 'ordersn' => $ordersn,
                 'user_coupon_id' => $user_coupon_id,
@@ -362,9 +358,13 @@ class BoxController extends BaseController
 
             $user = User::find($request->uid);
             if ($user->money >= $pay_amount) {
+                if ($pay_amount <= 0) {
+                    $pay_amount = 0.01;
+                }
                 $order->pay_type = 2;
+                $order->pay_amount = $pay_amount;
                 $order->save();
-                User::money(-$pay_amount, $request->uid, '购买盲盒');
+                User::money(-$pay_amount, $request->uid, $box->name);
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
@@ -374,24 +374,32 @@ class BoxController extends BaseController
                 if ($res->code == 1) {
                     //支付失败
                     // 回滚事务
-                    Db::rollBack();
                     return $this->fail($res->msg);
                 }
             } else {
+
+                // 生成 1 到 9 之间的随机整数
+                $randomCents = rand(1, 9);
+                // 将随机整数转换为小数（0.01 到 0.09）
+                $randomDecimal = $randomCents / 100;
+                // 从原价中减去随机小数
+                $pay_amount = function_exists('bcsub') ? bcsub($pay_amount, $randomDecimal, 2) : $pay_amount - $randomDecimal;
+                if ($pay_amount <= 0) {
+                    $pay_amount = 0.01;
+                }
                 $order->pay_type = 1;
+                $order->pay_amount = $pay_amount;
                 $order->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
                 $code = 4;
             }
             // 提交事务
-            Db::commit();
             return $this->success('成功', [
                 'code' => $code,
                 'ret' => $ret,
             ]);
         } catch (\Throwable $e) {
             // 回滚事务
-            Db::rollBack();
             return $this->fail($e->getMessage());
         }
     }
@@ -428,26 +436,41 @@ class BoxController extends BaseController
     function getDrawLog(Request $request)
     {
         $box_id = $request->post('box_id');
-        if (empty($box_id)) {
+        $level_id = $request->post('level_id', 0);
+        $grade = $request->post('grade');
+
+        if (empty($box_id)|| empty($grade)) {
             return $this->fail('参数不能为空');
         }
-        $prize_ids = BoxPrize::where(['box_id' => $box_id])->where('grade','>',2)->pluck('id'); #盲盒内大于N赏的奖品
-        $list = UsersPrizeLog::with(['user','boxPrize'])->whereIn('box_prize_id',$prize_ids)
-            ->where('user_id', $request->uid)
+
+
+        #盲盒内大于N赏的奖品
+        $prize_ids = BoxPrize::where(['box_id' => $box_id])
+            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                $builder->where('level_id', $level_id);
+            })
+            ->where('grade', $grade)
+            ->pluck('id');
+        $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
             ->where('type', 0)
             ->orderBy('id', 'desc')
             ->paginate()
             ->getCollection()
-            ->each(function ($item)use($request){
-                $item->times = UsersPrizeLog::where(['user_id' => $request->uid,'type'=>0])->where('id', '<', $item->id)->where('grade','>',2)->count();
-                $item->detail = UsersPrizeLog::with(['user','boxPrize'])->where(['user_id' => $request->uid,'type'=>0])->where('id', '<', $item->id)->where('grade','<',2)->get();
+            ->each(function ($item) use ($request, $grade) {
+                $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $grade)->first();
+                if (!$last) {
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->get();
+                } else {
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->get();
+                }
+                $item->times = $prizes->count();
+                $item->detail = $prizes;
             });
+
 
         return $this->success('成功', $list);
 
     }
-
-
 
 
 }

@@ -27,6 +27,7 @@ use support\Db;
  * @property string $token token
  * @property string $created_at 创建时间
  * @property string $updated_at 更新时间
+ * @property string $new_time 不是新人的时间
  * @property integer $role 角色
  * @property integer $status 禁用
  * @property string $openid 微信公众标识
@@ -67,7 +68,18 @@ class User extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['username', 'nickname', 'password', 'sex', 'avatar', 'email', 'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip', 'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official', 'invitecode'];
+    protected $fillable = [
+        'username',
+        'nickname',
+        'password',
+        'sex',
+        'avatar',
+        'email',
+        'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip',
+        'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official', 'invitecode',
+        'new',
+        'new_time'
+    ];
 
     protected $appends = ['official_text'];
     /**

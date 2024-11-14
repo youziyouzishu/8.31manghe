@@ -79,8 +79,8 @@ class UserController extends Crud
                     ->withSum(['userDisburse as user_disburse_sum_amount_amount_at' => function ($query) use ($user_disburse_at) {
                         $query->whereBetween('created_at', [$user_disburse_at[0], $user_disburse_at[1]])->where('mark', '<>', '购买商品');
                     }], 'amount');
-            })
-            ->withSum('userPrize', 'price');
+            });
+
 
         return $this->doFormat($query, $format, $limit);
     }
@@ -119,8 +119,6 @@ class UserController extends Crud
      */
     protected function afterQuery($items)
     {
-
-
         return collect($items)->each(function ($item) {
             if (!empty(request()->get('profit_created_at')[0])) {
                 $where['profit_created_at'] = request()->get('profit_created_at');
@@ -136,7 +134,7 @@ class UserController extends Crud
                 //水晶余额
                 $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()?->value('after')??0;
                 //赏袋和保险箱剩余商品价值
-                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price')??0;
+                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price * num')??0;
                 //活动赠送部分
                 $give_prize = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->get();
                 $give_prize_price = $give_prize->sum('price');
@@ -145,6 +143,9 @@ class UserController extends Crud
 
                 $item->profit = abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money;
                 $item->give_prize = $give_prize;
+                $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {
+                    return $userprize->price * $userprize->num;
+                });
             } else {
                 //微信支付的金额
                 $profit_sum_amount = UsersDisburse::where(['type' => 1, 'user_id' => $item->id])->sum('amount');
@@ -157,6 +158,9 @@ class UserController extends Crud
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->sum('price');
                 //水晶余额
                 $money = $item->money;
+                $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {
+                    return $userprize->price * $userprize->num;
+                });
                 //赏袋和保险箱剩余商品价值
                 $user_prize_sum_price = $item->user_prize_sum_price;
                 //活动赠送部分
@@ -164,7 +168,6 @@ class UserController extends Crud
                 $give_prize_price = $give_prize->sum('price');
                 //系统增加的水晶
                 $system_money = UsersMoneyLog::where(['user_id' => $item->id, 'memo' => '系统赠送'])->sum('money') ?? 0;
-
 
                 $item->profit = abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money;
                 $item->give_prize = $give_prize;

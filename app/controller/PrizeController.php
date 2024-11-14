@@ -8,6 +8,7 @@ use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\User;
+use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
@@ -41,7 +42,7 @@ class PrizeController extends BaseController
             if ($res->num <= 0) {
                 $res->delete();
             }
-            User::money($res->price * $prize['num'], $request->uid, '分解获得');
+            User::money($res->price * $prize['num'], $request->uid, '退货获得');
         }
         return $this->success();
     }
@@ -58,6 +59,10 @@ class PrizeController extends BaseController
         $user = User::find($request->uid);
         if ($user->kol == 1) {
             return $this->fail('达人不能转赠');
+        }
+        $xiaofei =  UsersDisburse::where(['user_id' => $request->uid,'type'=>1])->sum('amount');
+        if ($xiaofei < 100){
+            return $this->fail('转赠失败');
         }
 
         foreach ($prizes as $prize) {

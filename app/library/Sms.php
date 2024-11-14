@@ -67,6 +67,7 @@ class Sms
             // 获取响应体
             $ret = $response->getBody()->getContents();
             $ret = json_decode($ret);
+
             if ($ret->code != 1) {
                 return false;
             }

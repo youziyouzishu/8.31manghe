@@ -21,13 +21,7 @@ class BannerController extends BaseController
     #轮播图列表
     public function index(Request $request)
     {
-        $prizes = UsersPrize::whereIn('id',[1,2,3])->get();
 
-            $prize= $prizes->random();
-
-            $prize->decrement('num');
-
-        return $this->success('获取成功',['a'=>$prize,'b'=>$prize,'c'=>$prizes]);
         $rows = Banner::orderBy('id','desc')->get();
         return $this->success('获取成功',$rows);
     }

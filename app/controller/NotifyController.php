@@ -2,6 +2,9 @@
 
 namespace app\controller;
 
+use DateTime;
+use DateTimeZone;
+use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\BoxOrder;
@@ -61,7 +64,6 @@ class NotifyController extends BaseController
      */
     private function pay(Request $request)
     {
-        Db::beginTransaction();
         try {
             $paytype = $request->input('paytype');
             $pay = Pay::wechat(config('payment'));
@@ -72,6 +74,9 @@ class NotifyController extends BaseController
                 $res = $res['ciphertext'];
                 $out_trade_no = $res['out_trade_no'];
                 $attach = $res['attach'];
+                $mchid = $res['mchid'];
+                $transaction_id = $res['transaction_id'];
+                $openid = $res['payer']['openid'] ?? '';
             } elseif ($paytype == 'balance') {
                 $out_trade_no = $request->input('out_trade_no');
                 $attach = $request->input('attach');
@@ -92,8 +97,9 @@ class NotifyController extends BaseController
                         $order->userCoupon->status = 2;
                         $order->userCoupon->save();
                     }
-                    if ($order->user->new == 0) {
-                        $order->user->new = 1;
+                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                        $order->user->new = 0;
+                        $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
                     //开始执行抽奖操作
@@ -107,6 +113,8 @@ class NotifyController extends BaseController
 
                     $winnerPrize = [];
                     for ($i = 0; $i < $order->times; $i++) {
+                        $start = microtime(true);
+                        dump($start);
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                         $prizes = BoxPrize::where([['num', '>', 0]])
                             ->where(['box_id' => $order->box_id])
@@ -116,15 +124,13 @@ class NotifyController extends BaseController
                             ->get();
                         // 如果没有可用奖品，返回提示
                         if ($prizes->isEmpty()) {
-                            BoxPrize::query()
-                                ->where(['box_id' => $order->box_id])
+                            BoxPrize::where(['box_id' => $order->box_id])
                                 ->when(!empty($order->level_id), function (Builder $query) use ($order) {
                                     $query->where('level_id', $order->level_id);
                                 })
                                 ->update(['num' => DB::raw('total')]);
 
-                            $prizes = BoxPrize::where([['num', '>', 0]])
-                                ->where(['box_id' => $order->box_id])
+                            $prizes = BoxPrize::where(['box_id' => $order->box_id])
                                 ->when(!empty($order->level_id), function (Builder $query) use ($order) {
                                     $query->where('level_id', $order->level_id);
                                 })
@@ -147,6 +153,7 @@ class NotifyController extends BaseController
 
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
+
                             if ($randomNumber < $currentChance) {
                                 //达人抽奖不减数量
                                 if ($order->user->kol == 0) {
@@ -154,29 +161,10 @@ class NotifyController extends BaseController
                                 }
                                 $winnerPrize[] = $prize;
                                 // 发放奖品并且记录
-
-                                if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
-                                    $userPrize->increment('num');
-                                } else {
-                                    UsersPrize::create([
-                                        'user_id' => $order->user_id,
-                                        'box_prize_id' => $prize->id,
-                                        'price' => $prize->price,
-                                    ]);
-                                }
-
-                                UsersPrizeLog::create([
-                                    'draw_id' => $draw->id,
-                                    'user_id' => $order->user_id,
-                                    'box_prize_id' => $prize->id,
-                                    'mark' => '抽奖获得',
-                                    'price' => $prize->price,
-                                    'type' => 0,
-                                    'grade' => $prize->grade,
-                                ]);
                                 break;
                             }
                         }
+                        dump('耗时 '.microtime(true) - $start);
                     }
                     $api = new Api(
                         'http://127.0.0.1:3232',
@@ -187,7 +175,30 @@ class NotifyController extends BaseController
                     $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
                         'winner_prize' => $winnerPrize
                     ]);
+                    foreach ($winnerPrize as $item){
+                        // 发放奖品并且记录
+                        if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                            $userPrize->increment('num');
+                        } else {
+                            UsersPrize::create([
+                                'user_id' => $order->user_id,
+                                'box_prize_id' => $item->id,
+                                'price' => $item->price,
+                                'num' => 1,
+                                'mark' => '抽奖获得',
+                            ]);
+                        }
 
+                        UsersPrizeLog::create([
+                            'draw_id' => $draw->id,
+                            'user_id' => $order->user_id,
+                            'box_prize_id' => $item->id,
+                            'mark' => '抽奖获得',
+                            'price' => $item->price,
+                            'type' => 0,
+                            'grade' => $item->grade,
+                        ]);
+                    }
 
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
@@ -206,8 +217,9 @@ class NotifyController extends BaseController
                     $order->status = 2;
                     $order->pay_at = date('Y-m-d H:i:s');
                     $order->save();
-                    if ($order->user->new == 0) {
-                        $order->user->new = 1;
+                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                        $order->user->new = 0;
+                        $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
 
@@ -227,7 +239,7 @@ class NotifyController extends BaseController
                     UsersPrizeLog::create([
                         'user_id' => $order->user_id,
                         'box_prize_id' => $order->goods->prize_id,
-                        'mark' => '购买商品获得',
+                        'mark' => $order->goods->boxPrize->name,
                         'type' => 5,
                         'price' => $order->goods->boxPrize->price,
                         'grade' => $order->goods->boxPrize->grade,
@@ -236,7 +248,7 @@ class NotifyController extends BaseController
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
-                        'mark' => '购买商品',
+                        'mark' => $order->goods->boxPrize->name,
                         'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
 
@@ -274,10 +286,12 @@ class NotifyController extends BaseController
                     $order->pay_at = date('Y-m-d H:i:s');
 
                     $probability = $order->probability;
+                    $probability = $probability / 2;
                     $big_prize_id = $order->big_prize_id;
                     $small_prize_id = $order->small_prize_id;
-                    if ($order->user->new == 0) {
-                        $order->user->new = 1;
+                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                        $order->user->new = 0;
+                        $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
 
@@ -298,6 +312,8 @@ class NotifyController extends BaseController
                                 'user_id' => $order->user_id,
                                 'box_prize_id' => $prize_id,
                                 'price' => $prize->price,
+                                'num' => 1,
+                                'mark' => '梦想DIY获得',
                             ]);
                         }
 
@@ -305,7 +321,7 @@ class NotifyController extends BaseController
                         UsersPrizeLog::create([
                             'user_id' => $order->user_id,
                             'box_prize_id' => $prize_id,
-                            'mark' => '梦想DIY抽奖获得',
+                            'mark' => '梦想DIY获得',
                             'type' => 6
                         ]);
                     }
@@ -347,10 +363,23 @@ class NotifyController extends BaseController
                 default:
                     throw new \Exception('回调错误');
             }
-            Db::commit();
+            if ($paytype == 'weichat') {
+                $app = new Application(config('wechat'));
+                $api = $app->getClient();
+                $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
+                $formatted_date = $date->format('c');
+                $api->postJson('/wxa/sec/order/upload_shipping_info', [
+                    'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
+                    'logistics_type' => 3,
+                    'delivery_mode' => 1,
+                    'shipping_list' => [[
+                        'item_desc' => '盲盒'
+                    ]],
+                    'upload_time' => $formatted_date,
+                    'payer' => ['openid' => $openid]
+                ]);
+            }
         } catch (\Throwable $e) {
-            Db::rollBack();
-            dump($e->getMessage());
             throw new \Exception($e->getMessage());
         }
     }

@@ -240,10 +240,12 @@ class UserController extends BaseController
         if ($type == 1) {
             $rows = UsersDrawLog::with(['box'])
                 ->where(['user_id' => $request->uid])
+                ->orderByDesc('id')
                 ->paginate()
                 ->items();
         } elseif ($type == 2) {
             $rows = GoodsOrder::where(['user_id' => $request->uid, 'status' => 2])
+                ->orderByDesc('id')
                 ->paginate()
                 ->getCollection()
                 ->map(function (GoodsOrder $order) {

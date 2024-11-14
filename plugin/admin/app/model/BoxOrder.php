@@ -61,7 +61,8 @@ class BoxOrder extends Base
         'pay_at',
         'coupon_id',
         'times',
-        'pay_type'
+        'pay_type',
+        'level_id',
     ];
 
     function userCoupon()

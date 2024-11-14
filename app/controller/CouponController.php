@@ -19,6 +19,7 @@ class CouponController extends BaseController
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
+            ->where('fuli',0)
             ->where('status',1)
             ->whereNotIn('id', $coupon_id)
             ->get();
@@ -32,12 +33,11 @@ class CouponController extends BaseController
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
+            ->where('fuli',0)
             ->whereNotIn('id', $coupon_id)
             ->get();
         foreach ($rows as $row){
-            $row->num -= 1;
-            $row->save();
-
+            $row->decrement('num');
             UsersCoupon::create([
                 'user_id' => $request->uid,
                 'coupon_id' => $row->id,

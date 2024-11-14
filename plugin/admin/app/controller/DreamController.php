@@ -27,6 +27,13 @@ class DreamController extends Crud
     {
         $this->model = new Dream;
     }
+
+    public function select(Request $request): Response
+    {
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->with(['boxPrize']);
+        return $this->doFormat($query, $format, $limit);
+    }
     
     /**
      * 浏览

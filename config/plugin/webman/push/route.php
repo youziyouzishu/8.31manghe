@@ -51,7 +51,6 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     }
 
     $body = $request->rawBody();
-
     // 计算签名，$app_secret 是双方使用的密钥，是保密的，外部无从得知
     $expected_signature = hash_hmac('sha256', $body, config('plugin.webman.push.app.app_secret'), false);
 
@@ -59,7 +58,6 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     if ($webhook_signature !== $expected_signature) {
         return response('401 Not authenticated', 401);
     }
-
     // 这里存储这上线 下线的channel数据
     $payload = json_decode($body, true);
 
@@ -75,9 +73,9 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
 
     // 业务根据需要处理上下线的channel，例如将在线状态写入数据库，通知其它channel等
     // 上线的所有channel
-    echo 'online channels: ' . implode(',', $channels_online) . "\n";
+    dump('online channels: ' . implode(',', $channels_online)) ;
     // 下线的所有channel
-    echo 'offline channels: ' . implode(',', $channels_offline) . "\n";
+    dump('offline channels: ' . implode(',', $channels_offline)) ;
 
     return 'OK';
 });

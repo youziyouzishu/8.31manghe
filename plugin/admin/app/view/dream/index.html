@@ -171,16 +171,9 @@
 						sort: true,
 					},{
 						title: "奖品",align: "center",
-						field: "box_prize_id",
-						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
+                        templet: function (d) {
+                            return d.box_prize ? d.box_prize.name : "";
+                        }
 					},{
 						title: "类型",align: "center",
 						field: "type",
@@ -221,6 +214,10 @@
 				        size: "lg",
 				        toolbar: "#table-toolbar",
 				        autoSort: false,
+                        where: { // 请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                            field: 'id', // 排序字段
+                            order: 'desc' // 排序方式
+                        },
 				        defaultToolbar: [{
 				            title: "刷新",
 				            layEvent: "refresh",
@@ -234,9 +231,8 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
 				let apiResults = {};
-				apiResults["box_prize_id"] = [];
+
 				apiResults["type"] = {"1":"梦想大奖","2":"基础奖"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {

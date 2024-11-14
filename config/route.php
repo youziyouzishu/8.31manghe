@@ -54,7 +54,7 @@ Route::group('/goods', function () {
     Route::post('/pay', [\app\controller\GoodsController::class, 'pay']);
 });
 
-Route::group('/userCoupon', function () {
+Route::group('/coupon', function () {
     Route::post('/index', [\app\controller\CouponController::class, 'index']);
     Route::post('/receive', [\app\controller\CouponController::class, 'receive']);
 });
