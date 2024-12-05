@@ -86,6 +86,7 @@ class ConfigController extends Base
                     $data[$section]['privacy_agreement'] = $items['privacy_agreement'] ?? '';
                     $data[$section]['pay_agreement'] = $items['pay_agreement'] ?? '';
                     $data[$section]['box_explain'] = $items['box_explain'] ?? '';
+                    $data[$section]['buy_explain'] = $items['buy_explain'] ?? '';
                     $data[$section]['diy_explain'] = $items['diy_explain'] ?? '';
                     $data[$section]['newfuli'] = htmlspecialchars($items['newfuli'] ?? '');
                     $data[$section]['start_page'] = htmlspecialchars($items['start_page'] ?? '');

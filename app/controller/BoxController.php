@@ -213,7 +213,7 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $times = $request->post('times');
-        $user_coupon_id = $request->post('user_coupon_id', 0);
+        $coupon_id = $request->post('coupon_id', 0);
         $level_id = $request->post('level_id', 0);
         $box = Box::find($box_id);
         if (empty($box)) {
@@ -335,7 +335,7 @@ class BoxController extends BaseController
 
             $amount = $box->price * $times;
 
-            $coupon_amount = Coupon::getCouponAmount($amount, $user_coupon_id);
+            $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
 
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
 
@@ -348,7 +348,7 @@ class BoxController extends BaseController
                 'pay_amount' => 0,
                 'coupon_amount' => $coupon_amount,
                 'ordersn' => $ordersn,
-                'user_coupon_id' => $user_coupon_id,
+                'user_coupon_id' => $coupon_id,
                 'times' => $times,
                 'level_id' => $level_id
             ];
@@ -463,8 +463,8 @@ class BoxController extends BaseController
                 } else {
                     $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->get();
                 }
-                $item->times = $prizes->count();
-                $item->detail = $prizes;
+                $item->setAttribute('times',$prizes->count());
+                $item->setAttribute('detail',$prizes);
             });
 
 

@@ -90,7 +90,8 @@ class RoomController extends BaseController
             'user',
             'boxPrizes'
         ])
-            ->withCount(['roomPrize'])
+            ->withSum('roomPrize','total')
+            ->withSum('roomPrize','price')
             ->where('status', $status)
             ->paginate()
             ->items();

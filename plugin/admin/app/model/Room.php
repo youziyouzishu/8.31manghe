@@ -60,7 +60,7 @@ class Room extends Base
 
     function userPrize()
     {
-        return $this->belongsToMany(UsersPrize::class, RoomPrize::class, 'room_id', 'user_prize_id');
+        return $this->hasManyThrough(UsersPrize::class, RoomPrize::class, 'room_id', 'id','id','user_prize_id');
     }
 
     function roomPrize()

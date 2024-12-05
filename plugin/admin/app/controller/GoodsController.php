@@ -28,23 +28,20 @@ class GoodsController extends Crud
         $this->model = new Goods;
     }
 
+
     /**
-     * 格式化下拉列表
-     * @param $items
+     * 查询
+     * @param Request $request
      * @return Response
+     * @throws BusinessException
      */
-    protected function formatSelect($items): Response
+    public function select(Request $request): Response
     {
-        $formatted_items = [];
-        $primary_key = $this->model->getKeyName();
-        foreach ($items as $item) {
-            $formatted_items[] = [
-                'name' => $item->boxPrize->name,
-                'value' => $item->$primary_key
-            ];
-        }
-        return  $this->json(0, 'ok', $formatted_items);
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->with(['boxPrize']);
+        return $this->doFormat($query, $format, $limit);
     }
+
     
     /**
      * 浏览

@@ -41,7 +41,7 @@ class RoomPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total'];
+    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total','price'];
 
 
     public function room()

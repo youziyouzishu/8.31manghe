@@ -16,18 +16,14 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label required">盲盒</label>
                         <div class="layui-input-block">
-                            <select  id="box_id" lay-filter="box_id">
-                                <option value="">请选择盲盒</option>
-                            </select>
+                            <div id="box_id"></div>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
-                            <select name="prize_id" id="prize_id">
-                                <option value="">请选择奖品</option>
-                            </select>
+                            <div id="prize_id" ></div>
                         </div>
                     </div>
 
@@ -68,7 +64,7 @@
         <script src="/app/admin/admin/js/permission.js"></script>
 
         <script>
-
+            loadCity(0)
             // 相关接口
             const INSERT_API = "/app/admin/goods/insert";
             const class_id = layui.url().search['class_id'];
@@ -163,58 +159,78 @@
                 });
             });
 
-            layui.use(['form', 'jquery'], function(){
-                var form = layui.form;
-                var $ = layui.jquery;
-
-                // 通过 AJAX 请求获取省份数据
-                $.ajax({
-                    url: '/app/admin/box/select?format=select', // 请替换为实际的 API 地址
-                    method: 'GET',
-                    success: function(response) {
-                        var data = response.data;
-                        // 动态加载省份
-                        $.each(data, function(index, item){
-                            $('#box_id').append(new Option(item.name, item.value));
-                        });
-                        form.render('select'); // 重新渲染选择框
+            layui.use(['form','xmSelect', 'jquery'], function(){
+                layui.xmSelect.render({
+                    el: '#box_id',
+                    name: "box_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    layVerify: "required",
+                    prop: {
+                        name: 'name',
+                        value: 'id',
                     },
-                    error: function(error) {
-                        console.error('请求失败:', error);
-                    }
-                });
-
-                // 监听省份选择变化
-                form.on('select(box_id)', function(data){
-                    console.log(data);
-                    var selectedbox_idId = data.value;
-                    if (!selectedbox_idId) {
-                        $('#prize_id').html('<option value="">请选择奖品</option>');
-                        form.render('select');
-                        return;
-                    }
-
-                    // 通过 AJAX 请求获取对应省份的城市数据
-                    $.ajax({
-                        url: '/app/admin/box-prize/select?format=normal', // 请替换为实际的 API 地址
-                        method: 'GET',
-                        data: { box_id: selectedbox_idId },
-                        success: function(response) {
-                            var data = response.data;
-
-                            // 清空城市选择框并加载新的城市选项
-                            $('#prize_id').html('<option value="">请选择奖品</option>');
-                            $.each(data, function(index, item){
-                                $('#prize_id').append(new Option(item.name+'-'+item.price, item.id));
-                            });
-                            form.render('select'); // 重新渲染选择框
-                        },
-                        error: function(error) {
-                            console.error('请求失败:', error);
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
+                        layui.$.ajax({
+                            url: "/app/admin/box/select?format=normal",
+                            dataType: "json",
+                            data: {
+                                name: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
+                        });
+                    },
+                    on: function (data) {
+                        //arr:  当前多选已选中的数据
+                        var arr = data.arr;
+                        if (arr.length > 0) {
+                            var value = arr[0].id;
+                            loadCity(value);
                         }
-                    });
-                });
+                    },
+                })
             });
+
+            function loadCity(box_id) {
+                layui.$.ajax({
+                    url: '/app/admin/box-prize/select?format=normal&box_id=' + box_id, // 获取城市数据的 API
+                    type: 'GET',
+                    success: function (res) {
+                        if (res.code === 0) {
+                            var data = res.data
+                            layui.xmSelect.render({
+                                el: '#prize_id',
+                                name: 'prize_id',
+                                filterable: true,
+                                radio: true,
+                                clickClose: true,
+                                prop: {
+                                    name: 'name',
+                                    value: 'id',
+                                },
+                                layVerify: "required",
+                                data: data,
+                                on: function (data) {
+                                    //arr:  当前多选已选中的数据
+                                    var arr = data.arr;
+                                    if (arr.length > 0) {
+                                        var value = arr[0].id;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
 
         </script>
 

@@ -236,15 +236,8 @@
 						sort: true,
 					},{
 						title: "用户",align: "center",
-						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user.nickname;
 						}
 					},{
 						title: "房间名称",align: "center",

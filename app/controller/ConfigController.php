@@ -19,6 +19,7 @@ class ConfigController extends BaseController
             'pay_agreement' => $config->logo->pay_agreement,
             'diy_explain' =>$config->logo->diy_explain,
             'box_explain' =>$config->logo->box_explain,
+            'buy_explain' => $config->logo->buy_explain,
             'newfuli' => $config->logo->newfuli,
             'start_page'=>$config->logo->start_page,
         ]);

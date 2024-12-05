@@ -44,11 +44,20 @@ class BoxPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $appends = ['grade_text'];
+    protected $appends = ['grade_text','chance'];
 
     function box()
     {
         return $this->belongsTo(Box::class);
+    }
+
+    function getChanceAttribute($value)
+    {
+        $value = $value ?: ($this->chance ?? '');
+
+        $formattedNumber = number_format($value, 3, '.', '');
+        // 去除末尾的零和小数点
+        return rtrim(rtrim($formattedNumber, '0'), '.');
     }
 
     function getGradeTextAttribute($value)
@@ -72,6 +81,8 @@ class BoxPrize extends Base
     {
         return $this->hasMany(UsersPrize::class);
     }
+
+
     
     
     

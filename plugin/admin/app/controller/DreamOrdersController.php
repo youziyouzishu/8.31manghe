@@ -28,6 +28,19 @@ class DreamOrdersController extends Crud
         $this->model = new DreamOrders;
     }
 
+    /**
+     * 查询
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function select(Request $request): Response
+    {
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->with(['bigPrize','smallPrize','user']);
+        return $this->doFormat($query, $format, $limit);
+    }
+
 
     /**
      * 浏览

@@ -258,43 +258,23 @@
 						sort: true,
 					},{
 						title: "用户",align: "center",
-						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user.nickname;
 						}
 					},{
 						title: "订单编号",align: "center",
 						field: "ordersn",
 					},{
 						title: "大奖",align: "center",
-						field: "big_prize_id",
-						templet: function (d) {
-							let field = "big_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
+                        templet: function (d) {
+                            return d.big_prize.name;
+                        }
 					},{
 						title: "小奖",align: "center",
 						field: "small_prize_id",
-						templet: function (d) {
-							let field = "small_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
+                        templet: function (d) {
+                            return d.small_prize.name;
+                        }
 					},{
 						title: "状态",align: "center",
 						field: "status",

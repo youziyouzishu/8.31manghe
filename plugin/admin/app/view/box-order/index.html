@@ -42,12 +42,7 @@
                         </div>
                     </div>
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">所属关卡</label>
-                        <div class="layui-input-block">
-                            <div name="level_id" id="level_id" value="" ></div>
-                        </div>
-                    </div>
+
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">支付类型</label>
@@ -261,15 +256,8 @@
 						sort: true,
 					},{
 						title: "用户",align: "center",
-						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user.nickname;
 						}
 					},{
 						title: "状态",align: "center",
@@ -297,15 +285,8 @@
                         }
                     },{
 						title: "所属盲盒",align: "center",
-						field: "box_id",
 						templet: function (d) {
-							let field = "box_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.box.name
 						}
 					},{
                         title: "盲盒类型",align: "center",
@@ -340,7 +321,8 @@
                                 items.push(apiResults[field][v] || v);
                             });
                             return util.escape(items.join(","));
-                        }
+                        },
+                        hide:true
 					},{
 						title: "抽奖次数",align: "center",
 						field: "times",
@@ -355,7 +337,8 @@
 								items.push(apiResults[field][v] || v);
 							});
 							return util.escape(items.join(","));
-						}
+						},
+                        hide:true
 					},{
 						title: "创建时间",align: "center",
 						field: "created_at",

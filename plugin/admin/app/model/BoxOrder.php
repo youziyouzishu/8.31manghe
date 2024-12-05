@@ -80,6 +80,11 @@ class BoxOrder extends Base
         return $this->belongsTo(User::class);
     }
 
+    function level()
+    {
+        return $this->belongsTo(BoxLevel::class,'level_id');
+    }
+
 
 
 

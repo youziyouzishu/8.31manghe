@@ -14,7 +14,7 @@
 
 return [
     '' => [
+        app\middleware\AccessControl::class,
         app\middleware\AuthCheck::class,
-        app\middleware\AccessControl::class
     ]
 ];

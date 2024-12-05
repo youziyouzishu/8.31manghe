@@ -14,7 +14,7 @@
 
             <div class="mainBox">
                 <div class="main-container mr-5">
-                    
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
@@ -87,7 +87,7 @@
                                 obj[0].value = value;
                             }
                         });
-                        
+
                         // 字段 奖品 prize_id
                         layui.use(["jquery", "xmSelect", "popup"], function() {
                             layui.$.ajax({
@@ -101,7 +101,7 @@
                                         name: "prize_id",
                                         initValue: initValue,
                                         filterable: true,
-                                        data: res.data, 
+                                        data: res.data,
                                         model: {"icon":"hidden","label":{"type":"text"}},
                                         clickClose: true,
                                         radio: true,

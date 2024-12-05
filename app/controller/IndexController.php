@@ -16,11 +16,6 @@ use Wolfcode\PhpLogviewer\webman\laravel\LogViewer;
 class IndexController extends BaseController
 {
     protected array $noNeedLogin = ['*'];
-    public function index(Request $request)
-    {
-        $res = Pay::refund(1,0.01,'20241106672ADDC80E02F','20241106672ADDC80E022','申请退款');
-        dump($res);
-    }
 
     function log()
     {

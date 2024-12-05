@@ -37,7 +37,7 @@ class BoxOrderController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->with('box');
+        $query = $this->doSelect($where, $field, $order)->with(['box','user','level']);
         return $this->doFormat($query, $format, $limit);
     }
 

@@ -60,7 +60,7 @@ class UserController extends BaseController
             $nextId = User::max('id') + 1;
             $userData = [
                 'nickname' => '昵称' . $nextId,
-                'avatar' => '/app/admin/admin/images/logo.png',
+                'avatar' => '/app/admin/upload/files/20241205/675118b32fcb.jpg',
                 'openid' => $openid??'',
                 'mobile' => $mobile??'',
                 'join_time' => date('Y-m-d H:i:s'),

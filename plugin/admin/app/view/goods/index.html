@@ -150,15 +150,8 @@
 						sort: true,
 					},{
 						title: "奖品",align: "center",
-						field: "prize_id",
 						templet: function (d) {
-							let field = "prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+					        return d.box_prize.name;
 						}
 					},{
                         title: "创建时间",align: "center",
@@ -167,6 +160,7 @@
                     },{
                         title: "更新时间",align: "center",
                         field: "updated_at",
+                        hide:true
                     },{
 						title: "操作",
 						toolbar: "#table-bar",

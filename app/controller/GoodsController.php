@@ -2,9 +2,7 @@
 
 namespace app\controller;
 
-use app\service\Coupon;
 use app\service\Pay;
-use app\tool\Random;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Goods;
@@ -19,7 +17,7 @@ use Tinywan\Jwt\JwtToken;
 class GoodsController extends BaseController
 {
     protected array $noNeedLogin = ['class'];
-
+    
     function class()
     {
         $row = GoodsClass::get();
@@ -88,12 +86,10 @@ class GoodsController extends BaseController
                 //余额支付
                 User::money(-$pay_amount, $request->uid, '购买商品');
                 $code = 3;
-
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
-                $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'goods']);
+                $request->set('get',['out_trade_no' => $ordersn, 'attach' => 'goods']);
                 $res = $notify->balance($request);
-
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
                     //支付失败

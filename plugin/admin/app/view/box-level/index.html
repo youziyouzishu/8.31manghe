@@ -143,6 +143,12 @@
                             return '<img src="'+encodeURI(d['image'])+'" style="max-width:32px;max-height:32px;" alt="" />'
                         }
                     },{
+                        title: "详情图片",align: "center",
+                        field: "detail_img",
+                        templet: function (d) {
+                            return '<img src="'+encodeURI(d['detail_img'])+'" style="max-width:32px;max-height:32px;" alt="" />'
+                        }
+                    },{
 						title: "关卡",align: "center",
 						field: "name",
                         templet: function (d) {

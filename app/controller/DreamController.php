@@ -17,23 +17,16 @@ class DreamController extends BaseController
 {
     function index(Request $request)
     {
+        $order = $request->post('order','desc');
         $type = $request->post('type');
         if (!in_array($type, [1, 2])) {
             return $this->fail('参数错误');
         }
         // 加载 dreams 并按 boxPrize 的 price 排序
-        $dreams = Dream::with(['boxPrize' => function ($query) use ($type) {
-            $query->when($type == 1, function ($query) {
-                $query->orderByDesc('price');
-            }, function ($query) {
-                $query->orderBy('price');
-            });
-        }])->where('type', $type)->get();
+        $box_prize_ids = Dream::where('type', $type)->pluck('box_prize_id');
 
-        // 提取 boxPrize 数据
-        $boxPrizes = $dreams->map(function ($dream) {
-            return $dream->boxPrize;
-        });
+        $boxPrizes = BoxPrize::whereIn('id', $box_prize_ids)->orderBy('price',$order)->get();
+
         return $this->success('成功', $boxPrizes);
     }
 

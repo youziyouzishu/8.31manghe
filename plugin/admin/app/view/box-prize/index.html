@@ -133,7 +133,7 @@
 
     layui.use(["jquery", "xmSelect", "popup"], function() {
         layui.$.ajax({
-            url: "/app/admin/box-level/select?format=select",
+            url: "/app/admin/box-level/select?format=select&box_id="+box_id,
             dataType: "json",
             success: function (res) {
                 let value = layui.$("#level_id").attr("value");
@@ -154,6 +154,7 @@
             }
         });
     });
+
 
     // 表格渲染
     layui.use(["table", "form", "common", "popup", "util"], function () {
@@ -188,15 +189,8 @@
                 }
             }, {
                 title: "所属关卡", align: "center",
-                field: "level_id",
                 templet: function (d) {
-                    let field = "level_id";
-                    if (typeof d[field] == "undefined") return "";
-                    let items = [];
-                    layui.each((d[field] + "").split(","), function (k, v) {
-                        items.push(apiResults[field][v] || v);
-                    });
-                    return "关卡 " + util.escape(items.join(","));
+                    return d.level? d.level.name : "";
                 }
             }, {
                 title: "概率", align: "center",
@@ -223,6 +217,7 @@
             }, {
                 title: "更新时间", align: "center",
                 field: "updated_at",
+                hide:true
             }, {
                 title: "操作",
                 toolbar: "#table-bar",
@@ -270,11 +265,9 @@
         // 获取表格中下拉或树形组件数据
         let apis = [];
         apis.push(["box_id", "/app/admin/box/select?format=select"]);
-        apis.push(["level_id", "/app/admin/box-level/select?format=select"]);
         let apiResults = {};
         apiResults["grade"] = {"1": "通关赏", "2": "N", "3": "S级", "4": "SS级", "5": "SSS级"};
         apiResults["box_id"] = [];
-        apiResults["level_id"] = [];
         let count = apis.length;
         layui.each(apis, function (k, item) {
 

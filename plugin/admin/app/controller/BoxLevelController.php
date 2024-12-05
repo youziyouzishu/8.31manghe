@@ -41,23 +41,6 @@ class BoxLevelController extends Crud
         return $this->doFormat($query, $format, $limit);
     }
 
-    /**
-     * 格式化下拉列表
-     * @param $items
-     * @return Response
-     */
-    protected function formatSelect($items): Response
-    {
-        $formatted_items = [];
-        $primary_key = $this->model->getKeyName();
-        foreach ($items as $item) {
-            $formatted_items[] = [
-                'name' =>  $item->box->name. ' ' .$this->guessName($item) ?: $item->$primary_key,
-                'value' => $item->$primary_key
-            ];
-        }
-        return  $this->json(0, 'ok', $formatted_items);
-    }
 
     
     /**

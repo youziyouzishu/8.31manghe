@@ -17,7 +17,6 @@ use Tinywan\Jwt\JwtToken;
 use Webman\Route;
 
 
-Route::any('/', [\app\controller\IndexController::class, 'index']);
 Route::any('/log', [\app\controller\IndexController::class, 'log']);
 
 Route::group('/notify', function () {

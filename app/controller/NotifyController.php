@@ -97,7 +97,7 @@ class NotifyController extends BaseController
                         $order->userCoupon->status = 2;
                         $order->userCoupon->save();
                     }
-                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                    if ($order->user->new == 1 && $paytype == 'wechat') {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
@@ -114,7 +114,6 @@ class NotifyController extends BaseController
                     $winnerPrize = [];
                     for ($i = 0; $i < $order->times; $i++) {
                         $start = microtime(true);
-                        dump($start);
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                         $prizes = BoxPrize::where([['num', '>', 0]])
                             ->where(['box_id' => $order->box_id])
@@ -217,7 +216,7 @@ class NotifyController extends BaseController
                     $order->status = 2;
                     $order->pay_at = date('Y-m-d H:i:s');
                     $order->save();
-                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                    if ($order->user->new == 1 && $paytype == 'wechat') {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
@@ -289,7 +288,7 @@ class NotifyController extends BaseController
                     $probability = $probability / 2;
                     $big_prize_id = $order->big_prize_id;
                     $small_prize_id = $order->small_prize_id;
-                    if ($order->user->new == 1 && $paytype == 'weichat') {
+                    if ($order->user->new == 1 && $paytype == 'wechat') {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
@@ -363,7 +362,7 @@ class NotifyController extends BaseController
                 default:
                     throw new \Exception('回调错误');
             }
-            if ($paytype == 'weichat') {
+            if ($paytype == 'wechat') {
                 $app = new Application(config('wechat'));
                 $api = $app->getClient();
                 $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
