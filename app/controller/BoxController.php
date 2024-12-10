@@ -32,9 +32,9 @@ class BoxController extends BaseController
     public function index(Request $request)
     {
         $type = $request->post('type', 1);
-        $sort = $request->post('sort', 'asc');
+        $sort = $request->post('sort', 'desc');
         $rows = Box::where(['type' => $type, 'status' => 1])
-            ->orderBy('weigh', $sort)
+            ->orderBy('price', $sort)
             ->paginate()
             ->items();
         return $this->success('成功', $rows);
@@ -190,7 +190,7 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $times = $request->post('times');
-        $coupon_id = $request->post('coupon_id');
+        $coupon_id = $request->post('coupon_id',0);
         $row = Box::find($box_id);
         if (!$row) {
             return $this->fail('盲盒不存在');
@@ -254,7 +254,6 @@ class BoxController extends BaseController
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
-
                         $prizes = BoxPrize::where([['num', '>', 0], 'level_id' => $level_id])->get();
                         // 如果没有可用奖品，返回提示
 
@@ -313,6 +312,9 @@ class BoxController extends BaseController
                                     $ticket->decrement('num');
                                     if ($ticket->num <= 0) {
                                         $ticket->delete();
+
+                                        // 从集合中移除该元素
+                                        $lastTicket->forget($ticket->getKey());
                                     }
                                 }
                                 break;
@@ -334,12 +336,11 @@ class BoxController extends BaseController
             }
 
             $amount = $box->price * $times;
-
+            dump($coupon_id);
             $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
-
+            dump($coupon_amount);
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
-
-
+            dump($pay_amount);
             $ordersn = Util::ordersn();
             $orderData = [
                 'user_id' => $request->uid,
@@ -348,7 +349,7 @@ class BoxController extends BaseController
                 'pay_amount' => 0,
                 'coupon_amount' => $coupon_amount,
                 'ordersn' => $ordersn,
-                'user_coupon_id' => $coupon_id,
+                'user_coupon_id' => empty($coupon_id)?0:$coupon_id,
                 'times' => $times,
                 'level_id' => $level_id
             ];
@@ -359,7 +360,7 @@ class BoxController extends BaseController
             $user = User::find($request->uid);
             if ($user->money >= $pay_amount) {
                 if ($pay_amount <= 0) {
-                    $pay_amount = 0.01;
+                    $pay_amount = 0;
                 }
                 $order->pay_type = 2;
                 $order->pay_amount = $pay_amount;

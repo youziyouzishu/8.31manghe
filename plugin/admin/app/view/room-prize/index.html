@@ -14,12 +14,7 @@
             <div class="layui-card-body">
                 <form class="layui-form top-search-from">
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">奖品</label>
-                        <div class="layui-input-block">
-                            <div name="box_prize_id" id="box_prize_id" value="" ></div>
-                        </div>
-                    </div>
+
                     
                     <div class="layui-form-item layui-inline">
                         <label class="layui-form-label"></label>
@@ -67,64 +62,15 @@
         <script src="/app/admin/admin/js/common.js"></script>
         
         <script>
-
+            const room_id = layui.url().search['room_id'];
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/room-prize/select";
+            const SELECT_API = "/app/admin/room-prize/select?room_id="+room_id;
             const UPDATE_API = "/app/admin/room-prize/update";
             const DELETE_API = "/app/admin/room-prize/delete";
-            const INSERT_URL = "/app/admin/room-prize/insert";
-            const UPDATE_URL = "/app/admin/room-prize/update";
-            
-            // 字段 房间 room_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/room/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#room_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#room_id",
-                            name: "room_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-            
-            // 字段 奖品 box_prize_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box-prize/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#box_prize_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#box_prize_id",
-                            name: "box_prize_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
+            const INSERT_URL = "/app/admin/room-prize/insert?room_id="+room_id;
+            const UPDATE_URL = "/app/admin/room-prize/update?room_id="+room_id;
+
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -143,29 +89,9 @@
 						title: "主键",align: "center",
 						field: "id",
 					},{
-						title: "用户赏品",align: "center",
-						field: "user_prize_id",
-						hide: true,
-						templet: function (d) {
-							let field = "user_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
-					},{
 						title: "奖品",align: "center",
-						field: "box_prize_id",
 						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.box_prize.name
 						}
 					},{
 						title: "创建时间",align: "center",
@@ -327,7 +253,7 @@
                         shade: 0.1,
                         maxmin: true,
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
-                        content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
+                        content: UPDATE_URL + "&" + PRIMARY_KEY + "=" + value
                     });
                 }
 

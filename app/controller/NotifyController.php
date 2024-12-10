@@ -206,6 +206,22 @@ class NotifyController extends BaseController
                         'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
 
+                    if ($paytype == 'wechat') {
+                        $app = new Application(config('wechat'));
+                        $api = $app->getClient();
+                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
+                        $formatted_date = $date->format('c');
+                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
+                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
+                            'logistics_type' => 3,
+                            'delivery_mode' => 1,
+                            'shipping_list' => [[
+                                'item_desc' => $order->box->name,
+                            ]],
+                            'upload_time' => $formatted_date,
+                            'payer' => ['openid' => $openid]
+                        ]);
+                    }
 
                     break;
                 case 'goods':
@@ -250,7 +266,22 @@ class NotifyController extends BaseController
                         'mark' => $order->goods->boxPrize->name,
                         'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
-
+                    if ($paytype == 'wechat') {
+                        $app = new Application(config('wechat'));
+                        $api = $app->getClient();
+                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
+                        $formatted_date = $date->format('c');
+                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
+                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
+                            'logistics_type' => 3,
+                            'delivery_mode' => 1,
+                            'shipping_list' => [[
+                                'item_desc' => $order->goods->boxPrize->name,
+                            ]],
+                            'upload_time' => $formatted_date,
+                            'payer' => ['openid' => $openid]
+                        ]);
+                    }
                     break;
                 case 'freight':
                     $order = Deliver::where(['ordersn' => $out_trade_no, 'status' => 0])->first();
@@ -275,6 +306,23 @@ class NotifyController extends BaseController
                             $item->userPrize->delete();
                         }
                     });
+
+                    if ($paytype == 'wechat') {
+                        $app = new Application(config('wechat'));
+                        $api = $app->getClient();
+                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
+                        $formatted_date = $date->format('c');
+                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
+                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
+                            'logistics_type' => 3,
+                            'delivery_mode' => 1,
+                            'shipping_list' => [[
+                                'item_desc' => '发货运费'
+                            ]],
+                            'upload_time' => $formatted_date,
+                            'payer' => ['openid' => $openid]
+                        ]);
+                    }
                     break;
                 case 'dream':
                     $order = DreamOrders::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
@@ -358,26 +406,28 @@ class NotifyController extends BaseController
                         'mark' => '梦想DIY抽奖',
                         'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
+
+                    if ($paytype == 'wechat') {
+                        $app = new Application(config('wechat'));
+                        $api = $app->getClient();
+                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
+                        $formatted_date = $date->format('c');
+                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
+                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
+                            'logistics_type' => 3,
+                            'delivery_mode' => 1,
+                            'shipping_list' => [[
+                                'item_desc' => '梦想DIY抽奖'
+                            ]],
+                            'upload_time' => $formatted_date,
+                            'payer' => ['openid' => $openid]
+                        ]);
+                    }
                     break;
                 default:
                     throw new \Exception('回调错误');
             }
-            if ($paytype == 'wechat') {
-                $app = new Application(config('wechat'));
-                $api = $app->getClient();
-                $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
-                $formatted_date = $date->format('c');
-                $api->postJson('/wxa/sec/order/upload_shipping_info', [
-                    'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
-                    'logistics_type' => 3,
-                    'delivery_mode' => 1,
-                    'shipping_list' => [[
-                        'item_desc' => '盲盒'
-                    ]],
-                    'upload_time' => $formatted_date,
-                    'payer' => ['openid' => $openid]
-                ]);
-            }
+
         } catch (\Throwable $e) {
             throw new \Exception($e->getMessage());
         }

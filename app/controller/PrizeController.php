@@ -42,7 +42,7 @@ class PrizeController extends BaseController
             if ($res->num <= 0) {
                 $res->delete();
             }
-            User::money($res->price * $prize['num'], $request->uid, '退货获得');
+            User::money($res->price * $prize['num'], $request->uid, '退货'.$res->boxPrize->name.'获得');
         }
         return $this->success();
     }

@@ -67,14 +67,14 @@
         <script src="/app/admin/admin/js/common.js"></script>
         
         <script>
-
+            const room_id = layui.url().search['room_id'];
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/room-users/select";
+            const SELECT_API = "/app/admin/room-users/select?room_id="+room_id;
             const UPDATE_API = "/app/admin/room-users/update";
             const DELETE_API = "/app/admin/room-users/delete";
-            const INSERT_URL = "/app/admin/room-users/insert";
-            const UPDATE_URL = "/app/admin/room-users/update";
+            const INSERT_URL = "/app/admin/room-users/insert?room_id="+room_id;
+            const UPDATE_URL = "/app/admin/room-users/update?room_id="+room_id;
             
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
@@ -312,7 +312,7 @@
                         shade: 0.1,
                         maxmin: true,
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
-                        content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
+                        content: UPDATE_URL + "&" + PRIMARY_KEY + "=" + value
                     });
                 }
 

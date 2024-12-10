@@ -134,14 +134,17 @@ class UserController extends Crud
                 //水晶余额
                 $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()?->value('after')??0;
                 //赏袋和保险箱剩余商品价值
-                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('price * num')??0;
+                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])
+                    ->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])
+                    ->select(DB::raw('SUM(price * num) as user_prize_sum_price'))
+                    ->value('user_prize_sum_price') ?? 0;
                 //活动赠送部分
                 $give_prize = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->get();
                 $give_prize_price = $give_prize->sum('price');
                 //系统增加的水晶
                 $system_money = UsersMoneyLog::where(['user_id' => $item->id, 'memo' => '系统赠送'])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('money') ?? 0;
 
-                $item->profit = abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money;
+                $item->profit = round(abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money,2);
                 $item->give_prize = $give_prize;
                 $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {
                     return $userprize->price * $userprize->num;
@@ -169,7 +172,7 @@ class UserController extends Crud
                 //系统增加的水晶
                 $system_money = UsersMoneyLog::where(['user_id' => $item->id, 'memo' => '系统赠送'])->sum('money') ?? 0;
 
-                $item->profit = abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money;
+                $item->profit = round(abs($profit_sum_amount) - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money,2);
                 $item->give_prize = $give_prize;
             }
         });

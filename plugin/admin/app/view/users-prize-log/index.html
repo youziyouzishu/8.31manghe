@@ -108,19 +108,15 @@
                 SELECT_API = "/app/admin/users-prize-log/select?user_id="+user_id+"&type=3";
             }
             if (typeof ordersn !== 'undefined' ) {
-                let data = {};
-                data["ordersn"] = ordersn;
                 layui.$.ajax({
-                    url: "/app/admin/users-draw-log/select?format=select",
+                    url: "/app/admin/users-draw-log/select?format=normal&ordersn="+ordersn,
                     dataType: "json",
-                    data: data,
                     success: function (res) {
                         if (!res.code) {
-                            draw_id = res.data.id;
-                            if (typeof draw_id === 'undefined' ){
-                                SELECT_API = "/app/admin/users-prize-log/select?draw_id=999999999999";
+                            if (res.data.length === 0 ){
+                                SELECT_API = "/app/admin/users-prize-log/select?draw_id=-1";
                             }else{
-                                SELECT_API = "/app/admin/users-prize-log/select?draw_id="+draw_id;
+                                SELECT_API = "/app/admin/users-prize-log/select?draw_id="+res.data[0].id;
                             }
                         }else{
                             layui.popup.failure(res.msg);

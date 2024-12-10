@@ -63,11 +63,12 @@ class BoxOrder extends Base
         'times',
         'pay_type',
         'level_id',
+        'user_coupon_id'
     ];
 
     function userCoupon()
     {
-        return $this->belongsTo(UsersCoupon::class);
+        return $this->belongsTo(UsersCoupon::class,'user_coupon_id');
     }
 
     function box()

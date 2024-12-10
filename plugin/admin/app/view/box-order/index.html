@@ -121,27 +121,31 @@
 
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/user/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#user_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#user_id",
-                            name: "user_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
+                layui.xmSelect.render({
+                    el: '#user_id',
+                    name: "user_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
+                        layui.$.ajax({
+                            url: "/app/admin/user/select?format=select",
+                            dataType: "json",
+                            data: {
+                                nickname: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
                         });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
                     }
-                });
+                })
             });
 
             
@@ -177,31 +181,38 @@
                     radio: true,
                 })
             });
-            
-            // 字段 所属盲盒 box_id
+
+
+            // 字段 box_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#box_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#box_id",
-                            name: "box_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
+                layui.xmSelect.render({
+                    el: '#box_id',
+                    name: "box_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
+                        layui.$.ajax({
+                            url: "/app/admin/box/select?format=select",
+                            dataType: "json",
+                            data: {
+                                name: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
                         });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
                     }
-                });
+                })
             });
+            
+
             
             // 字段 所属关卡 level_id
             layui.use(["jquery", "xmSelect", "popup"], function() {

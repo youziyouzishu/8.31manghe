@@ -90,12 +90,9 @@ class RoomController extends BaseController
             'user',
             'boxPrizes'
         ])
-            ->withSum('roomPrize','total')
-            ->withSum('roomPrize','price')
             ->where('status', $status)
             ->paginate()
             ->items();
-
         return $this->success('成功', $rows);
     }
 
@@ -104,7 +101,7 @@ class RoomController extends BaseController
     {
         $room_id = $request->post('room_id');
         $row = Room::with([
-            'userPrize' => function ($query) {
+            'roomPrize' => function ($query) {
                 $query->with(['boxPrize']);
             },
             'user',
@@ -190,12 +187,15 @@ class RoomController extends BaseController
         $rooms = Room::where(['user_id' => $request->uid])
             ->paginate()
             ->getCollection()
-            ->map(function (Room $room) {
-                $count = $room->roomPrize->sum('num');
-                $price = $room->roomPrize->sum('price');
-                $room->prize_count = $count;
-                $room->price = $price;
-                return $room;
+            ->each(function ($room) {
+                $total = 0;
+                $total_price = 0;
+                $room->roomPrize->each(function ($item)use(&$total,&$total_price){
+                    $total += $item->total;
+                    $total_price += $item->total * $item->price;
+                });
+                $room->setAttribute('prize_count',$total);
+                $room->setAttribute('price',round($total_price,2));
             });
         return $this->success('成功', $rooms);
     }
