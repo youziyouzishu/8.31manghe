@@ -360,7 +360,7 @@ class UserController extends Crud
                     'money' => $addmoney,
                     'before' => $originmoney,
                     'after' => $user->money,
-                    'memo' => '管理员变更'
+                    'memo' => '活动赠送'
                 ]);
             }
         } catch (\PDOException $exception) {
