@@ -151,15 +151,8 @@
 						hide: true,
 					},{
 						title: "奖品",align: "center",
-						field: "box_prize_id",
 						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.box_prize.name;
 						}
 					},{
 						title: "所属用户奖品",align: "center",

@@ -113,7 +113,6 @@ class NotifyController extends BaseController
 
                     $winnerPrize = [];
                     for ($i = 0; $i < $order->times; $i++) {
-                        $start = microtime(true);
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                         $prizes = BoxPrize::where([['num', '>', 0]])
                             ->where(['box_id' => $order->box_id])
@@ -163,7 +162,6 @@ class NotifyController extends BaseController
                                 break;
                             }
                         }
-                        dump('耗时 '.microtime(true) - $start);
                     }
                     $api = new Api(
                         'http://127.0.0.1:3232',
@@ -291,6 +289,7 @@ class NotifyController extends BaseController
                     $order->status = 1;
                     $order->pay_time = date('Y-m-d H:i:s');
                     $order->save();
+
                     $order->detail->each(function (DeliverDetail $item) {
                         //支付成功  删除用户的奖品
                         UsersPrizeLog::create([
@@ -301,8 +300,8 @@ class NotifyController extends BaseController
                             'price' => $item->boxPrize->price,
                             'grade' => $item->boxPrize->grade,
                         ]);
-                        $item->userPrize->decrement('num');
-                        if ($item->userPrize <= 0) {
+                        $item->userPrize->decrement('num',$item->num);
+                        if ($item->userPrize->num <= 0) {
                             $item->userPrize->delete();
                         }
                     });

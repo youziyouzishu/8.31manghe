@@ -64,7 +64,6 @@
         <script src="/app/admin/admin/js/permission.js"></script>
 
         <script>
-            loadCity(0)
             // 相关接口
             const INSERT_API = "/app/admin/goods/insert";
             const class_id = layui.url().search['class_id'];
@@ -160,7 +159,7 @@
             });
 
             layui.use(['form','xmSelect', 'jquery'], function(){
-                layui.xmSelect.render({
+                let boxSelect =  layui.xmSelect.render({
                     el: '#box_id',
                     name: "box_id",
                     //配置搜索
@@ -193,44 +192,44 @@
                         //arr:  当前多选已选中的数据
                         var arr = data.arr;
                         if (arr.length > 0) {
-                            var value = arr[0].id;
-                            loadCity(value);
+                            var selectedBoxId = arr[0].id;
+                            if (boxPrizeSelect) {
+                                boxPrizeSelect.update({
+                                    data:[],
+                                    remoteMethod: function (val, cb, show, pageIndex) {
+                                        layui.$.ajax({
+                                            url: '/app/admin/box-prize/select?format=normal&box_id=' + selectedBoxId,
+                                            dataType: "json",
+                                            data: {
+                                                name: val
+                                            },
+                                            success: function (res) {
+                                                cb(res.data);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         }
                     },
                 })
-            });
 
-            function loadCity(box_id) {
-                layui.$.ajax({
-                    url: '/app/admin/box-prize/select?format=normal&box_id=' + box_id, // 获取城市数据的 API
-                    type: 'GET',
-                    success: function (res) {
-                        if (res.code === 0) {
-                            var data = res.data
-                            layui.xmSelect.render({
-                                el: '#prize_id',
-                                name: 'prize_id',
-                                filterable: true,
-                                radio: true,
-                                clickClose: true,
-                                prop: {
-                                    name: 'name',
-                                    value: 'id',
-                                },
-                                layVerify: "required",
-                                data: data,
-                                on: function (data) {
-                                    //arr:  当前多选已选中的数据
-                                    var arr = data.arr;
-                                    if (arr.length > 0) {
-                                        var value = arr[0].id;
-                                    }
-                                }
-                            });
-                        }
-                    }
+                let boxPrizeSelect = layui.xmSelect.render({
+                    el: '#prize_id',
+                    name: 'prize_id',
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    layVerify: "required",
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
                 });
-            }
+            });
 
         </script>
 

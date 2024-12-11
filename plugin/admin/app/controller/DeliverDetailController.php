@@ -27,7 +27,20 @@ class DeliverDetailController extends Crud
     {
         $this->model = new DeliverDetail;
     }
-    
+
+    /**
+     * 查询
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function select(Request $request): Response
+    {
+        [$where, $format, $limit, $field, $order] = $this->selectInput($request);
+        $query = $this->doSelect($where, $field, $order)->with(['boxPrize']);
+        return $this->doFormat($query, $format, $limit);
+    }
+
     /**
      * 浏览
      * @return Response

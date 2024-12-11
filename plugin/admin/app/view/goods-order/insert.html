@@ -89,30 +89,43 @@
 
             // 相关接口
             const INSERT_API = "/app/admin/goods-order/insert";
-            
+
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/user/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#user_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#user_id",
-                            name: "user_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
+                let value = layui.$("#user_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: '#user_id',
+                    name: "user_id",
+                    //配置搜索
+                    initValue: initValue,
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    template({ item, sels, name, value }){
+                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
+                    },
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        layui.$.ajax({
+                            url: "/app/admin/user/select?format=select",
+                            dataType: "json",
+                            data: {
+                                id: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
                         });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
                     }
-                });
+                })
             });
             
             // 字段 商品 goods_id

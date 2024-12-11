@@ -15,7 +15,7 @@
                 <div class="main-container mr-5">
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">用户</label>
+                        <label class="layui-form-label required">用户</label>
                         <div class="layui-input-block">
                             <div name="user_id" id="user_id" value="" ></div>
                         </div>
@@ -24,17 +24,14 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label required">盲盒</label>
                         <div class="layui-input-block">
-                            <select  id="box_id" lay-filter="box_id">
-                                <option value="">请选择盲盒</option>
-                            </select>
+                            <div id="box_id"></div>
                         </div>
                     </div>
+
                     <div class="layui-form-item">
                         <label class="layui-form-label required">奖品</label>
                         <div class="layui-input-block">
-                            <select name="box_prize_id" id="box_prize_id">
-                                <option value="">请选择奖品</option>
-                            </select>
+                            <div id="box_prize_id" ></div>
                         </div>
                     </div>
 
@@ -100,51 +97,43 @@
 
             // 相关接口
             const INSERT_API = "/app/admin/users-prize/insert";
-            
+
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/user/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#user_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#user_id",
-                            name: "user_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                            remoteSearch: true,
-                            remoteMethod: function(val, cb, show){
-                                //这里如果val为空, 则不触发搜索
-                                if(!val){
-                                    return cb([]);
-                                }
-                                //这里引入了一个第三方插件axios, 相当于$.ajax
-                                layui.$.ajax({
-                                    url: '/app/admin/user/select?format=select',
-                                    data: {
-                                        id: val,
-                                    },
-                                    dataType: "json",
-                                    success: function(res) {
-                                        cb(res.data);
-                                    },
-                                    error: function(e) {
-                                        cb([]);
-                                    }
-                                });
+                let value = layui.$("#user_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: '#user_id',
+                    name: "user_id",
+                    //配置搜索
+                    initValue: initValue,
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    template({ item, sels, name, value }){
+                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
+                    },
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        layui.$.ajax({
+                            url: "/app/admin/user/select?format=select",
+                            dataType: "json",
+                            data: {
+                                id: val
                             },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
                         });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
                     }
-                });
+                })
             });
 
             // 字段 保险箱 safe
@@ -163,65 +152,79 @@
                     radio: true,
                 })
             });
-            
-            // 字段 删除时间 deleted_at
-            layui.use(["laydate"], function() {
-                layui.laydate.render({
-                    elem: "#deleted_at",
-                    type: "datetime",
-                });
-            })
 
-            layui.use(['form', 'jquery'], function(){
-                var form = layui.form;
-                var $ = layui.jquery;
 
-                // 通过 AJAX 请求获取省份数据
-                $.ajax({
-                    url: '/app/admin/box/select?format=select', // 请替换为实际的 API 地址
-                    method: 'GET',
-                    success: function(response) {
-                        var data = response.data;
-                        // 动态加载省份
-                        $.each(data, function(index, item){
-                            $('#box_id').append(new Option(item.name, item.value));
-                        });
-                        form.render('select'); // 重新渲染选择框
+
+            layui.use(['form','xmSelect', 'jquery'], function(){
+                let boxSelect =  layui.xmSelect.render({
+                    el: '#box_id',
+                    name: "box_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    layVerify: "required",
+                    prop: {
+                        name: 'name',
+                        value: 'id',
                     },
-                    error: function(error) {
-                        console.error('请求失败:', error);
-                    }
-                });
-
-                // 监听省份选择变化
-                form.on('select(box_id)', function(data){
-                    console.log(data);
-                    var selectedbox_idId = data.value;
-                    if (!selectedbox_idId) {
-                        $('#box_prize_id').html('<option value="">请选择奖品</option>');
-                        form.render('select');
-                        return;
-                    }
-
-                    // 通过 AJAX 请求获取对应省份的城市数据
-                    $.ajax({
-                        url: '/app/admin/box-prize/select?format=formatNormal', // 请替换为实际的 API 地址
-                        method: 'GET',
-                        data: { box_id: selectedbox_idId },
-                        success: function(response) {
-                            var data = response.data;
-                            console.log(data)
-                            // 清空城市选择框并加载新的城市选项
-                            $('#box_prize_id').html('<option value="">请选择奖品</option>');
-                            $.each(data, function(index, item){
-                                $('#box_prize_id').append(new Option(item.name + '-' + item.price, item.id));
-                            });
-                            form.render('select'); // 重新渲染选择框
-                        },
-                        error: function(error) {
-                            console.error('请求失败:', error);
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
+                        layui.$.ajax({
+                            url: "/app/admin/box/select?format=normal",
+                            dataType: "json",
+                            data: {
+                                name: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
+                        });
+                    },
+                    on: function (data) {
+                        //arr:  当前多选已选中的数据
+                        var arr = data.arr;
+                        if (arr.length > 0) {
+                            var selectedBoxId = arr[0].id;
+                            if (boxPrizeSelect) {
+                                boxPrizeSelect.update({
+                                    data:[],
+                                    remoteMethod: function (val, cb, show, pageIndex) {
+                                        layui.$.ajax({
+                                            url: '/app/admin/box-prize/select?format=normal&box_id=' + selectedBoxId,
+                                            dataType: "json",
+                                            data: {
+                                                name: val
+                                            },
+                                            success: function (res) {
+                                                cb(res.data);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         }
-                    });
+                    },
+                })
+
+                let boxPrizeSelect = layui.xmSelect.render({
+                    el: '#box_prize_id',
+                    name: 'box_prize_id',
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    layVerify: "required",
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
                 });
             });
             

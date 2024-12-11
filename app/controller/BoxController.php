@@ -26,7 +26,7 @@ use Webman\Push\Api;
 class BoxController extends BaseController
 {
 
-    protected array $noNeedLogin = ['index', 'boxPrize'];
+    protected array $noNeedLogin = ['index', 'boxPrize','getDrawLog'];
 
 
     public function index(Request $request)
@@ -336,11 +336,8 @@ class BoxController extends BaseController
             }
 
             $amount = $box->price * $times;
-            dump($coupon_id);
             $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);
-            dump($coupon_amount);
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
-            dump($pay_amount);
             $ordersn = Util::ordersn();
             $orderData = [
                 'user_id' => $request->uid,
@@ -443,8 +440,6 @@ class BoxController extends BaseController
         if (empty($box_id)|| empty($grade)) {
             return $this->fail('参数不能为空');
         }
-
-
         #盲盒内大于N赏的奖品
         $prize_ids = BoxPrize::where(['box_id' => $box_id])
             ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
@@ -452,6 +447,7 @@ class BoxController extends BaseController
             })
             ->where('grade', $grade)
             ->pluck('id');
+
         $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
             ->where('type', 0)
             ->orderBy('id', 'desc')
@@ -460,13 +456,13 @@ class BoxController extends BaseController
             ->each(function ($item) use ($request, $grade) {
                 $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $grade)->first();
                 if (!$last) {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->get();
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->count();
                 } else {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->get();
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }
-                $item->setAttribute('times',$prizes->count());
-                $item->setAttribute('detail',$prizes);
+                $item->setAttribute('times',$prizes);
             });
+
 
 
         return $this->success('成功', $list);

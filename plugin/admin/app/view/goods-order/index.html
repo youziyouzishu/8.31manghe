@@ -159,6 +159,8 @@
 
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
+                let value = layui.$("#user_id").attr("value");
+                let initValue = value ? value.split(",") : [];
                 layui.xmSelect.render({
                     el: '#user_id',
                     name: "user_id",
@@ -168,14 +170,21 @@
                     clickClose: true,
                     radio: true,
                     remoteSearch:true,
+                    initValue: initValue,
+                    template({ item, sels, name, value }){
+                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
+                    },
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
                     //数据处理
                     remoteMethod: function(val, cb, show, pageIndex){
-                        //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
                         layui.$.ajax({
                             url: "/app/admin/user/select?format=select",
                             dataType: "json",
                             data: {
-                                nickname: val
+                                id: val
                             },
                             success: function (res) {
                                 //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
@@ -184,6 +193,7 @@
                         });
                     }
                 })
+
             });
             
             // 字段 商品 goods_id

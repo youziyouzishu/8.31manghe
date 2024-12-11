@@ -119,30 +119,44 @@
                     type: "datetime",
                 });
             })
-            
+
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/user/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#user_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#user_id",
-                            name: "user_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
+                let value = layui.$("#user_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: '#user_id',
+                    name: "user_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    initValue: initValue,
+                    template({ item, sels, name, value }){
+                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
+                    },
+                    prop: {
+                        name: 'name',
+                        value: 'id',
+                    },
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        layui.$.ajax({
+                            url: "/app/admin/user/select?format=select",
+                            dataType: "json",
+                            data: {
+                                id: val
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
                         });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
                     }
-                });
+                })
+
             });
             
             // 字段 奖品 box_prize_id
@@ -220,10 +234,7 @@
 						}
 					},{
                         title: "所属盲盒",align: "center",
-                        field: "box_prize.box.name",
                         templet: function (d) {
-                            let field = "box_prize.box.name";
-                            if (typeof d.box_prize == "undefined") return "";
                             return d.box_prize.box.name;
                         }
                     },{
@@ -231,16 +242,9 @@
                         field: "price",
                     },{
 						title: "奖品",align: "center",
-						field: "box_prize_id",
-						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
+                        templet: function (d) {
+                            return d.box_prize.name;
+                        }
 					},{
 						title: "保险箱",align: "center",
 						field: "safe",
