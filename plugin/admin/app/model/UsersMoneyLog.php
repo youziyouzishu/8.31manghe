@@ -3,7 +3,7 @@
 namespace plugin\admin\app\model;
 
 /**
- * 
+ *
  *
  * @property int $id 主键
  * @property int $user_id 会员ID
@@ -35,4 +35,9 @@ class UsersMoneyLog extends Base
     protected $primaryKey = 'id';
 
     protected $fillable = ['user_id', 'money', 'before', 'after', 'memo'];
+
+    function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -225,7 +225,6 @@ class UserController extends Crud
             $changemoney = $request->post('money');
 
             if (!empty($changemoney) && (function_exists('bccomp') ? bccomp($changemoney, $originmoney, 2) !== 0 : (double)$changemoney !== (double)$originmoney)) {
-
                 UsersMoneyLog::create(['user_id' => $user->id, 'money' => $changemoney - $originmoney, 'before' => $originmoney, 'after' => $changemoney, 'memo' => '系统赠送']);
             }
             return parent::update($request);
