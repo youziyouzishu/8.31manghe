@@ -94,7 +94,7 @@ class PrizeController extends BaseController
                 'source_user_id' => $request->uid,
                 'user_id' => $to_user_id,
                 'box_prize_id' => $res->box_prize_id,
-                'mark' => $user->nickname . ' 赠送',
+                'mark' => $user->nickname .' '.$user->id. ' 赠送',
                 'price' => $res->price,
                 'grade' => $res->boxPrize->grade
             ]);
@@ -103,7 +103,7 @@ class PrizeController extends BaseController
                 'source_user_id' => $to_user_id,
                 'user_id' => $request->uid,
                 'box_prize_id' => $res->box_prize_id,
-                'mark' => '赠送 ' . $to_user->nickname,
+                'mark' => '赠送' ,
                 'price' => $res->price,
                 'grade' => $res->boxPrize->grade
             ]);
