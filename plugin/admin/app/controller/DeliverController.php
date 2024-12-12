@@ -4,6 +4,9 @@ namespace plugin\admin\app\controller;
 
 use plugin\admin\app\common\Auth;
 use plugin\admin\app\common\Util;
+use plugin\admin\app\model\DeliverDetail;
+use plugin\admin\app\model\UsersPrize;
+use plugin\admin\app\model\UsersPrizeLog;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\Deliver;
@@ -33,7 +36,7 @@ class DeliverController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->where('status','<>',0);
+        $query = $this->doSelect($where, $field, $order)->where('status','<>',0)->with(['user','address']);
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -102,7 +105,26 @@ class DeliverController extends Crud
         $row->status = 4;
         $row->mark = $param['mark'];
         $row->save();
-        return $this->success('发货成功');
+        $data = [];
+        $row->detail->each(function (DeliverDetail $item)use($row,&$data){
+            UsersPrizeLog::create([
+                'user_id'=>$row->user_id,
+                'box_prize_id'=>1,
+                'mark'=>'取消发货返还奖品',
+                'type'=>9,
+                'price'=>$item->price,
+                'grade'=>$item->boxPrize->grade
+            ]);
+            $data[] = [
+                'user_id'=>$row->user_id,
+                'box_prize_id'=>$item->box_prize_id,
+                'num'=>$item->num,
+                'mark'=>'取消发货返还奖品',
+                'price'=>$item->price,
+            ];
+        });
+        UsersPrize::insert($data);
+        return $this->success('取消成功');
     }
 
 }

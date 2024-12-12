@@ -85,14 +85,14 @@
         <script src="/app/admin/admin/js/common.js"></script>
         
         <script>
-
+            const deliver_id = layui.url().search['deliver_id'];
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/deliver-detail/select";
+            const SELECT_API = "/app/admin/deliver-detail/select"+"?deliver_id="+deliver_id;
             const UPDATE_API = "/app/admin/deliver-detail/update";
             const DELETE_API = "/app/admin/deliver-detail/delete";
-            const INSERT_URL = "/app/admin/deliver-detail/insert";
-            const UPDATE_URL = "/app/admin/deliver-detail/update";
+            const INSERT_URL = "/app/admin/deliver-detail/insert"+"?deliver_id="+deliver_id;
+            const UPDATE_URL = "/app/admin/deliver-detail/update"+"?deliver_id="+deliver_id;
             
             // 字段 奖品 box_prize_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
@@ -315,7 +315,7 @@
                         shade: 0.1,
                         maxmin: true,
                         area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
-                        content: UPDATE_URL + "?" + PRIMARY_KEY + "=" + value
+                        content: UPDATE_URL + "&" + PRIMARY_KEY + "=" + value
                     });
                 }
 

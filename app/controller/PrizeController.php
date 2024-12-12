@@ -167,7 +167,7 @@ class PrizeController extends BaseController
         }
         $user = User::find($request->uid);
         if ($user->kol == 1) {
-            return $this->fail('达人不能发货');
+            return $this->fail('错误');
         }
         $ordersn = Util::ordersn();
 
@@ -209,27 +209,16 @@ class PrizeController extends BaseController
         ]);
         $deliver->detail()->createMany($detailData);
 
-        dump($freight);
-        if ($freight == 0) {
-            $deliver->status = 1;
-            $deliver->pay_time = date('Y-m-d H:i:s');
-            $deliver->save();
-            $deliver->detail->each(function (DeliverDetail $item) {
-                //支付成功  删除用户的奖品
-                UsersPrizeLog::create([
-                    'user_id' => $item->userPrize->user_id,
-                    'box_prize_id' => $item->box_prize_id,
-                    'mark' => '发货成功，删除奖品',
-                    'type'=>4,
-                    'price'=>$item->price,
-                    'grade'=>$item->userPrize->boxPrize->grade
-                ]);
 
-                $item->userPrize->decrement('num',$item->num);
-                if ($item->userPrize <= 0){
-                    $item->userPrize->delete();
-                }
-            });
+        if ($freight == 0) {
+            // 创建一个新的请求对象 直接调用支付
+            $notify = new NotifyController();
+            $request->set('get', ['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'freight']);
+            $res = $notify->balance($request);
+            $res = json_decode($res->rawBody());
+            if ($res->code == 1) {
+                return $this->fail($res->msg);
+            }
             return $this->success();
         } else {
             $user = User::find($request->uid);
@@ -245,9 +234,6 @@ class PrizeController extends BaseController
                 $res = $notify->balance($request);
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
-                    //支付失败
-                    // 回滚事务
-                    Db::rollBack();
                     return $this->fail($res->msg);
                 }
             } else {

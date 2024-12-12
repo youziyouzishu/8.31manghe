@@ -56,6 +56,7 @@ class UsersPrizeController extends Crud
     {
         if ($request->method() === 'POST') {
             $param = $request->post();
+            dump($param);
             $boxPrize = BoxPrize::find($param['box_prize_id']);
             $request->set('post',['price'=>$boxPrize->price]);
             UsersPrizeLog::create([

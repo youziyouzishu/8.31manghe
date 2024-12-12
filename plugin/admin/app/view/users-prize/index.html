@@ -84,15 +84,15 @@
             <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.usersprize.insert">
                 <i class="layui-icon layui-icon-add-1"></i>新增
             </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.usersprize.delete">
-                <i class="layui-icon layui-icon-delete"></i>删除
-            </button>
+<!--            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.usersprize.delete">-->
+<!--                <i class="layui-icon layui-icon-delete"></i>删除-->
+<!--            </button>-->
         </script>
 
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.usersprize.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.usersprize.delete">删除</button>
+<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.usersprize.update">编辑</button>-->
+<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.usersprize.delete">删除</button>-->
         </script>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
@@ -139,7 +139,7 @@
                     },
                     prop: {
                         name: 'name',
-                        value: 'id',
+                        value: 'value',
                     },
                     //数据处理
                     remoteMethod: function(val, cb, show, pageIndex){
@@ -258,9 +258,12 @@
 							return util.escape(items.join(","));
 						}
 					},{
-						title: "备注",align: "center",
-						field: "mark",
+						title: "数量",align: "center",
+						field: "num",
 					},{
+                        title: "备注",align: "center",
+                        field: "mark",
+                    },{
                         title: "创建时间",align: "center",
                         field: "created_at",
                         sort: true,

@@ -80,5 +80,10 @@ class Deliver extends Base
         return $this->belongsToMany(UsersPrize::class, DeliverDetail::class, 'deliver_id', 'user_prize_id');
     }
 
+    function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 
 }
