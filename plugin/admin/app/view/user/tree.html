@@ -169,7 +169,11 @@
                     enable: true,
                     url: SELECT_API, // 此处为静态模拟数据，实际使用时需换成真实接口
                     autoParam: ["parent_id=id"],
-                    where:[]
+                    parseData(r){
+                        r.data.map(d=>{
+                            d.isParent = !!d?.children.length
+                        })
+                    }
                 }
             },
             toolbar: '#TPL-treeTable-demo',
