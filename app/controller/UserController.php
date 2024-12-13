@@ -113,9 +113,9 @@ class UserController extends BaseController
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd = Carbon::now()->endOfWeek();
         $row = User::withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) {
-            $query->where('mark', '<>', '购买商品')->whereDate('created_at', date('Y-m-d'));
+            $query->whereDate('created_at', date('Y-m-d'));
         }], 'amount')->withSum(['userDisburse as week_user_disburse_sum_amount_amount' => function ($query)use($weekStart,$weekEnd) {
-            $query->where('mark', '<>', '购买商品')->whereBetween('created_at', [$weekStart, $weekEnd]);
+            $query->whereBetween('created_at', [$weekStart, $weekEnd]);
         }], 'amount')->find($request->uid);
         $row->week_text = $weekStart->format('m.d') . '~' . $weekEnd->format('m.d日');
         return $this->success('成功', $row);

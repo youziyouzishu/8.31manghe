@@ -84,7 +84,7 @@ class GoodsController extends BaseController
                 $order->save();
                 $ret = [];
                 //余额支付
-                User::money(-$pay_amount, $request->uid, '购买商品');
+                User::money(-$pay_amount, $request->uid, '购买商品-'.$goods->boxPrize->name);
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
@@ -112,7 +112,7 @@ class GoodsController extends BaseController
                 $order->pay_type = 1;
                 $order->save();
                 //微信支付
-                $ret = Pay::pay($pay_amount, $ordersn, '购买商品', 'goods', JwtToken::getUser()->openid);
+                $ret = Pay::pay($pay_amount, $ordersn, '购买商品-'.$goods->boxPrize->name, 'goods', JwtToken::getUser()->openid);
                 $code = 4;
             }
 

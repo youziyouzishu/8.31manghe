@@ -200,7 +200,7 @@ class NotifyController extends BaseController
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
-                        'mark' => '购买盲盒',
+                        'mark' => $order->box->name,
                         'type' => $paytype == 'wechat' ? 1 : 2,
                     ]);
 
