@@ -240,6 +240,8 @@ class PrizeController extends BaseController
                 $deliver->pay_type = 1;
                 $deliver->save();
                 $ret = Pay::pay($freight, $ordersn, '支付运费', 'freight', JwtToken::getUser()->openid);
+                $ret = json_decode($ret);
+                $ret = $ret->data->qr_code;
                 $code = 4;
             }
             return $this->success('成功', [

@@ -61,7 +61,7 @@ class Pay
             'data' => $data,
             'sign'=>$sign
         ];
-
+        dump($postdata);
         $result = $client->post($url, [
             'json' => $postdata,
         ]);

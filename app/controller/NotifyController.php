@@ -81,17 +81,11 @@ class NotifyController extends BaseController
             } elseif ($paytype == 'balance') {
                 $out_trade_no = $request->input('out_trade_no');
                 $attach = $request->input('attach');
-            } else if ($paytype == 'alipay'){
-                dump($request->all());
-				$pay = Pay::alipay(config('payment'));
-				try {
-                    $res = $pay->callback();
-                } catch (\Exception $e) {
-                    $this->writeJson(0, $e->getMessage());
-                }
-				$out_trade_no = $res->out_trade_no;
-				$attach = $res->passback_params;
-
+            } elseif ($paytype == 'alipay'){
+                $ret = $request->all();
+                $data = json_decode($ret['resp_data']);
+                $attach = $data->remark;
+                $out_trade_no = $data->mer_ord_id;
             }else{
                 throw new \Exception('支付类型错误');
             }

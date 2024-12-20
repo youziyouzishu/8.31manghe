@@ -388,6 +388,8 @@ class BoxController extends BaseController
                 $order->pay_amount = $pay_amount;
                 $order->save();
                 $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
+                $ret = json_decode($ret);
+                $ret = $ret->data->qr_code;
                 $code = 4;
             }
             // 提交事务
