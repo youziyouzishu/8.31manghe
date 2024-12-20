@@ -66,9 +66,10 @@ class NotifyController extends BaseController
     {
         try {
             $paytype = $request->input('paytype');
-            $pay = Pay::wechat(config('payment'));
+
 
             if ($paytype == 'wechat') {
+                $pay = Pay::wechat(config('payment'));
                 $res = $pay->callback($request->post());
                 $res = $res->resource;
                 $res = $res['ciphertext'];
@@ -80,7 +81,18 @@ class NotifyController extends BaseController
             } elseif ($paytype == 'balance') {
                 $out_trade_no = $request->input('out_trade_no');
                 $attach = $request->input('attach');
-            } else {
+            } else if ($paytype == 'alipay'){
+                dump($request->all());
+				$pay = Pay::alipay(config('payment'));
+				try {
+                    $res = $pay->callback();
+                } catch (\Exception $e) {
+                    $this->writeJson(0, $e->getMessage());
+                }
+				$out_trade_no = $res->out_trade_no;
+				$attach = $res->passback_params;
+
+            }else{
                 throw new \Exception('支付类型错误');
             }
 

@@ -4,14 +4,9 @@ namespace app\controller;
 
 
 
-use Illuminate\Support\Facades\Redirect;
+use app\service\Pay;
 use plugin\admin\app\model\Banner;
-use plugin\admin\app\model\Deliver;
-use plugin\admin\app\model\UsersDisburse;
-use plugin\admin\app\model\UsersPrize;
-use support\Db;
 use support\Request;
-use Webman\Route\Route;
 
 
 class BannerController extends BaseController
@@ -21,7 +16,8 @@ class BannerController extends BaseController
     #轮播图列表
     public function index(Request $request)
     {
-
+        $ret = Pay::pay(0.01, '11111111', '123123', 'goods');
+        dump(json_decode($ret));
         $rows = Banner::orderBy('id','desc')->get();
         return $this->success('获取成功',$rows);
     }

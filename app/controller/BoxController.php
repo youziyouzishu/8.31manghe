@@ -375,7 +375,6 @@ class BoxController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
-
                 // 生成 1 到 9 之间的随机整数
                 $randomCents = rand(1, 9);
                 // 将随机整数转换为小数（0.01 到 0.09）
