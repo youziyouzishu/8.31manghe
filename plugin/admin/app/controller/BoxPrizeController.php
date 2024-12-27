@@ -61,21 +61,21 @@ class BoxPrizeController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if ($params['chance'] <= 0){
+            if ($params['chance'] <= 0) {
                 return $this->fail('概率必须大于0');
             }
             $box = Box::with(['boxPrize'])->find($params['box_id']);
-            $row = $this->model->where(['box_id' => $params['box_id']])
+            if ($box->type != 4 && $params['grade'] == 2 && $params['price'] > $box->price) {
+                return $this->fail('市场价不能大于等于盲盒单抽价格');
+            }
+            $chance = $this->model->where(['box_id' => $params['box_id']])
                 ->when($box->type == 4, function (Builder $query) use ($params) {
                     $query->where('level_id', $params['level_id']);
                 })
                 ->sum('chance');
-
-            if ($params['chance'] + $row > 100) {
+            if ($params['chance'] + $chance > 100) {
                 return $this->fail('概率不能超过100%');
             }
-            $request->set('post',['num'=>$request->post('total')]);
-
             return parent::insert($request);
         }
         return view('box-prize/insert');
@@ -91,20 +91,20 @@ class BoxPrizeController extends Crud
     {
         if ($request->method() === 'POST') {
             $param = $request->post();
-            if ($param['chance'] <= 0){
+            if ($param['chance'] <= 0) {
                 return $this->fail('概率必须大于0');
             }
             $row = $this->model->find($param['id']);
             if ($row->box->type == 4) {
-                $chance = $this->model->where(['level_id' => $param['level_id'],'box_id' => $param['box_id'],['id','<>',$row->id]])->sum('chance');
-                if ($row->chance != $param['chance'] && $chance + $param['chance'] > 100) {
-                    return $this->fail('概率不能超过100%');
-                }
+                $chance = $this->model->where(['level_id' => $param['level_id'], 'box_id' => $param['box_id'], ['id', '<>', $row->id]])->sum('chance');
             } else {
-                $chance = $this->model->where(['box_id' => $param['box_id'],['id','<>',$row->id]])->sum('chance');
-                if ($row->chance != $param['chance'] && $chance + $param['chance'] > 100) {
-                    return $this->fail('概率不能超过100%');
+                if ($param['grade'] == 2 && $param['price'] > $row->box->price) {
+                    return $this->fail('市场价不能大于等于盲盒单抽价格');
                 }
+                $chance = $this->model->where(['box_id' => $param['box_id'], ['id', '<>', $row->id]])->sum('chance');
+            }
+            if ($row->chance != $param['chance'] && $chance + $param['chance'] > 100) {
+                return $this->fail('概率不能超过100%');
             }
             return parent::update($request);
         }

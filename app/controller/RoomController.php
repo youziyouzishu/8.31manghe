@@ -58,7 +58,7 @@ class RoomController extends BaseController
             if ($res->num <= 0) {
                 $res->delete();
             }
-            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price,'total'=>$prize['num']];
+            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price,'grade'=>$res->grade,'total'=>$prize['num']];
         }
 
         $room = Room::create([
@@ -228,7 +228,8 @@ class RoomController extends BaseController
                         'room_prize_id' => $roomPrize->id,
                         'num' => $roomPrize->num,
                         'price' => $roomPrize->price,
-                        'mark' => '撤销房间恢复奖品'
+                        'mark' => '撤销房间恢复奖品',
+                        'grade' => $roomPrize->grade,
                     ]);
                 }
 
@@ -302,7 +303,8 @@ class RoomController extends BaseController
                         'box_prize_id' => $item->box_prize_id,
                         'num' => $item->num,
                         'price' => $item->price,
-                        'mark' => '房间编辑恢复'
+                        'mark' => '房间编辑恢复',
+                        'grade' => $item->grade,
                     ]);
                 }
                 //删除房间奖品

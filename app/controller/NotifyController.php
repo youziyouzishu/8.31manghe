@@ -2,21 +2,17 @@
 
 namespace app\controller;
 
-use DateTime;
-use DateTimeZone;
-use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\Deliver;
-use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\DreamOrders;
 use plugin\admin\app\model\GoodsOrder;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersDrawLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
-use support\Db;
+use support\Cache;
 use support\Request;
 use Webman\Push\Api;
 use Yansongda\Pay\Pay;
@@ -59,6 +55,18 @@ class NotifyController extends BaseController
         return $this->success();
     }
 
+    #云闪付
+    function unipay(Request $request)
+    {
+        $request->set('get', ['paytype' => 'unipay']);
+        try {
+            $this->pay($request);
+        } catch (\Throwable $e) {
+            return $this->fail($e->getMessage());
+        }
+        return $this->success();
+    }
+
     /**
      * @throws \Exception
      */
@@ -81,12 +89,12 @@ class NotifyController extends BaseController
             } elseif ($paytype == 'balance') {
                 $out_trade_no = $request->input('out_trade_no');
                 $attach = $request->input('attach');
-            } elseif ($paytype == 'alipay'){
+            } elseif ($paytype == 'alipay' || $paytype == 'unipay') {
                 $ret = $request->all();
                 $data = json_decode($ret['resp_data']);
                 $attach = $data->remark;
                 $out_trade_no = $data->mer_ord_id;
-            }else{
+            } else {
                 throw new \Exception('支付类型错误');
             }
 
@@ -97,17 +105,20 @@ class NotifyController extends BaseController
                         throw new \Exception('订单不存在');
                     }
                     $order->status = 2;
+                    $order->pay_type = $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3);
                     $order->pay_at = date('Y-m-d H:i:s');
                     $order->save();
                     if ($order->userCoupon) {
                         $order->userCoupon->status = 2;
                         $order->userCoupon->save();
                     }
-                    if ($order->user->new == 1 && $paytype == 'wechat') {
+                    if ($order->user->new == 1 && ($paytype == 'unipay' || $paytype == 'alipay')) {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
+                    $order->box->increment('consume_amount',$order->pay_amount);#增加盲盒消费金额
+
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
                         'user_id' => $order->user_id,
@@ -117,32 +128,31 @@ class NotifyController extends BaseController
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
 
-                    $winnerPrize = [];
-                    for ($i = 0; $i < $order->times; $i++) {
-                        // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
-                        $prizes = BoxPrize::where([['num', '>', 0]])
-                            ->where(['box_id' => $order->box_id])
-                            ->when(!empty($order->level_id), function (Builder $query) use ($order) {
-                                $query->where('level_id', $order->level_id);
-                            })
-                            ->get();
-                        // 如果没有可用奖品，返回提示
-                        if ($prizes->isEmpty()) {
-                            BoxPrize::where(['box_id' => $order->box_id])
-                                ->when(!empty($order->level_id), function (Builder $query) use ($order) {
-                                    $query->where('level_id', $order->level_id);
-                                })
-                                ->update(['num' => DB::raw('total')]);
+                    $winnerPrize = ['gt_n'=>0];
+                    // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
+                    $prizes = BoxPrize::where(['box_id' => $order->box_id])
+                        ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                            $query->where('level_id', $order->level_id);
+                        }, function (Builder $query) use($order){
+                            $query->whereBetween('price',[0,$order->box->pool_amount]);
+                        })
+                        ->get();
 
+                    // 如果没有可用奖品，返回提示
+                    if ($prizes->isEmpty()){
+                        if (!empty($order->level_id)) {
+                            throw new \Exception('闯关赏没有奖品');
+                        }else{
                             $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                                ->when(!empty($order->level_id), function (Builder $query) use ($order) {
-                                    $query->where('level_id', $order->level_id);
-                                })
-                                ->get(); // 重新获取奖品列表
+                                ->where('grade',2)
+                                ->get();
                             if ($prizes->isEmpty()) {
-                                throw new \Exception('没有设置奖池');
+                                throw new \Exception('盲盒没有设置奖品');
                             }
                         }
+                    }
+                    $prizes_price = 0;
+                    for ($i = 0; $i < $order->times; $i++) {
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
@@ -157,28 +167,35 @@ class NotifyController extends BaseController
 
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
-
                             if ($randomNumber < $currentChance) {
-                                //达人抽奖不减数量
-                                if ($order->user->kol == 0) {
-                                    $prize->decrement('num');
+                                $winnerPrize['list'][] = $prize;
+                                if ($prize->grade >= 3){
+                                    $winnerPrize['gt_n'] = 1;
                                 }
-                                $winnerPrize[] = $prize;
+                                $prizes_price += $prize->price;
                                 // 发放奖品并且记录
                                 break;
                             }
                         }
                     }
-                    $api = new Api(
-                        'http://127.0.0.1:3232',
-                        config('plugin.webman.push.app.app_key'),
-                        config('plugin.webman.push.app.app_secret')
-                    );
-                    // 给客户端推送私有 prize_draw 事件的消息
-                    $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
-                        'winner_prize' => $winnerPrize
-                    ]);
-                    foreach ($winnerPrize as $item){
+                    $pool_amount = ($order->pay_amount - $prizes_price) * (1 - $order->box->rate);
+                    $order->box->increment('pool_amount', $pool_amount);
+                    $online = Cache::has("private-user-{$order->user_id}");
+
+                    if (!$online) {
+                        Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
+                    } else {
+                        $api = new Api(
+                            'http://127.0.0.1:3232',
+                            config('plugin.webman.push.app.app_key'),
+                            config('plugin.webman.push.app.app_secret')
+                        );
+                        // 给客户端推送私有 prize_draw 事件的消息
+                        $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                            'winner_prize' => $winnerPrize
+                        ]);
+                    }
+                    foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
                         if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
                             $userPrize->increment('num');
@@ -189,6 +206,7 @@ class NotifyController extends BaseController
                                 'price' => $item->price,
                                 'num' => 1,
                                 'mark' => '抽奖获得',
+                                'grade' => $item->grade,
                             ]);
                         }
 
@@ -200,32 +218,17 @@ class NotifyController extends BaseController
                             'price' => $item->price,
                             'type' => 0,
                             'grade' => $item->grade,
+                            'num' => 1,
                         ]);
                     }
-
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
                         'mark' => $order->box->name,
-                        'type' => $paytype == 'wechat' ? 1 : 2,
+                        'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
+                        'scene' => 1,
                     ]);
 
-                    if ($paytype == 'wechat') {
-                        $app = new Application(config('wechat'));
-                        $api = $app->getClient();
-                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
-                        $formatted_date = $date->format('c');
-                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
-                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
-                            'logistics_type' => 3,
-                            'delivery_mode' => 1,
-                            'shipping_list' => [[
-                                'item_desc' => $order->box->name,
-                            ]],
-                            'upload_time' => $formatted_date,
-                            'payer' => ['openid' => $openid]
-                        ]);
-                    }
 
                     break;
                 case 'goods':
@@ -234,9 +237,10 @@ class NotifyController extends BaseController
                         throw new \Exception('订单不存在');
                     }
                     $order->status = 2;
+                    $order->pay_type = $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3);
                     $order->pay_at = date('Y-m-d H:i:s');
                     $order->save();
-                    if ($order->user->new == 1 && $paytype == 'wechat') {
+                    if ($order->user->new == 1 && ($paytype == 'unipay' || $paytype == 'alipay')) {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
@@ -251,6 +255,8 @@ class NotifyController extends BaseController
                             'box_prize_id' => $order->goods->prize_id,
                             'price' => $order->goods->boxPrize->price,
                             'mark' => '购买商品获得',
+                            'num' => 1,
+                            'grade' => $order->goods->boxPrize->grade,
                         ]);
                     }
 
@@ -262,36 +268,23 @@ class NotifyController extends BaseController
                         'type' => 5,
                         'price' => $order->goods->boxPrize->price,
                         'grade' => $order->goods->boxPrize->grade,
+                        'num' => 1,
                     ]);
 
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
                         'mark' => $order->goods->boxPrize->name,
-                        'type' => $paytype == 'wechat' ? 1 : 2,
+                        'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
+                        'scene' => 2,
                     ]);
-                    if ($paytype == 'wechat') {
-                        $app = new Application(config('wechat'));
-                        $api = $app->getClient();
-                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
-                        $formatted_date = $date->format('c');
-                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
-                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
-                            'logistics_type' => 3,
-                            'delivery_mode' => 1,
-                            'shipping_list' => [[
-                                'item_desc' => $order->goods->boxPrize->name,
-                            ]],
-                            'upload_time' => $formatted_date,
-                            'payer' => ['openid' => $openid]
-                        ]);
-                    }
                     break;
                 case 'freight':
                     $order = Deliver::where(['ordersn' => $out_trade_no, 'status' => 0])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
                     }
+                    $order->pay_type = $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3);
                     $order->status = 1;
                     $order->pay_time = date('Y-m-d H:i:s');
                     $order->save();
@@ -305,43 +298,29 @@ class NotifyController extends BaseController
                             'type' => 4,
                             'price' => $item->boxPrize->price,
                             'grade' => $item->boxPrize->grade,
+                            'num' => $item->num,
                         ]);
-                        $item->userPrize->decrement('num',$item->num);
+                        $item->userPrize->decrement('num', $item->num);
                         if ($item->userPrize->num <= 0) {
                             $item->userPrize->delete();
                         }
                     });
 
-                    if ($paytype == 'wechat') {
-                        $app = new Application(config('wechat'));
-                        $api = $app->getClient();
-                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
-                        $formatted_date = $date->format('c');
-                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
-                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
-                            'logistics_type' => 3,
-                            'delivery_mode' => 1,
-                            'shipping_list' => [[
-                                'item_desc' => '发货运费'
-                            ]],
-                            'upload_time' => $formatted_date,
-                            'payer' => ['openid' => $openid]
-                        ]);
-                    }
                     break;
                 case 'dream':
                     $order = DreamOrders::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
                     }
+                    $order->pay_type = $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3);
                     $order->status = 2;
                     $order->pay_at = date('Y-m-d H:i:s');
-
+                    $order->save();
                     $probability = $order->probability;
                     $probability = $probability / 2;
                     $big_prize_id = $order->big_prize_id;
                     $small_prize_id = $order->small_prize_id;
-                    if ($order->user->new == 1 && $paytype == 'wechat') {
+                    if ($order->user->new == 1 && ($paytype == 'unipay' || $paytype == 'alipay')) {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
@@ -366,15 +345,17 @@ class NotifyController extends BaseController
                                 'price' => $prize->price,
                                 'num' => 1,
                                 'mark' => '梦想DIY获得',
+                                'grade' => $prize->grade,
                             ]);
                         }
-
-
                         UsersPrizeLog::create([
                             'user_id' => $order->user_id,
                             'box_prize_id' => $prize_id,
                             'mark' => '梦想DIY获得',
-                            'type' => 6
+                            'type' => 6,
+                            'num' => 1,
+                            'price'=>$prize->price,
+                            'grade'=>$prize->grade,
                         ]);
                     }
 
@@ -383,51 +364,44 @@ class NotifyController extends BaseController
 
                     // 计算利润
                     $order->profit = $order->pay_amount - $prizes->sum('price');
-
                     // 保存订单信息
                     $order->save();
-
+                    $winnerPrize = ['gt_n'=>0];
                     // 构建最终结果数组，保留重复的条目
-                    $winnerPrize = $prize_ids->map(function ($prize_id) use ($prizes) {
-                        return $prizes[$prize_id];
+                    $winnerPrize['list'][] = $prize_ids->map(function ($prize_id) use ($prizes,&$winnerPrize) {
+                        $prize =  $prizes[$prize_id];
+                        if ($prize->grade >= 3){
+                            $winnerPrize['gt_n'] = 1;
+                        }
+                        return $prize;
                     })->all();
 
-                    // 初始化API客户端
-                    $api = new Api(
-                        'http://127.0.0.1:3232',
-                        config('plugin.webman.push.app.app_key'),
-                        config('plugin.webman.push.app.app_secret')
-                    );
+                    $online = Cache::has("private-user-{$order->user_id}");
 
-                    // 给客户端推送私有 prize_draw 事件的消息
-                    $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
-                        'winner_prize' => $winnerPrize
-                    ]);
+                    if (!$online) {
+                        Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
+                    } else {
+                        // 初始化API客户端
+                        $api = new Api(
+                            'http://127.0.0.1:3232',
+                            config('plugin.webman.push.app.app_key'),
+                            config('plugin.webman.push.app.app_secret')
+                        );
+
+                        // 给客户端推送私有 prize_draw 事件的消息
+                        $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                            'winner_prize' => $winnerPrize
+                        ]);
+                    }
 
                     // 处理微信支付的额外逻辑
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
                         'mark' => '梦想DIY抽奖',
-                        'type' => $paytype == 'wechat' ? 1 : 2,
+                        'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
+                        'scene' => 3,
                     ]);
-
-                    if ($paytype == 'wechat') {
-                        $app = new Application(config('wechat'));
-                        $api = $app->getClient();
-                        $date = new DateTime(date('Y-m-d H:i:s'), new DateTimeZone('Asia/Shanghai'));
-                        $formatted_date = $date->format('c');
-                        $api->postJson('/wxa/sec/order/upload_shipping_info', [
-                            'order_key' => ['order_number_type' => 1, 'mchid' => $mchid, 'out_trade_no' => $out_trade_no],
-                            'logistics_type' => 3,
-                            'delivery_mode' => 1,
-                            'shipping_list' => [[
-                                'item_desc' => '梦想DIY抽奖'
-                            ]],
-                            'upload_time' => $formatted_date,
-                            'payer' => ['openid' => $openid]
-                        ]);
-                    }
                     break;
                 default:
                     throw new \Exception('回调错误');

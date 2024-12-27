@@ -14,11 +14,11 @@ use plugin\admin\app\controller\Crud;
 use support\exception\BusinessException;
 
 /**
- * 发货列表 
+ * 发货列表
  */
 class DeliverController extends Crud
 {
-    
+
     /**
      * @var Deliver
      */
@@ -36,9 +36,11 @@ class DeliverController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->where('status','<>',0)->with(['user','address']);
+        $query = $this->doSelect($where, $field, $order)->where('status', '<>', 0)->with(['user', 'address','boxPrize']);
         return $this->doFormat($query, $format, $limit);
     }
+
+
 
     /**
      * 浏览
@@ -68,7 +70,7 @@ class DeliverController extends Crud
      * @param Request $request
      * @return Response
      * @throws BusinessException
-    */
+     */
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
@@ -84,7 +86,7 @@ class DeliverController extends Crud
         if (!$row) {
             return $this->fail('找不到此数据');
         }
-        if ($row->status != 1){
+        if ($row->status != 1) {
             return $this->fail('订单状态异常');
         }
         $row->status = 2;
@@ -99,31 +101,35 @@ class DeliverController extends Crud
         if (!$row) {
             return $this->fail('找不到此数据');
         }
-        if ($row->status != 1){
+        if ($row->status != 1) {
             return $this->fail('订单状态异常');
         }
         $row->status = 4;
         $row->mark = $param['mark'];
         $row->save();
-        $data = [];
-        $row->detail->each(function (DeliverDetail $item)use($row,&$data){
-            UsersPrizeLog::create([
-                'user_id'=>$row->user_id,
-                'box_prize_id'=>1,
-                'mark'=>'取消发货返还奖品',
-                'type'=>9,
-                'price'=>$item->price,
-                'grade'=>$item->boxPrize->grade
+        if ($userPrize = UsersPrize::where(['user_id' => $row->user_id, 'box_prize_id' => $row->box_prize_id, 'price' => $row->price])->first()) {
+            $userPrize->increment('num', $row->num);
+        } else {
+            //给用户发放赏袋
+            UsersPrize::create([
+                'user_id' => $row->user_id,
+                'box_prize_id' => $row->box_prize_id,
+                'price' => $row->price,
+                'mark' => '取消发货返还奖品',
+                'num' => $row->num,
+                'grade' => $row->grade,
             ]);
-            $data[] = [
-                'user_id'=>$row->user_id,
-                'box_prize_id'=>$item->box_prize_id,
-                'num'=>$item->num,
-                'mark'=>'取消发货返还奖品',
-                'price'=>$item->price,
-            ];
-        });
-        UsersPrize::insert($data);
+        }
+        UsersPrizeLog::create([
+            'user_id' => $row->user_id,
+            'box_prize_id' => $row->box_prize_id,
+            'mark' => '取消发货返还奖品',
+            'type' => 9,
+            'price' => $row->price,
+            'grade' => $row->grade,
+            'num' => $row->num,
+        ]);
+
         return $this->success('取消成功');
     }
 

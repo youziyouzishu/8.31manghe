@@ -28,6 +28,7 @@ use plugin\admin\app\model\Base;
  * @property int $level_id 所属关卡
  * @property-read \plugin\admin\app\model\User|null $user
  * @property int $pay_type 支付类型
+ * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @mixin \Eloquent
  */
 class BoxOrder extends Base

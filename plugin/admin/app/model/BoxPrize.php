@@ -9,12 +9,9 @@ use plugin\admin\app\model\Base;
  * 
  *
  * @property integer $id 主键(主键)
- * @property string $created_at 创建时间
- * @property string $updated_at 更新时间
  * @property string $grade 评级
  * @property integer $box_id 所属盲盒
  * @property float $chance 概率
- * @property integer $num 数量
  * @property string $image 图片
  * @property string $name 名称
  * @property-read \plugin\admin\app\model\Box|null $box
@@ -22,11 +19,16 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize query()
  * @property-read mixed $grade_text
- * @property int $total 总数量
  * @property int $level_id 所属关卡
- * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @property string $price 市场价
+ * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrizes
+ * @property string $created_at 创建时间
+ * @property string $updated_at 更新时间
+ * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withoutTrashed()
  * @mixin \Eloquent
  */
 class BoxPrize extends Base

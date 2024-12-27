@@ -12,6 +12,7 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
+use support\Cache;
 use support\Request;
 use Webman\Route;
 use Webman\Push\Api;
@@ -66,13 +67,30 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     foreach ($payload['events'] as $event) {
         if ($event['name'] === 'channel_added') {
             $channels_online[] = $event['channel'];
+            Cache::set($event['channel'],'1');
+            $winner_prize = Cache::get($event['channel']."-winner_prize");
+            if ($winner_prize){
+                $api = new Api(
+                    'http://127.0.0.1:3232',
+                    config('plugin.webman.push.app.app_key'),
+                    config('plugin.webman.push.app.app_secret')
+                );
+                // 给客户端推送私有 prize_draw 事件的消息
+                 $api->trigger($event['channel'], 'prize_draw', [
+                    'winner_prize' => $winner_prize
+                ]);
+                Cache::delete($event['channel']."-winner_prize");
+            }
         } else if ($event['name'] === 'channel_removed') {
             $channels_offline[] = $event['channel'];
+            Cache::delete($event['channel']);
         }
     }
 
     // 业务根据需要处理上下线的channel，例如将在线状态写入数据库，通知其它channel等
     // 上线的所有channel
+
+
     dump('online channels: ' . implode(',', $channels_online)) ;
     // 下线的所有channel
     dump('offline channels: ' . implode(',', $channels_offline)) ;

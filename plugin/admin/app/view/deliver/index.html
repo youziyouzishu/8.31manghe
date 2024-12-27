@@ -55,12 +55,6 @@
                 </div>
             </div>
 
-            <div class="layui-form-item">
-                <label class="layui-form-label">收货地址</label>
-                <div class="layui-input-block">
-                    <div name="address_id" id="address_id" value=""></div>
-                </div>
-            </div>
 
             <div class="layui-form-item">
                 <label class="layui-form-label">创建时间</label>
@@ -113,7 +107,6 @@
 <script type="text/html" id="table-bar">
     <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.deliver.update">编辑</button>-->
     <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.deliver.delete">删除</button>-->
-    <button class="pear-btn pear-btn-xs tool-btn" lay-event="detail" permission="app.admin.deliver.detail">详情</button>
     <button class="pear-btn pear-btn-xs tool-btn {{ d.status == 1 ? '' : 'layui-hide' }}" lay-event="deliver" permission="app.admin.deliver.deliver">发货</button>
     <button class="pear-btn pear-btn-xs tool-btn {{ d.status == 1 ? '' : 'layui-hide' }}" lay-event="cancel" permission="app.admin.deliver.cancel">取消</button>
 </script>
@@ -194,30 +187,6 @@
         })
     });
 
-    // 字段 收货地址 address_id
-    layui.use(["jquery", "xmSelect", "popup"], function () {
-        layui.$.ajax({
-            url: "/app/admin/address/select?format=select",
-            dataType: "json",
-            success: function (res) {
-                let value = layui.$("#address_id").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#address_id",
-                    name: "address_id",
-                    initValue: initValue,
-                    filterable: true,
-                    data: res.data,
-                    model: {"icon": "hidden", "label": {"type": "text"}},
-                    clickClose: true,
-                    radio: true,
-                });
-                if (res.code) {
-                    layui.popup.failure(res.msg);
-                }
-            }
-        });
-    });
 
     // 字段 创建时间 created_at
     layui.use(["laydate"], function () {
@@ -262,9 +231,14 @@
                     });
                     return util.escape(items.join(","));
                 }
+            },{
+                title: "奖品",align: "center",
+                templet: function (d) {
+                    return d.box_prize.name;
+                }
             }, {
                 title: "运费", align: "center",
-                field: "freight",
+                field: "pay_amount",
             }, {
                 title: "订单编号", align: "center",
                 field: "ordersn",
@@ -364,8 +338,6 @@
                 remove(obj);
             } else if (obj.event === "edit") {
                 edit(obj);
-            } else if (obj.event === "detail") {
-                detail(obj);
             } else if (obj.event === "deliver") {
                 deliver(obj);
             } else if (obj.event === "cancel") {
@@ -449,17 +421,6 @@
             });
         }
 
-        let detail = function (obj) {
-            let value = obj.data[PRIMARY_KEY];
-            layer.open({
-                type: 2,
-                title: "详情",
-                shade: 0.1,
-                maxmin: true,
-                area: [common.isModile() ? "100%" : "90%", common.isModile() ? "100%" : "90%"],
-                content: DETAIL_URL + "?" + "deliver_id" + "=" + value
-            });
-        }
 
         let deliver = function (obj) {
             let value = obj.data[PRIMARY_KEY];

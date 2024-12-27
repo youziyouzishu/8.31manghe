@@ -20,6 +20,7 @@ use support\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize query()
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property int $safe 保险箱
+ * @property int $grade 评级:1=通关赏,2=N级,3=S级,4=SS级,5=SSS级
  * @property string $mark 备注
  * @property-read \plugin\admin\app\model\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize onlyTrashed()
@@ -31,6 +32,7 @@ use support\Request;
  */
 class UsersPrize extends Base
 {
+    use SoftDeletes;
     /**
      * The table associated with the model.
      *
@@ -45,7 +47,7 @@ class UsersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price','num'];
+    protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price','num','grade'];
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {

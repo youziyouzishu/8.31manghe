@@ -123,11 +123,7 @@ class DreamController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
-                $orders->pay_type = 1;
-                $orders->save();
-                $ret = Pay::pay($pay_amount, $ordersn, '梦想DIY抽奖', 'dream', JwtToken::getUser()->openid);
-                $ret = json_decode($ret);
-                $ret = $ret->data->qr_code;
+                $ret = ['scene'=>'dream','ordersn'=>$ordersn];
                 $code = 4;
             }
             return $this->success('成功',['code'=>$code,'ret'=>$ret]);

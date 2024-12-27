@@ -2,12 +2,13 @@
 
 namespace app\controller;
 
+use plugin\admin\app\model\Effect;
 use plugin\admin\app\model\Option;
 use support\Request;
 
 class ConfigController extends BaseController
 {
-    protected array $noNeedLogin = ['getAgreement'];
+    protected array $noNeedLogin = ['*'];
     function getAgreement()
     {
         $name = 'system_config';
@@ -23,5 +24,11 @@ class ConfigController extends BaseController
             'newfuli' => $config->logo->newfuli,
             'start_page'=>$config->logo->start_page,
         ]);
+    }
+
+    function getEffectList(Request $request)
+    {
+        $rows = Effect::orderBy('id','desc')->get();
+        return $this->success('获取成功',$rows);
     }
 }

@@ -171,6 +171,45 @@
                 })
             });
 
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                let value = layui.$("#box_prize_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: '#box_prize_id',
+                    name: "box_prize_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    radio: true,
+                    remoteSearch:true,
+                    initValue: initValue,
+                    template({ item, sels, name, value }){
+                        const truncatedName = item.name.length > 10 ? item.name.substring(0, 10) + '...' : item.name;
+                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+truncatedName+'</span>';
+                    },
+
+                    prop: {
+                        name: 'name',
+                        value: 'value',
+                    },
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        layui.$.ajax({
+                            url: "/app/admin/box-prize/select?format=select",
+                            dataType: "json",
+                            data: {
+                                name: ['like','%'+val+'%']
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data)
+                            }
+                        });
+                    }
+                })
+            });
+
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -193,13 +232,7 @@
 						title: "用户",align: "center",
 						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user.nickname;
 						}
 					},{
                         title: "所属盲盒",align: "center",
@@ -209,6 +242,9 @@
                     },{
                         title: "参考价",align: "center",
                         field: "price",
+                    },{
+                        title: "数量",align: "center",
+                        field: "num",
                     },{
 						title: "奖品",align: "center",
 						templet: function (d) {
@@ -290,11 +326,7 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
 				let apiResults = {};
-				apiResults["user_id"] = [];
-				apiResults["box_prize_id"] = [];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

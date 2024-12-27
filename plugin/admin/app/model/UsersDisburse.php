@@ -15,7 +15,9 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersDisburse query()
- * @property int $type 类型:1=微信,2=水晶
+ * @property int $type 支付类型:1=支付宝,2=水晶,3=云闪付
+ * @property int $scene 场景:1=盲盒抽奖,2=商城购买,3=DIY抽奖
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class UsersDisburse extends Base
@@ -33,7 +35,12 @@ class UsersDisburse extends Base
      * @var string
      */
     protected $primaryKey = 'id';
-    protected $fillable = ['user_id', 'amount','mark','type'];
+    protected $fillable = ['user_id', 'amount','mark','type','scene'];
+
+    function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 
 
 }

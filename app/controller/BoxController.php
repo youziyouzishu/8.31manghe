@@ -17,6 +17,7 @@ use plugin\admin\app\model\UsersLevel;
 use plugin\admin\app\model\UsersLevelLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
+use support\Cache;
 use support\Db;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
@@ -234,7 +235,6 @@ class BoxController extends BaseController
                     return $this->fail('盲盒不存在关卡');
                 }
                 if ($level->id != $firstLevel->id) {
-
                     //非第一关 进行抽奖
                     //找出上一关判断是否有这一关的通关券
                     $getLastLevel = BoxLevel::getLastLevel($box_id, $level->name);
@@ -251,18 +251,14 @@ class BoxController extends BaseController
                     //开始抽奖
                     $draw = UsersDrawLog::create(['user_id' => $request->uid, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
                     $winnerPrize = [];
+                    $winnerPrize = ['gt_n'=>0];
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
-                        $prizes = BoxPrize::where([['num', '>', 0], 'level_id' => $level_id])->get();
+                        $prizes = BoxPrize::where(['level_id' => $level_id])->get();
                         // 如果没有可用奖品，返回提示
-
                         if ($prizes->isEmpty()) {
-                            BoxPrize::where(['level_id' => $level_id])->update(['num' => Db::raw('total')]);
-                            $prizes = BoxPrize::where([['num', '>', 0], 'level_id' => $level_id])->get(); // 重新获取奖品列表
-                            if ($prizes->isEmpty()) {
-                                return $this->fail('没有设置奖池');
-                            }
+                            return $this->fail('没有设置奖品');
                         }
 
                         // 计算总概率
@@ -278,13 +274,8 @@ class BoxController extends BaseController
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
-                                //达人不减数量
-                                if ($user->kol == 0) {
-                                    $prize->decrement('num');
-                                }
-                                $winnerPrize[] = $prize;
+                                $winnerPrize['list'][] = $prize;
                                 // 发放奖品并且记录
-
                                 if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
                                     $userPrize->increment('num');
                                 } else {
@@ -294,6 +285,7 @@ class BoxController extends BaseController
                                         'price' => $prize->price,
                                         'num' => 1,
                                         'mark' => '抽奖获得',
+                                        'grade'=>$prize->grade,
                                     ]);
                                 }
 
@@ -305,6 +297,7 @@ class BoxController extends BaseController
                                     'price' => $prize->price,
                                     'type' => 0,
                                     'grade' => $prize->grade,
+                                    'num' => 1,
                                 ]);
                                 //删除用户通关券
                                 $ticket = $lastTicket->first(); // 返回第一个元素
@@ -312,7 +305,6 @@ class BoxController extends BaseController
                                     $ticket->decrement('num');
                                     if ($ticket->num <= 0) {
                                         $ticket->delete();
-
                                         // 从集合中移除该元素
                                         $lastTicket->forget($ticket->getKey());
                                     }
@@ -321,15 +313,24 @@ class BoxController extends BaseController
                             }
                         }
                     }
-                    $api = new Api(
-                        'http://127.0.0.1:3232',
-                        config('plugin.webman.push.app.app_key'),
-                        config('plugin.webman.push.app.app_secret')
-                    );
-                    // 给客户端推送私有 prize_draw 事件的消息
-                    $api->trigger("private-user-{$request->uid}", 'prize_draw', [
-                        'winner_prize' => $winnerPrize
-                    ]);
+
+                    $online = Cache::has("private-user-{$request->uid}");
+
+                    if (!$online) {
+                        Cache::set("private-user-{$request->uid}-winner_prize", $winnerPrize);
+                    } else {
+                        // 初始化API客户端
+                        $api = new Api(
+                            'http://127.0.0.1:3232',
+                            config('plugin.webman.push.app.app_key'),
+                            config('plugin.webman.push.app.app_secret')
+                        );
+                        // 给客户端推送私有 prize_draw 事件的消息
+                        $api->trigger("private-user-{$request->uid}", 'prize_draw', [
+                            'winner_prize' => $winnerPrize
+                        ]);
+                    }
+
                     $ret = [];
                     return $this->success('成功', ['code' => 2, 'ret' => $ret]);
                 }
@@ -359,7 +360,6 @@ class BoxController extends BaseController
                 if ($pay_amount <= 0) {
                     $pay_amount = 0;
                 }
-                $order->pay_type = 2;
                 $order->pay_amount = $pay_amount;
                 $order->save();
                 User::money(-$pay_amount, $request->uid, $box->name);
@@ -384,12 +384,9 @@ class BoxController extends BaseController
                 if ($pay_amount <= 0) {
                     $pay_amount = 0.01;
                 }
-                $order->pay_type = 1;
                 $order->pay_amount = $pay_amount;
                 $order->save();
-                $ret = Pay::pay($pay_amount, $ordersn, '购买盲盒', 'box', JwtToken::getUser()->openid);
-                $ret = json_decode($ret);
-                $ret = $ret->data->qr_code;
+                $ret = ['scene'=>'box','ordersn'=>$ordersn];
                 $code = 4;
             }
             // 提交事务
@@ -432,14 +429,16 @@ class BoxController extends BaseController
         return $this->success('成功', $list);
     }
 
+
+    #中奖记录
     function getDrawLog(Request $request)
     {
         $box_id = $request->post('box_id');
         $level_id = $request->post('level_id', 0);
         $grade = $request->post('grade');
 
-        if (empty($box_id)|| empty($grade)) {
-            return $this->fail('参数不能为空');
+        if (empty($box_id)) {
+            return $this->fail('所选盲盒不能为空');
         }
         #盲盒内大于N赏的奖品
         $prize_ids = BoxPrize::where(['box_id' => $box_id])
@@ -463,12 +462,35 @@ class BoxController extends BaseController
                 }
                 $item->setAttribute('times',$prizes);
             });
-
-
-
         return $this->success('成功', $list);
-
     }
+
+
+    #获取中奖记录等级
+    function getGradeByDrawLog(Request $request)
+    {
+        $box_id = $request->post('box_id');
+        $level_id = $request->post('level_id', 0);
+        if (empty($box_id)) {
+            return $this->fail('所选盲盒不能为空');
+        }
+        #盲盒内大于N赏的奖品
+        $prize_ids = BoxPrize::where(['box_id' => $box_id])
+            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                $builder->where('level_id', $level_id);
+            })
+            ->where('grade', '>=',2)
+            ->pluck('id');
+
+        $grade = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
+            ->where('type', 0)
+            ->pluck('grade')
+            ->unique()
+            ->sort();
+        return $this->success('成功', $grade);
+    }
+
+
 
 
 }

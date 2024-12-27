@@ -51,8 +51,24 @@ use support\Db;
 class User extends Base
 {
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->{$model->getKeyName()} = self::generateRandomId($model);
+        });
+    }
 
 
+    protected static function generateRandomId($model)
+    {
+        $keyName = $model->getKeyName();
+        do {
+            $id = mt_rand(100000, 999999); // 生成6位随机数字
+        } while (self::where($keyName, $id)->exists());
+        return $id;
+    }
 
     /**
      * The table associated with the model.

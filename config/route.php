@@ -23,6 +23,7 @@ Route::group('/notify', function () {
     Route::any('/wechat', [\app\controller\NotifyController::class, 'wechat']);
 //    Route::any('/balance', [\app\controller\NotifyController::class, 'balance']);
     Route::any('/alipay', [\app\controller\NotifyController::class, 'alipay']);
+    Route::any('/unipay', [\app\controller\NotifyController::class, 'unipay']);
 
 });
 
@@ -36,6 +37,7 @@ Route::group('/box', function () {
     Route::post('/levelPrize', [\app\controller\BoxController::class, 'levelPrize']); //闯关赏关卡详情
     Route::post('/prizeLog', [\app\controller\BoxController::class, 'prizeLog']); //中奖记录
     Route::post('/getDrawLog', [\app\controller\BoxController::class, 'getDrawLog']); //中奖记录
+    Route::post('/getGradeByDrawLog', [\app\controller\BoxController::class, 'getGradeByDrawLog']);
 });
 
 Route::group('/sms', function () {
@@ -66,6 +68,7 @@ Route::group('/banner', function () {
 
 Route::group('/config', function () {
     Route::post('/getAgreement', [\app\controller\ConfigController::class, 'getAgreement']);
+    Route::post('/getEffectList', [\app\controller\ConfigController::class, 'getEffectList']);
 });
 
 Route::group('/user', function () {
@@ -86,6 +89,7 @@ Route::group('/user', function () {
     Route::post('/getUserInfoById', [\app\controller\UserController::class, 'getUserInfoById']);
     Route::post('/receive', [\app\controller\UserController::class, 'receive']);
     Route::post('/changeMobile', [\app\controller\UserController::class, 'changeMobile']);
+    Route::post('/bindMobile', [\app\controller\UserController::class, 'bindMobile']);
 });
 
 Route::group('/prize', function () {

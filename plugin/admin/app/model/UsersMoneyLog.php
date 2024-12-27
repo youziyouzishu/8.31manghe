@@ -3,7 +3,7 @@
 namespace plugin\admin\app\model;
 
 /**
- *
+ * 
  *
  * @property int $id 主键
  * @property int $user_id 会员ID
@@ -16,6 +16,7 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|UsersMoneyLog query()
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class UsersMoneyLog extends Base

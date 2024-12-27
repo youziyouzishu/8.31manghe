@@ -21,6 +21,7 @@ use plugin\admin\app\model\Base;
  * @property int $box_prize_id 奖品
  * @property int $num 数量
  * @property int $total 总数量
+ * @property int $grade 评级:1=通关赏,2=N级,3=S级,4=SS级,5=SSS级
  * @property string $price 价格
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @mixin \Eloquent
@@ -41,7 +42,7 @@ class RoomPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total','price'];
+    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total','price','grade'];
 
 
     public function room()

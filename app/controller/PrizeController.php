@@ -38,11 +38,11 @@ class PrizeController extends BaseController
             if ($res->num < $prize['num']) {
                 return $this->fail('奖品数量不足');
             }
-            $res->decrement('num',$prize['num']);
+            $res->decrement('num', $prize['num']);
             if ($res->num <= 0) {
                 $res->delete();
             }
-            User::money($res->price * $prize['num'], $request->uid, '退货'.$res->boxPrize->name.'获得');
+            User::money($res->price * $prize['num'], $request->uid, '退货' . $res->boxPrize->name . '获得');
         }
         return $this->success();
     }
@@ -60,8 +60,8 @@ class PrizeController extends BaseController
         if ($user->kol == 1) {
             return $this->fail('错误');
         }
-        $xiaofei =  UsersDisburse::where(['user_id' => $request->uid,'type'=>1])->sum('amount');
-        if ($xiaofei < 100){
+        $xiaofei = UsersDisburse::where(['user_id' => $request->uid, 'type' => 1])->sum('amount');
+        if ($xiaofei < 100) {
             return $this->fail('转赠失败');
         }
 
@@ -77,14 +77,15 @@ class PrizeController extends BaseController
                 return $this->fail('奖品数量不足');
             }
             if ($touserprize = UsersPrize::where(['user_id' => $to_user_id, 'box_prize_id' => $res->box_prize_id, 'price' => $res->price])->first()) {
-                $touserprize->increment('num',$prize['num']);
+                $touserprize->increment('num', $prize['num']);
             } else {
                 UsersPrize::create([
                     'user_id' => $to_user_id,
                     'box_prize_id' => $res->box_prize_id,
                     'price' => $res->price,
                     'num' => $prize['num'],
-                    'mark' => $user->nickname . '赠送'
+                    'mark' => $user->nickname . '赠送',
+                    'grade' => $res->grade,
                 ]);
             }
 
@@ -94,21 +95,23 @@ class PrizeController extends BaseController
                 'source_user_id' => $request->uid,
                 'user_id' => $to_user_id,
                 'box_prize_id' => $res->box_prize_id,
-                'mark' => $user->nickname .' '.$user->id. ' 赠送',
+                'mark' => $user->nickname . ' ' . $user->id . ' 赠送',
                 'price' => $res->price,
-                'grade' => $res->boxPrize->grade
+                'grade' => $res->boxPrize->grade,
+                'num' => $prize['num']
             ]);
             UsersPrizeLog::create([
                 'type' => 1,
                 'source_user_id' => $to_user_id,
                 'user_id' => $request->uid,
                 'box_prize_id' => $res->box_prize_id,
-                'mark' => '赠送' ,
+                'mark' => '赠送',
                 'price' => $res->price,
-                'grade' => $res->boxPrize->grade
+                'grade' => $res->boxPrize->grade,
+                'num' => $prize['num']
             ]);
 
-            $res->decrement('num',$prize['num']);
+            $res->decrement('num', $prize['num']);
             if ($res->num <= 0) {
                 $res->delete();
             }
@@ -133,26 +136,24 @@ class PrizeController extends BaseController
     function getPrizesFreight(Request $request)
     {
         $prizes = $request->post('prizes');
-
+        $prize = $prizes[0];
         $freight = 0;
-        $data = [];
-        foreach ($prizes as $prize) {
-            $res = UsersPrize::with(['boxPrize'])->find($prize['id']);
-            if (!$res) {
-                return $this->fail('奖品不存在');
-            }
-            if ($res->price < 30) {
-                $this_freight = 10 * $prize['num'];
 
-            } else {
-                $this_freight = 0;
-            }
-            $res->num = $prize['num'];
-            $res->freight = $this_freight;
-            $freight += $this_freight;
-            $data['prizes'][] = $res;
 
+        $res = UsersPrize::with(['boxPrize'])->find($prize['id']);
+        if (!$res) {
+            return $this->fail('奖品不存在');
         }
+        if ($res->price < 30) {
+            $this_freight = 10 * $prize['num'];
+
+        } else {
+            $this_freight = 0;
+        }
+        $res->num = $prize['num'];
+        $res->setAttribute('freight',$this_freight);
+        $freight += $this_freight;
+        $data['prizes'][] = $res;
         $data['freight'] = $freight;
         return $this->success('成功', $data);
     }
@@ -160,9 +161,13 @@ class PrizeController extends BaseController
     #发货
     function deliver(Request $request)
     {
-        $prizes = $request->post('prizes');
+        $prizes = $request->post('prizes');#array
+        $prize = $prizes[0];
+        if (empty($prize)) {
+            return $this->fail('请选择发货赏品');
+        }
         $address_id = $request->post('address_id');
-        if (empty($address_id)){
+        if (empty($address_id)) {
             return $this->fail('请选择收货地址');
         }
         $user = User::find($request->uid);
@@ -171,43 +176,33 @@ class PrizeController extends BaseController
         }
         $ordersn = Util::ordersn();
 
-        $freight = 0;
-        $detailData = [];
-        foreach ($prizes as $prize) {
-            $res = UsersPrize::find($prize['id']);
-            if (!$res) {
-                return $this->fail('奖品不存在');
-            }
-            if ($res->safe == 1) {
-                return $this->fail('奖品已锁定，不能发货');
-            }
-            if ($prize['num'] <= 0) {
-                return $this->fail('请输入正确的数量');
-            }
-            if ($res->num < $prize['num']) {
-                return $this->fail('奖品数量不足');
-            }
-            if ($res->price < 30) {
-                $this_freight = 10 * $prize['num'];
-            } else {
-                $this_freight = 0;
-            }
-            $detailData[] = [
-                'user_prize_id' => $res->id,
-                'box_prize_id' => $res->box_prize_id,
-                'num' => $prize['num'],
-                'freight' => $this_freight,
-                'price' => $res->price
-            ];
-            $freight += $this_freight;
+
+        $res = UsersPrize::find($prize['id']);
+        if (!$res) {
+            return $this->fail('奖品不存在');
+        }
+        if ($res->safe == 1) {
+            return $this->fail('奖品已锁定，不能发货');
+        }
+        if ($prize['num'] <= 0 || $prize['num'] > $res->num) {
+            return $this->fail('请输入正确的数量');
+        }
+        if ($res->price < 30) {
+            $freight = 10 * $prize['num'];
+        } else {
+            $freight = 0;
         }
         $deliver = Deliver::create([
             'user_id' => $request->uid,
             'ordersn' => $ordersn,
-            'freight' => $freight,
+            'pay_amount' => $freight,
             'address_id' => $address_id,
+            'box_prize_id' => $res->box_prize_id,
+            'user_prize_id' => $res->id,
+            'num' => $prize['num'],
+            'price' => $res->price,
+            'grade' => $res->grade
         ]);
-        $deliver->detail()->createMany($detailData);
 
 
         if ($freight == 0) {
@@ -237,11 +232,7 @@ class PrizeController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
-                $deliver->pay_type = 1;
-                $deliver->save();
-                $ret = Pay::pay($freight, $ordersn, '支付运费', 'freight', JwtToken::getUser()->openid);
-                $ret = json_decode($ret);
-                $ret = $ret->data->qr_code;
+                $ret = ['scene'=>'freight','ordersn'=>$ordersn];
                 $code = 4;
             }
             return $this->success('成功', [

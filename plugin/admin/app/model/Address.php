@@ -21,6 +21,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Address newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Address newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Address query()
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class Address extends Base
@@ -40,5 +41,10 @@ class Address extends Base
     protected $primaryKey = 'id';
 
     protected $fillable = ['user_id','default','detail','province','city','region','mobile','name'];
+
+    function user()
+    {
+        return $this->belongsTo(User::class,'user_id');
+    }
 
 }

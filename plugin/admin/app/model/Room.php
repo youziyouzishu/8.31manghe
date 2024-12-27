@@ -13,8 +13,8 @@ use plugin\admin\app\model\Base;
  * @property string $name 房间名称
  * @property \Illuminate\Support\Carbon|null $created_at 创建时间
  * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
- * @property string|null $start_at 开始时间
- * @property string|null $end_at 结束时间
+ * @property \Illuminate\Support\Carbon|null $start_at 开始时间
+ * @property \Illuminate\Support\Carbon|null $end_at 结束时间
  * @property string $content 活动介绍
  * @property int $type 房间类型:1=密码,2=流水
  * @property string $password

@@ -103,7 +103,7 @@
                     name: "type",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"微信"},{"value":"2","name":"水晶"}],
+                    data: [{"value":"1","name":"支付宝"},{"value":"2","name":"水晶"},{"value":"3","name":"云闪付"}],
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,
                     radio: true,
@@ -187,16 +187,22 @@
 							return util.escape(items.join(","));
 						}
 					},{
+                        title: "场景",align: "center",
+                        field: "scene",
+                        templet: function (d) {
+                            let field = "scene";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "用户",align: "center",
 						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user.nickname
 						}
 					},{
 						title: "金额",align: "center",
@@ -248,10 +254,9 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
 				let apiResults = {};
-				apiResults["type"] = {"1":"微信","2":"水晶"};
-				apiResults["user_id"] = [];
+				apiResults["type"] = {"1":"支付宝","2":"水晶","3":"云闪付"};
+				apiResults["scene"] = {"1":"盲盒抽奖","2":"商城购买","3":"DIY抽奖"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

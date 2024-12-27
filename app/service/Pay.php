@@ -2,52 +2,49 @@
 
 namespace app\service;
 
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use Exception;
 use GuzzleHttp\Client;
-use plugin\admin\app\common\Util;
-use Yansongda\Artful\Rocket;
-use Yansongda\Supports\Collection;
+use GuzzleHttp\Exception\GuzzleException;
 
 class Pay
 {
     /**
      * 支付
+     * @param $pay_type 1=支付宝 2=云闪付
      * @param  $pay_amount
      * @param  $order_no
      * @param $mark
      * @param $attach
-     * @param string $openid
+     * @return string
+     * @throws GuzzleException
      */
-    public static function pay($pay_amount, $order_no, $mark, $attach, string $openid = '')
+    public static function pay($pay_type,$pay_amount, $order_no, $mark, $attach)
     {
-//        $config = config('payment');
-//        return \Yansongda\Pay\Pay::wechat($config)->mini([
-//            'out_trade_no' => $order_no,
-//            'description' => $mark,
-//            'amount' => [
-//                'total' => function_exists('bcmul') ? (int)bcmul($pay_amount, 100, 2) : $pay_amount * 100,
-//                'currency' => 'CNY',
-//            ],
-//            'payer' => [
-//                'openid' => $openid,
-//            ],
-//            'attach' => $attach
-//        ]);
+        if (!in_array($pay_type,[1,2])){
+            throw new Exception('支付类型错误');
+        }
+
         $client = new Client();
         $url = 'https://api.huifu.com/v2/trade/payment/jspay';
         $sys_id = '6666000159541570';
         $product_id = 'PAYUN';
+        $notify_url = $pay_type == 1 ? 'https://0831manghe.62.hzgqapp.com/notify/alipay': 'https://0831manghe.62.hzgqapp.com/notify/unipay';
         $data = [
             'req_date'=>date('Ymd'),
             'req_seq_id'=>$order_no,
             'huifu_id'=>'6666000159541570',
             'goods_desc'=>$mark,
-            'trade_type'=>'A_NATIVE',
+            'trade_type'=>$pay_type == 1 ?'A_NATIVE' : 'U_NATIVE',
             'trans_amt'=>$pay_amount,
-            'notify_url'=> 'https://0831manghe.62.hzgqapp.com/notify/alipay',
+            'notify_url'=> $notify_url,
             'remark'=>$attach
         ];
-
         ksort($data);
         $signdata = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
         $signature= '';
@@ -61,11 +58,26 @@ class Pay
             'data' => $data,
             'sign'=>$sign
         ];
-        dump($postdata);
         $result = $client->post($url, [
             'json' => $postdata,
         ]);
-        return $result->getBody()->getContents();
+        $ret = $result->getBody()->getContents();
+        $ret = json_decode($ret);
+        $qr_code =  $ret->data->qr_code;
+
+        // 使用构建器创建 QR Code
+        $writer = new PngWriter();
+        $qrCode = new QrCode(
+            data: $qr_code,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::Low,
+            size: 100,
+            margin: 10,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+            foregroundColor: new Color(0, 0, 0),
+            backgroundColor: new Color(255, 255, 255)
+        );
+        return $writer->write($qrCode)->getDataUri();
     }
 
     #退款

@@ -22,55 +22,6 @@
                     </div>
                     
                     <div class="layui-form-item">
-                        <label class="layui-form-label">用户</label>
-                        <div class="layui-input-block">
-                            <div name="user_id" id="user_id" value="" ></div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">默认</label>
-                        <div class="layui-input-block">
-                            <div name="default" id="default" value="" ></div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">省</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="province" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">市</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="city" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">区</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="region" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">手机号</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="mobile" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">姓名</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="name" value="" class="layui-input">
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
                         <div class="layui-input-block">
                             <div class="layui-input-block" id="created_at">
@@ -105,21 +56,21 @@
             </div>
         </div>
 
-<!--        &lt;!&ndash; 表格顶部工具栏 &ndash;&gt;-->
-<!--        <script type="text/html" id="table-toolbar">-->
-<!--            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.address.insert">-->
-<!--                <i class="layui-icon layui-icon-add-1"></i>新增-->
-<!--            </button>-->
-<!--            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.address.delete">-->
-<!--                <i class="layui-icon layui-icon-delete"></i>删除-->
-<!--            </button>-->
-<!--        </script>-->
+        <!-- 表格顶部工具栏 -->
+        <script type="text/html" id="table-toolbar">
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.effect.insert">
+                <i class="layui-icon layui-icon-add-1"></i>新增
+            </button>
+            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.effect.delete">
+                <i class="layui-icon layui-icon-delete"></i>删除
+            </button>
+        </script>
 
-<!--        &lt;!&ndash; 表格行工具栏 &ndash;&gt;-->
-<!--        <script type="text/html" id="table-bar">-->
-<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.address.update">编辑</button>-->
-<!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.address.delete">删除</button>-->
-<!--        </script>-->
+        <!-- 表格行工具栏 -->
+        <script type="text/html" id="table-bar">
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.effect.update">编辑</button>
+            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.effect.delete">删除</button>
+        </script>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
         <script src="/app/admin/component/pear/pear.js"></script>
@@ -130,66 +81,11 @@
 
             // 相关常量
             const PRIMARY_KEY = "id";
-            const SELECT_API = "/app/admin/address/select";
-            const UPDATE_API = "/app/admin/address/update";
-            const DELETE_API = "/app/admin/address/delete";
-            const INSERT_URL = "/app/admin/address/insert";
-            const UPDATE_URL = "/app/admin/address/update";
-
-            // 字段 用户 user_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                let value = layui.$("#user_id").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: '#user_id',
-                    name: "user_id",
-                    //配置搜索
-                    filterable: true,
-                    //配置远程分页
-                    clickClose: true,
-                    radio: true,
-                    remoteSearch:true,
-                    initValue: initValue,
-                    template({ item, sels, name, value }){
-                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
-                    },
-                    prop: {
-                        name: 'name',
-                        value: 'value',
-                    },
-                    //数据处理
-                    remoteMethod: function(val, cb, show, pageIndex){
-                        layui.$.ajax({
-                            url: "/app/admin/user/select?format=select",
-                            dataType: "json",
-                            data: {
-                                id: val
-                            },
-                            success: function (res) {
-                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
-                                cb(res.data)
-                            }
-                        });
-                    }
-                })
-
-            });
-            
-            // 字段 默认 default
-            layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#default").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#default",
-                    name: "default",
-                    filterable: true,
-                    initValue: initValue,
-                    data: [{"value":"0","name":"否"},{"value":"1","name":"是"}],
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
-                })
-            });
+            const SELECT_API = "/app/admin/effect/select";
+            const UPDATE_API = "/app/admin/effect/update";
+            const DELETE_API = "/app/admin/effect/delete";
+            const INSERT_URL = "/app/admin/effect/insert";
+            const UPDATE_URL = "/app/admin/effect/update";
             
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
@@ -218,41 +114,14 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "用户",align: "center",
-						field: "user_id",
-						templet: function (d) {
-							return d.user.nickname
-						}
-					},{
-						title: "默认",align: "center",
-						field: "default",
-						templet: function (d) {
-							let field = "default";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
-					},{
-						title: "详细地址",align: "center",
-						field: "detail",
-					},{
-						title: "省",align: "center",
-						field: "province",
-					},{
-						title: "市",align: "center",
-						field: "city",
-					},{
-						title: "区",align: "center",
-						field: "region",
-					},{
-						title: "手机号",align: "center",
-						field: "mobile",
-					},{
-						title: "姓名",align: "center",
+						title: "名称",align: "center",
 						field: "name",
+					},{
+						title: "视频",align: "center",
+						field: "file",
+						templet: function (d) {
+							return '<a href="' + encodeURI(d['file']) + '" target="_blank">' + util.escape(d['file']) + '</a>';
+						}
 					},{
 						title: "创建时间",align: "center",
 						field: "created_at",
@@ -270,63 +139,25 @@
 				];
 				
 				// 渲染表格
-				function render()
-				{
-				    table.render({
-				        elem: "#data-table",
-				        url: SELECT_API,
-				        page: true,
-				        cols: [cols],
-				        skin: "line",
-				        size: "lg",
-				        toolbar: "#table-toolbar",
-				        autoSort: false,
-				        defaultToolbar: [{
-				            title: "刷新",
-				            layEvent: "refresh",
-				            icon: "layui-icon-refresh",
-				        }, "filter", "print", "exports"],
-				        done: function () {
-				            layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
-				        }
-				    });
-				}
-				
-				// 获取表格中下拉或树形组件数据
-				let apis = [];
-				let apiResults = {};
-				apiResults["default"] = ["否","是"];
-				let count = apis.length;
-				layui.each(apis, function (k, item) {
-				    let [field, url] = item;
-				    $.ajax({
-				        url: url,
-				        dateType: "json",
-				        success: function (res) {
-				            if (res.code) {
-				                return layui.popup.failure(res.msg);
-				            }
-				            function travel(items) {
-				                for (let k in items) {
-				                    let item = items[k];
-				                    apiResults[field][item.value] = item.name;
-				                    if (item.children) {
-				                        travel(item.children);
-				                    }
-				                }
-				            }
-				            travel(res.data);
-				        },
-				        complete: function () {
-				            if (--count === 0) {
-				                render();
-				            }
-				        }
-				    });
+				table.render({
+				    elem: "#data-table",
+				    url: SELECT_API,
+				    page: true,
+				    cols: [cols],
+				    skin: "line",
+				    size: "lg",
+				    toolbar: "#table-toolbar",
+				    autoSort: false,
+				    defaultToolbar: [{
+				        title: "刷新",
+				        layEvent: "refresh",
+				        icon: "layui-icon-refresh",
+				    }, "filter", "print", "exports"],
+				    done: function () {
+				        layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
+				    }
 				});
-				if (!count) {
-				    render();
-				}
+				
 				
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {

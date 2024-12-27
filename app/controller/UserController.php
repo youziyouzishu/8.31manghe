@@ -105,7 +105,7 @@ class UserController extends BaseController
         }
         $user->client = JwtToken::TOKEN_CLIENT_MOBILE;
         $token = JwtToken::generateToken($user->toArray());
-        return $this->success('成功', ['token' => $token]);
+        return $this->success('成功', ['token' => $token,'user'=>$user]);
     }
 
     function getinfo(Request $request)
@@ -136,36 +136,26 @@ class UserController extends BaseController
     function deliverList(Request $request)
     {
         $status = $request->post('status', 0);
-
         $rows = Deliver::where(['user_id' => $request->uid])
+            ->with(['boxPrize'])
+            ->orderByDesc('id')
             ->when(!empty($status), function ($query) use ($status) {
                 $query->where('status', $status);
             },function ($query){
                 $query->whereIn('status', [1,2,3]);
             })
-            ->paginate()->getCollection()->each(function ($item){
-                $item->detail->map(function ($detail){
-                    $detail->boxPrize->freight = $detail->boxPrize->price < 30 ? 10 : 0;
-                    return $detail->boxPrize;
-                });
-            });
+            ->paginate()
+            ->items();
         return $this->success('成功', $rows);
     }
 
     function getDeliverInfo(Request $request)
     {
         $deliver_id = $request->post('deliver_id');
-        $row = Deliver::with(['detail' => function ($builder) {
-            $builder->with('boxPrize');
-        }, 'address'])
-            ->where(['user_id' => $request->uid, 'id' => $deliver_id])
-            ->first();
-        $row->detail->map(function ($detail){
-            $detail->boxPrize->freight = $detail->boxPrize->price < 30 ? 10 : 0;
-            return $detail->boxPrize;
-        });
+        $row = Deliver::with(['boxPrize', 'address'])->find($deliver_id);
         return $this->success('成功', $row);
     }
+
 
     function confirmReceipt(Request $request)
     {
@@ -334,8 +324,30 @@ class UserController extends BaseController
         }
         $user = User::find($request->uid);
         $user->mobile = $mobile;
+        $user->username = $mobile;
         $user->save();
         return $this->success();
+    }
+
+    function bindMobile(Request $request)
+    {
+        $code = $request->post('code');
+        //小程序
+        $app = new Application(config('wechat'));
+        $api = $app->getClient();
+        $ret = $api->postJson('/wxa/business/getuserphonenumber', [
+            'code' => $code
+        ]);
+        $ret = json_decode($ret);
+        if ($ret->errcode != 0) {
+            return $this->fail('获取手机号失败');
+        }
+        $mobile = $ret->phone_info->phoneNumber;
+        $row = User::find($request->user_id);
+        $row->mobile = $mobile;
+        $row->username = $mobile;
+        $row->save();
+        return $this->success('成功');
     }
 
 

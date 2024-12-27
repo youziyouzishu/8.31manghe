@@ -109,12 +109,8 @@ class GoodsController extends BaseController
                     $pay_amount = 0.01;
                 }
                 $order->pay_amount = $pay_amount;
-                $order->pay_type = 1;
                 $order->save();
-                //微信支付
-                $ret = Pay::pay($pay_amount, $ordersn, '购买商品-'.$goods->boxPrize->name, 'goods', JwtToken::getUser()->openid);
-                $ret = json_decode($ret);
-                $ret = $ret->data->qr_code;
+                $ret = ['scene'=>'goods','ordersn'=>$ordersn];
                 $code = 4;
             }
 

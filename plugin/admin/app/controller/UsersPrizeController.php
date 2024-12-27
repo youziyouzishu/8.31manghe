@@ -33,7 +33,7 @@ class UsersPrizeController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->with(['boxPrize.box']);
+        $query = $this->doSelect($where, $field, $order)->with(['boxPrize.box','user']);
         return $this->doFormat($query, $format, $limit);
     }
     
@@ -56,16 +56,31 @@ class UsersPrizeController extends Crud
     {
         if ($request->method() === 'POST') {
             $param = $request->post();
-            dump($param);
             $boxPrize = BoxPrize::find($param['box_prize_id']);
-            $request->set('post',['price'=>$boxPrize->price]);
+
+            if ($userPrize = UsersPrize::where(['user_id' => $param['user_id'], 'box_prize_id' => $param['box_prize_id'], 'price' => $boxPrize->price])->first()) {
+                $userPrize->increment('num',$param['num']);
+            } else {
+                //给用户发放赏袋
+                UsersPrize::create([
+                    'user_id' => $param['user_id'],
+                    'box_prize_id' => $param['box_prize_id'],
+                    'price' => $boxPrize->price,
+                    'mark' => '平台赠送',
+                    'num' => $param['num'],
+                    'grade' => $boxPrize->grade,
+                ]);
+            }
+
+
             UsersPrizeLog::create([
                 'user_id'=>$param['user_id'],
                 'box_prize_id'=>$param['box_prize_id'],
-                'mark'=>$param['mark'],
+                'mark'=>'平台赠送',
                 'type'=>3,
                 'price'=>$boxPrize->price,
-                'grade'=>$boxPrize->grade
+                'grade'=>$boxPrize->grade,
+                'num' => $param['num'],
             ]);
             return parent::insert($request);
         }

@@ -13,7 +13,7 @@ use plugin\admin\app\model\Base;
  * @property \Illuminate\Support\Carbon|null $updated_at 更新时间
  * @property int $user_id 用户
  * @property int $status 状态:0=待支付,1=待发货,2=待收货,3=已完成
- * @property string $freight 运费
+ * @property string $pay_amount 运费
  * @property string $ordersn 订单编号
  * @property string $waybill 快递单号
  * @property string $express 快递公司
@@ -25,10 +25,17 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\Address|null $address
  * @property-read mixed $status_text
  * @property string $mark 备注
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $usersPrize
- * @property int $pay_type 支付方式:0=无,1=微信,2=余额
+ * @property int $pay_type 支付方式:0=无,1=支付宝,2=水晶,3=云闪付
  * @property string|null $pay_time 付款时间
  * @property string|null $complete_time 收货时间
+ * @property-read \plugin\admin\app\model\User|null $user
+ * @property int $box_prize_id 奖品
+ * @property int $user_prize_id 所属用户奖品
+ * @property int $num 数量
+ * @property string $price 市场价
+ * @property int $grade 评级:1=通关赏,2=N级,3=S级,4=SS级,5=SSS级
+ * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
+ * @property-read \plugin\admin\app\model\UsersPrize|null $userPrize
  * @mixin \Eloquent
  */
 class Deliver extends Base
@@ -48,15 +55,25 @@ class Deliver extends Base
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'user_id', 'status', 'freight', 'ordersn', 'waybill', 'express', 'address_id', 'pay_type', 'mark', 'pay_time', 'complete_time'
+        'user_id',
+        'status',
+        'pay_amount',
+        'ordersn',
+        'waybill',
+        'express',
+        'address_id',
+        'pay_type',
+        'mark',
+        'pay_time',
+        'complete_time',
+        'box_prize_id',
+        'user_prize_id',
+        'num',
+        'price',
+        'grade',
     ];
 
     protected $appends = ['status_text'];
-
-    function detail()
-    {
-        return $this->hasMany(DeliverDetail::class, 'deliver_id');
-    }
 
     function address()
     {
@@ -75,10 +92,16 @@ class Deliver extends Base
         return ['1' => '待发货', '2' => '待收货', '3' => '完成', '4'=>'取消发货'];
     }
 
-    function usersPrize()
+    function boxPrize()
     {
-        return $this->belongsToMany(UsersPrize::class, DeliverDetail::class, 'deliver_id', 'user_prize_id');
+        return $this->belongsTo(BoxPrize::class,'box_prize_id','id');
     }
+
+    function userPrize()
+    {
+        return $this->belongsTo(UsersPrize::class,'user_prize_id','id');
+    }
+
 
     function user()
     {

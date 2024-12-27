@@ -219,28 +219,23 @@ class UploadController extends Crud
             $size = min($width, $height);
             $relative_path = 'upload/avatar/' . date('Ym');
             $real_path =  base_path(false) . "/public/";
-
-            if (!is_dir($real_path)) {
-                mkdir($real_path, 0777, true);
+            if (!is_dir($real_path.$relative_path)) {
+                mkdir($real_path.$relative_path, 0777, true);
             }
             $name = bin2hex(pack('Nn',time(), random_int(1, 65535)));
             $ext = $file->getUploadExtension();
-
             $image->crop($size, $size)->resize(300, 300);
             $path = $real_path.$relative_path."/$name.lg.$ext";
             $image->save($path);
-
             $image->resize(120, 120);
             $path = $real_path.$relative_path."/$name.md.$ext";
             $image->save($path);
-
             $image->resize(60, 60);
             $path = $real_path.$relative_path."/$name.$ext";
             $image->save($path);
             $image->resize(30, 30);
             $path = $real_path.$relative_path."/$name.sm.$ext";
             $image->save($path);
-
             return json([
                 'code' => 0,
                 'msg' => '上传成功',

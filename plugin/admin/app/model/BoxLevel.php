@@ -19,6 +19,7 @@ use plugin\admin\app\model\Base;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property-read mixed $name_text
+ * @property string $detail_img 详情图片
  * @mixin \Eloquent
  */
 class BoxLevel extends Base

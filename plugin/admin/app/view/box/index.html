@@ -177,6 +177,15 @@
                         title: "单价",align: "center",
                         field: "price",
                     },{
+                        title: "消费金额",align: "center",
+                        field: "consume_amount",
+                    },{
+                        title: "奖池金额",align: "center",
+                        field: "pool_amount",
+                    },{
+                        title: "毛利率",align: "center",
+                        field: "rate",
+                    },{
                         title: "上下架",align: "center",
                         field: "status",
                         templet: function (d) {
@@ -208,9 +217,6 @@
                         title: "奖品数量",align: "center",
                         field: "box_prize_count",
                     },{
-                        title: "商品总数量",align: "center",
-                        field: "box_prize_sum_total",
-                    },{
                         title: "单抽成本",align: "center",
                         field: "box_original_prize",
                     },{
@@ -229,6 +235,7 @@
 						field: "updated_at",
 					},{
 						title: "操作",
+                        fixed: "right",
 						toolbar: "#table-bar",
 						align: "center",
                         width: 200,
@@ -240,6 +247,7 @@
 				    elem: "#data-table",
 				    url: SELECT_API,
 				    page: true,
+                    cellMinWidth:100,
 				    cols: [cols],
 				    skin: "line",
 				    size: "lg",

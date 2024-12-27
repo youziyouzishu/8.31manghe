@@ -37,7 +37,10 @@ class BoxController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->withCount('boxPrize')->withSum(['boxPrize'], 'total')->withSum(['boxPrize'], 'chance');;
+        $query = $this->doSelect($where, $field, $order)
+            ->withCount('boxPrize')
+            ->withSum(['boxPrize'], 'chance')
+            ->withSum(['boxPrize'], 'price');
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -59,17 +62,9 @@ class BoxController extends Crud
         $paginator = $query->paginate($limit);
         $total = $paginator->total();
         $items = $paginator->items();
-        collect($items)->each(function ($item) {
-            //box_prize_sum_total
-            $item->box_prize_sum_price = $item->boxPrize->sum(function ($prize) {
-                return $prize->price * $prize->total;
-            });
-            if ($item->box_prize_sum_total == 0 || $item->box_prize_sum_price == 0){
-                $item->box_original_prize = 0;
-            }else{
-                $item->box_original_prize = round(  $item->box_prize_sum_price / $item->box_prize_sum_total,2);
-            }
-        });
+        foreach ($items as $item){
+            $item['box_original_prize'] = round(  $item['box_prize_sum_price'] / $item['box_prize_count'],2);
+        }
         if (method_exists($this, "afterQuery")) {
             $items = call_user_func([$this, "afterQuery"], $items);
         }
@@ -95,6 +90,10 @@ class BoxController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            $params = $request->post();
+            if ($params['rate'] < 0 || $params['rate'] > 1){
+                return $this->fail('毛利率必须大于0且小于1');
+            }
             return parent::insert($request);
         }
         return view('box/insert');
@@ -109,6 +108,10 @@ class BoxController extends Crud
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            $params = $request->post();
+            if ($params['rate'] < 0 || $params['rate'] > 1){
+                return $this->fail('毛利率必须大于0且小于1');
+            }
             return parent::update($request);
         }
         return view('box/update');

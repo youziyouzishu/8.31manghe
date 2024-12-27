@@ -23,9 +23,6 @@ class CouponExpire implements Consumer
         foreach ($events as $event) {
             $event->status = 3;
             $event->save();
-            $queue = 'create-room';
-            // 投递延迟消息，消息会在60秒后处理
-            Client::send($queue, ['id' => $room->id],$start_time - time());
         }
     }
 

@@ -224,13 +224,7 @@
 						title: "用户",align: "center",
 						field: "user_id",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+				            return d.user.nickname;
 						}
 					},{
                         title: "所属盲盒",align: "center",
@@ -308,11 +302,7 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
 				let apiResults = {};
-				apiResults["user_id"] = [];
-				apiResults["box_prize_id"] = [];
 				apiResults["safe"] = ["否","是"];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {

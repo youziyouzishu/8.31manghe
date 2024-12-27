@@ -24,6 +24,9 @@ use plugin\admin\app\model\Base;
  * @property string $image 封面
  * @property int $status 状态
  * @property int $weigh 权重
+ * @property string $consume_amount 消费金额
+ * @property string $pool_amount 奖金池
+ * @property string $rate 毛利率
  * @mixin \Eloquent
  */
 class Box extends Base
