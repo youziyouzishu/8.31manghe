@@ -42,7 +42,10 @@ Route::group('/box', function () {
 
 Route::group('/sms', function () {
     Route::post('/send', [\app\controller\SmsController::class, 'send']);
+});
 
+Route::group('/pay', function () {
+    Route::post('/pay', [\app\controller\PayController::class, 'pay']);
 });
 
 Route::group('/upload', function () {

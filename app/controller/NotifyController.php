@@ -181,7 +181,9 @@ class NotifyController extends BaseController
                     $pool_amount = ($order->pay_amount - $prizes_price) * (1 - $order->box->rate);
                     $order->box->increment('pool_amount', $pool_amount);
                     $online = Cache::has("private-user-{$order->user_id}");
-
+                    dump($online);
+                    dump('开始发奖');
+                    dump($winnerPrize);
                     if (!$online) {
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
@@ -289,22 +291,20 @@ class NotifyController extends BaseController
                     $order->pay_time = date('Y-m-d H:i:s');
                     $order->save();
 
-                    $order->detail->each(function (DeliverDetail $item) {
-                        //支付成功  删除用户的奖品
-                        UsersPrizeLog::create([
-                            'user_id' => $item->userPrize->user_id,
-                            'box_prize_id' => $item->box_prize_id,
-                            'mark' => '发货成功，删除奖品',
-                            'type' => 4,
-                            'price' => $item->boxPrize->price,
-                            'grade' => $item->boxPrize->grade,
-                            'num' => $item->num,
-                        ]);
-                        $item->userPrize->decrement('num', $item->num);
-                        if ($item->userPrize->num <= 0) {
-                            $item->userPrize->delete();
-                        }
-                    });
+                    //支付成功  删除用户的奖品
+                    UsersPrizeLog::create([
+                        'user_id' => $order->userPrize->user_id,
+                        'box_prize_id' => $order->box_prize_id,
+                        'mark' => '发货成功，删除奖品',
+                        'type' => 4,
+                        'price' => $order->boxPrize->price,
+                        'grade' => $order->boxPrize->grade,
+                        'num' => $order->num,
+                    ]);
+                    $order->userPrize->decrement('num', $order->num);
+                    if ($order->userPrize->num <= 0) {
+                        $order->userPrize->delete();
+                    }
 
                     break;
                 case 'dream':

@@ -129,8 +129,8 @@ class UserController extends Crud
                 Deliver::where('user_id', $item->id)->whereIn('status', [1, 2, 3])
                     ->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])
                     ->get()
-                    ->each(function ($itme) use (&$deliver_amount) {
-                        $deliver_amount += optional($itme->userPrize)->withTrashed()->first()->price * $itme->num;
+                    ->each(function ($item) use (&$deliver_amount) {
+                        $deliver_amount += optional($item->userPrize())->withTrashed()->first()->price * $item->num;
                     });
                 //赠送好友的赏品价值
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
@@ -158,8 +158,8 @@ class UserController extends Crud
                 Deliver::where('user_id', $item->id)
                     ->whereIn('status', [1, 2, 3])
                     ->get()
-                    ->each(function ($itme)use(&$deliver_amount) {
-                        $deliver_amount += optional($itme->userPrize)->withTrashed()->first()->price * $itme->num;
+                    ->each(function ($item)use(&$deliver_amount) {
+                        $deliver_amount += optional($item->userPrize())->withTrashed()->first()->price * $item->num;
                     });
                 //赠送好友的赏品价值
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->sum('price');

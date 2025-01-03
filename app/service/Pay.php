@@ -61,23 +61,7 @@ class Pay
         $result = $client->post($url, [
             'json' => $postdata,
         ]);
-        $ret = $result->getBody()->getContents();
-        $ret = json_decode($ret);
-        $qr_code =  $ret->data->qr_code;
-
-        // 使用构建器创建 QR Code
-        $writer = new PngWriter();
-        $qrCode = new QrCode(
-            data: $qr_code,
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::Low,
-            size: 100,
-            margin: 10,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin,
-            foregroundColor: new Color(0, 0, 0),
-            backgroundColor: new Color(255, 255, 255)
-        );
-        return $writer->write($qrCode)->getDataUri();
+        return $result->getBody()->getContents();
     }
 
     #退款

@@ -3,6 +3,12 @@
 namespace app\controller;
 
 use app\service\Pay;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DreamOrders;
@@ -43,7 +49,65 @@ class PayController extends BaseController
             return $this->fail('支付方式错误');
         }
         $ret = Pay::pay($pay_type,$pay_amount,$ordersn,$mark,$scene);
-        return  $this->success('请求支付',$ret);
+        $ret = json_decode($ret);
+        $qr_code =  $ret->data->qr_code;
+        // 使用构建器创建 QR Code
+        $writer = new PngWriter();
+        $qrCode = new QrCode(
+            data: $qr_code,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::Low,
+            size: 100,
+            margin: 10,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+            foregroundColor: new Color(0, 0, 0),
+            backgroundColor: new Color(255, 255, 255)
+        );
+        $base64 =  $writer->write($qrCode)->getDataUri();
+        return  $this->success('请求支付',['base64'=>$base64,'qr_code'=>$qr_code,'scene'=>$scene,'ordersn'=>$ordersn]);
+    }
+
+    #查询是否到账
+    function getPayStatus(Request $request)
+    {
+        $ordersn = $request->post('ordersn');
+        $scene  = $request->post('scene');
+        if ($scene == 'box'){
+            $order = BoxOrder::where(['ordersn' => $ordersn])->first();
+            if (!$order){
+                return $this->fail('订单不存在');
+            }
+            if ($order->status == 1){
+                return $this->fail('查询未到账');
+            }
+        }elseif ($scene == 'goods'){
+            $order = GoodsOrder::where(['ordersn' => $ordersn])->first();
+            if (!$order){
+                return $this->fail('订单不存在');
+            }
+            if ($order->status == 1){
+                return $this->fail('查询未到账');
+            }
+        }elseif ($scene == 'freight'){
+            $order = Deliver::where(['ordersn' => $ordersn])->first();
+            if (!$order){
+                return $this->fail('订单不存在');
+            }
+            if ($order->status == 0){
+                return $this->fail('查询未到账');
+            }
+        }elseif ($scene == 'dream'){
+            $order = DreamOrders::where(['ordersn' => $ordersn])->first();
+            if (!$order){
+                return $this->fail('订单不存在');
+            }
+            if ($order->status == 1){
+                return $this->fail('查询未到账');
+            }
+        }else{
+            return $this->fail('支付场景错误');
+        }
+        return $this->success('查询到账');
     }
 
 }

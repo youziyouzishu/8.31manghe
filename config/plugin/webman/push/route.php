@@ -67,7 +67,7 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     foreach ($payload['events'] as $event) {
         if ($event['name'] === 'channel_added') {
             $channels_online[] = $event['channel'];
-            Cache::set($event['channel'],'1');
+            Cache::set($event['channel'],1);
             $winner_prize = Cache::get($event['channel']."-winner_prize");
             if ($winner_prize){
                 $api = new Api(
@@ -81,6 +81,7 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
                 ]);
                 Cache::delete($event['channel']."-winner_prize");
             }
+
         } else if ($event['name'] === 'channel_removed') {
             $channels_offline[] = $event['channel'];
             Cache::delete($event['channel']);

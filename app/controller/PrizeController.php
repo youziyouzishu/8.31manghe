@@ -162,6 +162,7 @@ class PrizeController extends BaseController
     function deliver(Request $request)
     {
         $prizes = $request->post('prizes');#array
+
         $prize = $prizes[0];
         if (empty($prize)) {
             return $this->fail('请选择发货赏品');
