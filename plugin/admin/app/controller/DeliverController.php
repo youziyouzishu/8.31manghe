@@ -36,7 +36,11 @@ class DeliverController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->where('status', '<>', 0)->with(['user', 'address','boxPrize']);
+        $query = $this->doSelect($where, $field, $order)
+            ->where('status', '<>', 0)
+            ->with(['user', 'address','boxPrize'])
+            ->selectRaw('*,num * price as total_price');
+
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -89,6 +93,7 @@ class DeliverController extends Crud
         if ($row->status != 1) {
             return $this->fail('订单状态异常');
         }
+        $row->fill($param);
         $row->status = 2;
         $row->save();
         return $this->success('发货成功');

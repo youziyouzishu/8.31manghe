@@ -105,9 +105,10 @@
 
 <!-- 表格行工具栏 -->
 <script type="text/html" id="table-bar">
-    <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.deliver.update">编辑</button>-->
-    <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.deliver.delete">删除</button>-->
     <button class="pear-btn pear-btn-xs tool-btn {{ d.status == 1 ? '' : 'layui-hide' }}" lay-event="deliver" permission="app.admin.deliver.deliver">发货</button>
+
+    <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.deliver.update">编辑</button>
+    <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.deliver.delete">删除</button>-->
     <button class="pear-btn pear-btn-xs tool-btn {{ d.status == 1 ? '' : 'layui-hide' }}" lay-event="cancel" permission="app.admin.deliver.cancel">取消</button>
 </script>
 
@@ -216,6 +217,7 @@
                 sort: true,
             }, {
                 title: "用户", align: "center",
+                field: "user_id",
                 templet: function (d) {
                     return d.user.nickname
                 }
@@ -224,6 +226,18 @@
                 field: "status",
                 templet: function (d) {
                     let field = "status";
+                    if (typeof d[field] == "undefined") return "";
+                    let items = [];
+                    layui.each((d[field] + "").split(","), function (k, v) {
+                        items.push(apiResults[field][v] || v);
+                    });
+                    return util.escape(items.join(","));
+                }
+            },{
+                title: "支付方式", align: "center",
+                field: "pay_type",
+                templet: function (d) {
+                    let field = "pay_type";
                     if (typeof d[field] == "undefined") return "";
                     let items = [];
                     layui.each((d[field] + "").split(","), function (k, v) {
@@ -248,14 +262,30 @@
             }, {
                 title: "快递公司", align: "center",
                 field: "express",
-            }, {
+            },{
+                title: "数量", align: "center",
+                field: "num",
+            },{
+                title: "单价", align: "center",
+                field: "price",
+            },{
+                title: "总价值", align: "center",
+                field: "total_price",
+            },{
                 title: "收货地址", align: "center",
+                field: "address_id",
                 templet: function (d) {
                     return d.address.province + d.address.city + d.address.region + d.address.detail;
                 }
             },{
                 title: "备注", align: "center",
                 field: "mark",
+            },{
+                title: "付款时间", align: "center",
+                field: "pay_time",
+            },{
+                title: "收货时间", align: "center",
+                field: "complete_time",
             },{
                 title: "创建时间", align: "center",
                 field: "created_at",
@@ -298,6 +328,7 @@
         let apis = [];
         let apiResults = {};
         apiResults["status"] = ["待支付", "待发货", "待收货", "已完成", "已取消"];
+        apiResults["pay_type"] = ["无", "支付宝", "水晶,", "云闪付"];
         let count = apis.length;
         layui.each(apis, function (k, item) {
             let [field, url] = item;
@@ -433,19 +464,19 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label required">快递单号</label>
                         <div class="layui-input-block">
-                            <input type="text" name="waybill" value="" required lay-verify="required" class="layui-input waybill">
+                            <input type="text" name="waybill" value="" class="layui-input waybill">
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label required">快递公司</label>
                         <div class="layui-input-block">
-                            <input type="text" name="express" value="" required lay-verify="required" class="layui-input express">
+                            <input type="text" name="express" value="" class="layui-input express">
                         </div>
                     </div>
                       <div class="layui-form-item">
-                            <label class="layui-form-label required">备注</label>
+                            <label class="layui-form-label">备注</label>
                             <div class="layui-input-block">
-                                <textarea  rows="4" cols="40" name="mark" value="" required lay-verify="required" class="layui-textarea mark"></textarea>
+                                <textarea  rows="4" cols="40" name="mark" value="" class="layui-textarea mark"></textarea>
                             </div>
                         </div>
                     </div>
@@ -456,6 +487,8 @@
                     // 获取表单数据
                     var waybill = layero.find('.waybill').val();
                     var express = layero.find('.express').val();
+                    var mark = layero.find('.mark').val();
+                    console.log(waybill, express, mark);
                     $.ajax({
                         url: DELIVER_API,
                         method: 'POST',
@@ -463,7 +496,8 @@
                         data: JSON.stringify({
                             [PRIMARY_KEY]: value,
                             waybill: waybill,
-                            express: express
+                            express: express,
+                            mark: mark
                         }),
                         success: function (res) {
                             if (res.code) {

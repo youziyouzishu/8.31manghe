@@ -29,11 +29,11 @@ class PayController extends BaseController
             $pay_amount = $row->pay_amount;
         }elseif ($scene == 'box'){
             $row = BoxOrder::where('ordersn', $ordersn)->first();
-            $mark = '盲盒抽奖';
+            $mark = $row->box->name;
             $pay_amount = $row->pay_amount;
         }elseif ($scene == 'goods'){
             $row = GoodsOrder::where('ordersn', $ordersn)->first();
-            $mark = '购买商品';
+            $mark = $row->goods->boxPrize->name;
             $pay_amount = $row->pay_amount;
         }elseif ($scene == 'freight'){
             $row = Deliver::where('ordersn', $ordersn)->first();
