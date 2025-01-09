@@ -46,6 +46,7 @@ Route::group('/sms', function () {
 
 Route::group('/pay', function () {
     Route::post('/pay', [\app\controller\PayController::class, 'pay']);
+    Route::post('/getPayStatus', [\app\controller\PayController::class, 'getPayStatus']);
 });
 
 Route::group('/upload', function () {

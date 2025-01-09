@@ -127,7 +127,6 @@ class NotifyController extends BaseController
                         'level_id' => $order->level_id,
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
-
                     $winnerPrize = ['gt_n'=>0];
                     // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
                     $prizes = BoxPrize::where(['box_id' => $order->box_id])
@@ -178,12 +177,12 @@ class NotifyController extends BaseController
                             }
                         }
                     }
+
                     $pool_amount = ($order->pay_amount - $prizes_price) * (1 - $order->box->rate);
                     $order->box->increment('pool_amount', $pool_amount);
                     $online = Cache::has("private-user-{$order->user_id}");
-                    dump($online);
-                    dump('开始发奖');
-                    dump($winnerPrize);
+
+
                     if (!$online) {
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
@@ -230,7 +229,6 @@ class NotifyController extends BaseController
                         'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
                         'scene' => 1,
                     ]);
-
 
                     break;
                 case 'goods':
@@ -374,7 +372,7 @@ class NotifyController extends BaseController
                             $winnerPrize['gt_n'] = 1;
                         }
                         return $prize;
-                    })->all();
+                    });
 
                     $online = Cache::has("private-user-{$order->user_id}");
 
@@ -408,6 +406,8 @@ class NotifyController extends BaseController
             }
 
         } catch (\Throwable $e) {
+            dump($e->getMessage());
+            dump($e->getLine());
             throw new \Exception($e->getMessage());
         }
     }

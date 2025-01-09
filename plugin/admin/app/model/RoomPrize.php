@@ -42,7 +42,7 @@ class RoomPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['room_id','user_prize_id','box_prize_id','num','total','price','grade'];
+    protected $fillable = ['room_id', 'user_prize_id', 'box_prize_id', 'num', 'total', 'price', 'grade'];
 
 
     public function room()
@@ -52,14 +52,13 @@ class RoomPrize extends Base
 
     function userPrize()
     {
-        return $this->belongsTo(UsersPrize::class,'user_prize_id');
+        return $this->belongsTo(UsersPrize::class, 'user_prize_id');
     }
 
     function boxPrize()
     {
-        return $this->belongsTo(BoxPrize::class,'box_prize_id');
+        return $this->belongsTo(BoxPrize::class, 'box_prize_id');
     }
-
 
 
 }

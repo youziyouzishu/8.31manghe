@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Coupon;
 use plugin\admin\app\model\Deliver;
-use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\GoodsOrder;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersCoupon;
@@ -343,7 +342,7 @@ class UserController extends BaseController
             return $this->fail('获取手机号失败');
         }
         $mobile = $ret->phone_info->phoneNumber;
-        $row = User::find($request->user_id);
+        $row = User::find($request->uid);
         $row->mobile = $mobile;
         $row->username = $mobile;
         $row->save();

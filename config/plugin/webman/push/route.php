@@ -27,10 +27,12 @@ Route::get('/plugin/webman/push/push.js', function (Request $request) {
 /**
  * 私有频道鉴权，这里应该使用session辨别当前用户身份，然后确定该用户是否有权限监听channel_name
  */
-Route::post(config('plugin.webman.push.app.auth'), function (Request $request) {
+Route::any(config('plugin.webman.push.app.auth'), function (Request $request) {
+
     $pusher = new Api(str_replace('0.0.0.0', '127.0.0.1', config('plugin.webman.push.app.api')), config('plugin.webman.push.app.app_key'), config('plugin.webman.push.app.app_secret'));
     $channel_name = $request->post('channel_name');
-
+    dump('进入鉴权');
+    dump($channel_name);
     $has_authority = true;
     if ($has_authority) {
         return response($pusher->socketAuth($channel_name, $request->post('socket_id')));
@@ -45,7 +47,6 @@ Route::post(config('plugin.webman.push.app.auth'), function (Request $request) {
  * 频道下线：是指某个频道的所有连接都断开触发的事件
  */
 Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PATH), function (Request $request) {
-
     // 没有x-pusher-signature头视为伪造请求
     if (!$webhook_signature = $request->header('x-pusher-signature')) {
         return response('401 Not authenticated', 401);
@@ -61,7 +62,6 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     }
     // 这里存储这上线 下线的channel数据
     $payload = json_decode($body, true);
-
     $channels_online = $channels_offline = [];
 
     foreach ($payload['events'] as $event) {

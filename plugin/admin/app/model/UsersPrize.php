@@ -28,6 +28,7 @@ use support\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersPrize withoutTrashed()
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomPrize> $roomPrizes
  * @property string $price 参考价
+ * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
  * @mixin \Eloquent
  */
 class UsersPrize extends Base

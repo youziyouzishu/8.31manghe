@@ -31,7 +31,6 @@ class RoomController extends BaseController
         if (empty($prizes)) {
             return $this->fail('奖品不能为空');
         }
-
         $start_time = strtotime($start_at);
         $end_time = strtotime($end_at);
         if ($start_time >= $end_time) {
@@ -41,7 +40,6 @@ class RoomController extends BaseController
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
         }
-
         $roomPrizesData = [];
         foreach ($prizes as $prize) {
             $res = UsersPrize::find($prize['id']);
@@ -58,7 +56,7 @@ class RoomController extends BaseController
             if ($res->num <= 0) {
                 $res->delete();
             }
-            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price,'grade'=>$res->grade,'total'=>$prize['num']];
+            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price, 'grade' => $res->grade, 'total' => $prize['num']];
         }
 
         $room = Room::create([
@@ -71,6 +69,7 @@ class RoomController extends BaseController
             'end_at' => $end_at,
             'num' => $num,
         ]);
+
         // 批量创建关联模型
         $room->roomPrize()->createMany($roomPrizesData);
 
@@ -190,12 +189,12 @@ class RoomController extends BaseController
             ->each(function ($room) {
                 $total = 0;
                 $total_price = 0;
-                $room->roomPrize->each(function ($item)use(&$total,&$total_price){
+                $room->roomPrize->each(function ($item) use (&$total, &$total_price) {
                     $total += $item->total;
                     $total_price += $item->total * $item->price;
                 });
-                $room->setAttribute('prize_count',$total);
-                $room->setAttribute('price',round($total_price,2));
+                $room->setAttribute('prize_count', $total);
+                $room->setAttribute('price', round($total_price, 2));
             });
         return $this->success('成功', $rooms);
     }
@@ -332,7 +331,7 @@ class RoomController extends BaseController
                     'box_prize_id' => $res->box_prize_id,
                     'num' => $prize['num'],
                     'price' => $res->price,
-                    'total'=>$prize['num']
+                    'total' => $prize['num']
                 ];
             }
             $room->roomPrize()->createMany($roomPrizes);

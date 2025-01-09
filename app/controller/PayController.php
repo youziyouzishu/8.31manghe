@@ -17,7 +17,7 @@ use support\Request;
 
 class PayController extends BaseController
 {
-
+    protected array $noNeedLogin = ['getPayStatus'];
     function pay(Request $request)
     {
         $scene = $request->post('scene'); # dream  box  goods  freight

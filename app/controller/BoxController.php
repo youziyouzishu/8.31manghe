@@ -27,7 +27,7 @@ use Webman\Push\Api;
 class BoxController extends BaseController
 {
 
-    protected array $noNeedLogin = ['index', 'boxPrize','getDrawLog'];
+    protected array $noNeedLogin = ['index', 'boxPrize', 'getDrawLog'];
 
 
     public function index(Request $request)
@@ -191,7 +191,7 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $times = $request->post('times');
-        $coupon_id = $request->post('coupon_id',0);
+        $coupon_id = $request->post('coupon_id', 0);
         $row = Box::find($box_id);
         if (!$row) {
             return $this->fail('盲盒不存在');
@@ -250,8 +250,7 @@ class BoxController extends BaseController
 
                     //开始抽奖
                     $draw = UsersDrawLog::create(['user_id' => $request->uid, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
-                    $winnerPrize = [];
-                    $winnerPrize = ['gt_n'=>0];
+                    $winnerPrize = ['gt_n' => 0];
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
                         // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
@@ -275,6 +274,9 @@ class BoxController extends BaseController
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
+                                if ($prize->grade >= 3){
+                                    $winnerPrize['gt_n'] = 1;
+                                }
                                 // 发放奖品并且记录
                                 if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
                                     $userPrize->increment('num');
@@ -285,7 +287,7 @@ class BoxController extends BaseController
                                         'price' => $prize->price,
                                         'num' => 1,
                                         'mark' => '抽奖获得',
-                                        'grade'=>$prize->grade,
+                                        'grade' => $prize->grade,
                                     ]);
                                 }
 
@@ -347,7 +349,7 @@ class BoxController extends BaseController
                 'pay_amount' => 0,
                 'coupon_amount' => $coupon_amount,
                 'ordersn' => $ordersn,
-                'user_coupon_id' => empty($coupon_id)?0:$coupon_id,
+                'user_coupon_id' => empty($coupon_id) ? 0 : $coupon_id,
                 'times' => $times,
                 'level_id' => $level_id
             ];
@@ -386,7 +388,7 @@ class BoxController extends BaseController
                 }
                 $order->pay_amount = $pay_amount;
                 $order->save();
-                $ret = ['scene'=>'box','ordersn'=>$ordersn];
+                $ret = ['scene' => 'box', 'ordersn' => $ordersn];
                 $code = 4;
             }
             // 提交事务
@@ -440,14 +442,13 @@ class BoxController extends BaseController
         if (empty($box_id)) {
             return $this->fail('所选盲盒不能为空');
         }
-        #盲盒内大于N赏的奖品
+
         $prize_ids = BoxPrize::where(['box_id' => $box_id])
             ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
                 $builder->where('level_id', $level_id);
             })
             ->where('grade', $grade)
             ->pluck('id');
-
         $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
             ->where('type', 0)
             ->orderBy('id', 'desc')
@@ -460,7 +461,7 @@ class BoxController extends BaseController
                 } else {
                     $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }
-                $item->setAttribute('times',$prizes);
+                $item->setAttribute('times', $prizes);
             });
         return $this->success('成功', $list);
     }
@@ -479,18 +480,21 @@ class BoxController extends BaseController
             ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
                 $builder->where('level_id', $level_id);
             })
-            ->where('grade', '>=',2)
+            ->where('grade', '>=', 2)
             ->pluck('id');
 
-        $grade = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
+        $grade = UsersPrizeLog::with(['user', 'boxPrize'])
+            ->whereIn('box_prize_id', $prize_ids)
+            ->whereHas('boxPrize', function (Builder $query) {
+                $query->whereColumn('wa_users_prize_log.grade', 'wa_box_prize.grade');
+            })
             ->where('type', 0)
+            ->orderByDesc('grade')
             ->pluck('grade')
             ->unique()
-            ->sort();
+            ->values();
         return $this->success('成功', $grade);
     }
-
-
 
 
 }
