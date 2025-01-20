@@ -139,7 +139,6 @@ class PrizeController extends BaseController
         $prize = $prizes[0];
         $freight = 0;
 
-
         $res = UsersPrize::with(['boxPrize'])->find($prize['id']);
         if (!$res) {
             return $this->fail('奖品不存在');
@@ -205,7 +204,6 @@ class PrizeController extends BaseController
             'grade' => $res->grade
         ]);
 
-
         if ($freight == 0) {
             // 创建一个新的请求对象 直接调用支付
             $notify = new NotifyController();
@@ -215,10 +213,12 @@ class PrizeController extends BaseController
             if ($res->code == 1) {
                 return $this->fail($res->msg);
             }
-            return $this->success();
+            $code = 3;
+            $ret = [];
         } else {
             $user = User::find($request->uid);
             if ($user->money >= $freight) {
+
                 $deliver->pay_type = 2;
                 $deliver->save();
                 $ret = [];
@@ -236,11 +236,11 @@ class PrizeController extends BaseController
                 $ret = ['scene'=>'freight','ordersn'=>$ordersn];
                 $code = 4;
             }
-            return $this->success('成功', [
-                'code' => $code,
-                'ret' => $ret
-            ]);
         }
+        return $this->success('成功', [
+            'code' => $code,
+            'ret' => $ret
+        ]);
 
 
     }

@@ -62,8 +62,9 @@ class BoxController extends Crud
         $paginator = $query->paginate($limit);
         $total = $paginator->total();
         $items = $paginator->items();
-        foreach ($items as $item){
-            $item['box_original_prize'] = round(  $item['box_prize_sum_price'] / $item['box_prize_count'],2);
+        foreach ($items as $item) {
+
+            $item['box_original_prize'] = empty($item['box_prize_count']) || empty($item['box_prize_sum_price']) == 0 ? 0 : round($item['box_prize_sum_price'] / $item['box_prize_count'], 2);
         }
         if (method_exists($this, "afterQuery")) {
             $items = call_user_func([$this, "afterQuery"], $items);
@@ -91,7 +92,7 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if ($params['rate'] < 0 || $params['rate'] > 1){
+            if ($params['rate'] < 0 || $params['rate'] > 1) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             return parent::insert($request);
@@ -109,7 +110,7 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if ($params['rate'] < 0 || $params['rate'] > 1){
+            if ($params['rate'] < 0 || $params['rate'] > 1) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             return parent::update($request);

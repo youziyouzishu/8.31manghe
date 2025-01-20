@@ -127,31 +127,31 @@ class NotifyController extends BaseController
                         'level_id' => $order->level_id,
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
-                    $winnerPrize = ['gt_n'=>0];
-                    // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
-                    $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                        ->when(!empty($order->level_id), function (Builder $query) use ($order) {
-                            $query->where('level_id', $order->level_id);
-                        }, function (Builder $query) use($order){
-                            $query->whereBetween('price',[0,$order->box->pool_amount]);
-                        })
-                        ->get();
 
-                    // 如果没有可用奖品，返回提示
-                    if ($prizes->isEmpty()){
-                        if (!empty($order->level_id)) {
-                            throw new \Exception('闯关赏没有奖品');
-                        }else{
-                            $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                                ->where('grade',2)
-                                ->get();
-                            if ($prizes->isEmpty()) {
-                                throw new \Exception('盲盒没有设置奖品');
+                    $winnerPrize = ['gt_n'=>0,'list'=>[]];
+                    for ($i = 0; $i < $order->times; $i++) {
+                        // 从数据库中获取奖品列表
+                        $prizes = BoxPrize::where(['box_id' => $order->box_id])
+                            ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                                $query->where('level_id', $order->level_id);
+                            }, function (Builder $query) use($order){
+                                $query->whereBetween('price',[0,$order->box->pool_amount]);
+                            })
+                            ->get();
+
+                        // 如果没有可用奖品，返回提示
+                        if ($prizes->isEmpty()){
+                            if (!empty($order->level_id)) {
+                                throw new \Exception('闯关赏没有奖品');
+                            }else{
+                                $prizes = BoxPrize::where(['box_id' => $order->box_id])
+                                    ->where('grade',2)
+                                    ->get();
+                                if ($prizes->isEmpty()) {
+                                    throw new \Exception('盲盒没有设置奖品');
+                                }
                             }
                         }
-                    }
-                    $prizes_price = 0;
-                    for ($i = 0; $i < $order->times; $i++) {
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
@@ -160,26 +160,29 @@ class NotifyController extends BaseController
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
-                        if ($order->user->kol == 0) {
+                        if ($order->user->kol == 1) {
                             $currentChance += $order->user->chance;
                         }
 
                         foreach ($prizes as $prize) {
+
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
                                 if ($prize->grade >= 3){
                                     $winnerPrize['gt_n'] = 1;
                                 }
-                                $prizes_price += $prize->price;
-                                // 发放奖品并且记录
+                                if ($order->user->kol == 0) {
+                                    //普通用户才增加奖金池
+                                    // 增加奖金池金额
+                                    $prize->box->increment('pool_amount', $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price);
+                                }
                                 break;
                             }
                         }
+
                     }
 
-                    $pool_amount = ($order->pay_amount - $prizes_price) * (1 - $order->box->rate);
-                    $order->box->increment('pool_amount', $pool_amount);
                     $online = Cache::has("private-user-{$order->user_id}");
 
 

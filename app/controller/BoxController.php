@@ -225,6 +225,8 @@ class BoxController extends BaseController
             if (!empty($level_id)) {
                 $level = BoxLevel::find($level_id);
                 $firstLevel = BoxLevel::getFirstLevel($box_id);
+                $endLevel = BoxLevel::getEndLevel($box_id);
+
                 if (!$level) {
                     return $this->fail('关卡不存在');
                 }
@@ -233,6 +235,9 @@ class BoxController extends BaseController
                 }
                 if (!$firstLevel) {
                     return $this->fail('盲盒不存在关卡');
+                }
+                if (!$endLevel) {
+                    return $this->fail('不存在最后一关');
                 }
                 if ($level->id != $firstLevel->id) {
                     //非第一关 进行抽奖
@@ -247,19 +252,24 @@ class BoxController extends BaseController
                     if ($times > $lastTicketCount) {
                         return $this->fail('通关券不足');
                     }
-
-                    //开始抽奖
+                    //记录
                     $draw = UsersDrawLog::create(['user_id' => $request->uid, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
-                    $winnerPrize = ['gt_n' => 0];
+
+
+                    $winnerPrize = ['gt_n' => 0, 'list' => []];
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
-                        // 从数据库中获取奖品列表，过滤出数量大于 0 的奖品
-                        $prizes = BoxPrize::where(['level_id' => $level_id])->get();
+                        //开始抽奖
+                        $prizes = BoxPrize::where(['level_id' => $level_id])->when($endLevel->id == $level_id, function ($query) use ($level) {
+                            $query->whereBetween('price', [0, $level->box->pool_amount]);
+                        })->get();
                         // 如果没有可用奖品，返回提示
                         if ($prizes->isEmpty()) {
-                            return $this->fail('没有设置奖品');
+                            $prizes = BoxPrize::where(['level_id' => $level_id])->orderBy('price')->limit(3)->get();
+                            if ($prizes->isEmpty()) {
+                                return $this->fail('奖品不足');
+                            }
                         }
-
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
@@ -274,33 +284,11 @@ class BoxController extends BaseController
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
-                                if ($prize->grade >= 3){
+                                if ($prize->grade >= 3) {
                                     $winnerPrize['gt_n'] = 1;
                                 }
-                                // 发放奖品并且记录
-                                if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
-                                    $userPrize->increment('num');
-                                } else {
-                                    UsersPrize::create([
-                                        'user_id' => $request->uid,
-                                        'box_prize_id' => $prize->id,
-                                        'price' => $prize->price,
-                                        'num' => 1,
-                                        'mark' => '抽奖获得',
-                                        'grade' => $prize->grade,
-                                    ]);
-                                }
-
-                                UsersPrizeLog::create([
-                                    'draw_id' => $draw->id,
-                                    'user_id' => $request->uid,
-                                    'box_prize_id' => $prize->id,
-                                    'mark' => '抽奖获得',
-                                    'price' => $prize->price,
-                                    'type' => 0,
-                                    'grade' => $prize->grade,
-                                    'num' => 1,
-                                ]);
+                                // 减少奖金池金额
+                                $prize->box->decrement('pool_amount', $prize->price);
                                 //删除用户通关券
                                 $ticket = $lastTicket->first(); // 返回第一个元素
                                 if ($ticket) {
@@ -315,9 +303,7 @@ class BoxController extends BaseController
                             }
                         }
                     }
-
                     $online = Cache::has("private-user-{$request->uid}");
-
                     if (!$online) {
                         Cache::set("private-user-{$request->uid}-winner_prize", $winnerPrize);
                     } else {
@@ -333,10 +319,38 @@ class BoxController extends BaseController
                         ]);
                     }
 
+
+                    foreach ($winnerPrize['list'] as $item) {
+                        // 发放奖品并且记录
+                        if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                            $userPrize->increment('num');
+                        } else {
+                            UsersPrize::create([
+                                'user_id' => $request->uid,
+                                'box_prize_id' => $item->id,
+                                'price' => $item->price,
+                                'num' => 1,
+                                'mark' => '抽奖获得',
+                                'grade' => $item->grade,
+                            ]);
+                        }
+                        UsersPrizeLog::create([
+                            'draw_id' => $draw->id,
+                            'user_id' => $request->uid,
+                            'box_prize_id' => $item->id,
+                            'mark' => '抽奖获得',
+                            'price' => $item->price,
+                            'type' => 0,
+                            'grade' => $item->grade,
+                            'num' => 1,
+                        ]);
+                    }
+
                     $ret = [];
                     return $this->success('成功', ['code' => 2, 'ret' => $ret]);
                 }
             }
+
 
             $amount = $box->price * $times;
             $coupon_amount = Coupon::getCouponAmount($amount, $coupon_id);

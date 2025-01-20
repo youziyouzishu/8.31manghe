@@ -73,5 +73,9 @@ class BoxLevel extends Base
         return self::where(['box_id' => $box_id])->orderBy('name')->first();
     }
 
+    public static function getEndLevel($box_id){
+        return self::where(['box_id' => $box_id])->orderByDesc('name')->first();
+    }
+
     
 }

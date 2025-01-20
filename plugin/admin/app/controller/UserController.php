@@ -120,7 +120,8 @@ class UserController extends Crud
      */
     protected function afterQuery($items)
     {
-        return collect($items)->each(function ($item) {
+        return collect($items)->each(function (User $item) {
+
             if (!empty(request()->get('profit_created_at')[0])) {
                 $where['profit_created_at'] = request()->get('profit_created_at');
                 //微信支付的金额

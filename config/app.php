@@ -23,5 +23,5 @@ return [
     'runtime_path' => base_path(false) . DIRECTORY_SEPARATOR . 'runtime',
     'controller_suffix' => 'Controller',
     'controller_reuse' => false,
-    'host' =>'https://0831manghe.62.hzgqapp.com'
+    'host' =>'https://xinganya.cn'
 ];

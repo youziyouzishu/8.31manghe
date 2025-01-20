@@ -6,13 +6,13 @@ return [
             // 数据库类型
             'type' => 'mysql',
             // 服务器地址
-            'hostname' => '122.114.74.62',
+            'hostname' => '119.45.162.109',
             // 数据库名
-            'database' => '0831manghe_62_hz',
+            'database' => 'xinganya_cn',
             // 数据库用户名
-            'username' => '0831manghe_62_hz',
+            'username' => 'xinganya_cn',
             // 数据库密码
-            'password' => 'DWkiHC5Fp4tzBxZe',
+            'password' => '9fJhfr8bpJCWFixw',
             // 数据库连接端口
             'hostport' => 3306,
             // 数据库连接参数

@@ -277,10 +277,14 @@
 						sort: true,
 					},{
 						title: "用户",align: "center",
+                        field: "nickname",
 						templet: function (d) {
 							return d.user.nickname;
 						}
 					},{
+                        title: "用户ID",align: "center",
+                        field: "user_id",
+                    },{
 						title: "状态",align: "center",
 						field: "status",
 						templet: function (d) {
@@ -408,7 +412,7 @@
 				let apiResults = {};
 				apiResults["user_id"] = [];
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
-                apiResults["pay_type"] = {"1":"微信","2":"余额"};
+                apiResults["pay_type"] = {"0":"无","1":"支付宝","2":"水晶","3":"云闪付"};
 				apiResults["box_id"] = [];
 				apiResults["level_id"] = [];
 				apiResults["user_coupon_id"] = [];

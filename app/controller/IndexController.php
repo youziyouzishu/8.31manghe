@@ -16,7 +16,6 @@ use Wolfcode\PhpLogviewer\webman\laravel\LogViewer;
 class IndexController extends BaseController
 {
     protected array $noNeedLogin = ['*'];
-
     function log()
     {
         return (new \Wolfcode\PhpLogviewer\webman\laravel\LogViewer())->fetch();

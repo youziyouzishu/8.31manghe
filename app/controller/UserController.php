@@ -160,6 +160,12 @@ class UserController extends BaseController
     {
         $deliver_id = $request->post('deliver_id');
         $row = Deliver::where(['user_id' => $request->uid, 'id' => $deliver_id])->first();
+        if (!$row) {
+            return $this->fail('数据不存在');
+        }
+        if ($row->status != 2) {
+            return $this->fail('状态错误');
+        }
         $row->status = 3;
         $row->complete_time = date('Y-m-d H:i:s');
         $row->save();

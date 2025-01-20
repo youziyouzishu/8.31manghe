@@ -4,11 +4,11 @@ return  [
     'connections' => [
         'mysql' => [
             'driver'      => 'mysql',
-            'host'        => '122.114.74.62',
+            'host'        => '119.45.162.109',
             'port'        => '3306',
-            'database'    => '0831manghe_62_hz',
-            'username'    => '0831manghe_62_hz',
-            'password'    => 'DWkiHC5Fp4tzBxZe',
+            'database'    => 'xinganya_cn',
+            'username'    => 'xinganya_cn',
+            'password'    => '9fJhfr8bpJCWFixw',
             'charset'     => 'utf8mb4',
             'collation'   => 'utf8mb4_general_ci',
             'prefix'      => '',
