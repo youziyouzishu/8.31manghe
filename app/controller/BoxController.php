@@ -212,6 +212,8 @@ class BoxController extends BaseController
      */
     function draw(Request $request)
     {
+        $start_time = microtime(true);
+        dump($start_time);
         $box_id = $request->post('box_id');
         $times = $request->post('times');
         $coupon_id = $request->post('coupon_id', 0);
@@ -370,7 +372,6 @@ class BoxController extends BaseController
             $order = BoxOrder::create($orderData);
             //先用余额支付 余额不足再用微信支付
             $ret = [];
-
             $user = User::find($request->uid);
             if ($user->money >= $pay_amount) {
                 if ($pay_amount <= 0) {
@@ -484,29 +485,7 @@ class BoxController extends BaseController
     #获取中奖记录等级
     function getGradeByDrawLog(Request $request)
     {
-        $box_id = $request->post('box_id');
-        $level_id = $request->post('level_id', 0);
-        if (empty($box_id)) {
-            return $this->fail('所选盲盒不能为空');
-        }
-        #盲盒内大于N赏的奖品
-        $prize_ids = BoxPrize::where(['box_id' => $box_id])
-            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
-                $builder->where('level_id', $level_id);
-            })
-            ->where('grade', '>=', 2)
-            ->pluck('id');
-
-        $grade = UsersPrizeLog::with(['user', 'boxPrize'])
-            ->whereIn('box_prize_id', $prize_ids)
-            ->whereHas('boxPrize', function (Builder $query) {
-                $query->whereColumn('wa_users_prize_log.grade', 'wa_box_prize.grade');
-            })
-            ->where('type', 0)
-            ->orderByDesc('grade')
-            ->pluck('grade')
-            ->unique()
-            ->values();
+        $grade = [5,4,3,2];
         return $this->success('成功', $grade);
     }
 

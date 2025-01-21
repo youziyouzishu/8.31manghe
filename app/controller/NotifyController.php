@@ -13,6 +13,7 @@ use plugin\admin\app\model\UsersDrawLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Cache;
+use support\Log;
 use support\Request;
 use Webman\Push\Api;
 use Yansongda\Pay\Pay;
@@ -100,6 +101,7 @@ class NotifyController extends BaseController
 
             switch ($attach) {
                 case 'box':
+                    dump('抽奖');
                     $order = BoxOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
@@ -118,7 +120,6 @@ class NotifyController extends BaseController
                         $order->user->save();
                     }
                     $order->box->increment('consume_amount',$order->pay_amount);#增加盲盒消费金额
-
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
                         'user_id' => $order->user_id,
@@ -127,7 +128,6 @@ class NotifyController extends BaseController
                         'level_id' => $order->level_id,
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
-
                     $winnerPrize = ['gt_n'=>0,'list'=>[]];
                     for ($i = 0; $i < $order->times; $i++) {
                         // 从数据库中获取奖品列表
@@ -156,16 +156,13 @@ class NotifyController extends BaseController
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
                         $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
-
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
                         if ($order->user->kol == 1) {
                             $currentChance += $order->user->chance;
                         }
-
                         foreach ($prizes as $prize) {
-
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
@@ -182,13 +179,15 @@ class NotifyController extends BaseController
                         }
 
                     }
-
                     $online = Cache::has("private-user-{$order->user_id}");
 
 
                     if (!$online) {
+                        dump('离线');
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
+                        dump('在线');
+                        dump('发在线消息');
                         $api = new Api(
                             'http://127.0.0.1:3232',
                             config('plugin.webman.push.app.app_key'),
@@ -199,6 +198,8 @@ class NotifyController extends BaseController
                             'winner_prize' => $winnerPrize
                         ]);
                     }
+                    $end_time = microtime(true);
+                    dump($end_time);
                     foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
                         if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
@@ -319,66 +320,25 @@ class NotifyController extends BaseController
                     $order->save();
                     $probability = $order->probability;
                     $probability = $probability / 2;
-                    $big_prize_id = $order->big_prize_id;
-                    $small_prize_id = $order->small_prize_id;
+
                     if ($order->user->new == 1 && ($paytype == 'unipay' || $paytype == 'alipay')) {
                         $order->user->new = 0;
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
-
+                    $winnerPrize = ['gt_n'=>0,'list'=>[]];
                     // 生成奖品ID数组并创建订单奖品记录
-                    $prize_ids = collect();
                     for ($i = 0; $i < $order->times; $i++) {
                         $is_big_prize = mt_rand(1, 100) <= $probability;
-                        $prize_id = $is_big_prize ? $big_prize_id : $small_prize_id;
-                        $prize_ids->push($prize_id);
-
-                        $order->orderPrize()->create(['box_prize_id' => $prize_id]);
-
-                        $prize = BoxPrize::find($prize_id);
-                        if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $prize->id, 'price' => $prize->price])->first()) {
-                            $userPrize->increment('num');
-                        } else {
-                            UsersPrize::create([
-                                'user_id' => $order->user_id,
-                                'box_prize_id' => $prize_id,
-                                'price' => $prize->price,
-                                'num' => 1,
-                                'mark' => '梦想DIY获得',
-                                'grade' => $prize->grade,
-                            ]);
-                        }
-                        UsersPrizeLog::create([
-                            'user_id' => $order->user_id,
-                            'box_prize_id' => $prize_id,
-                            'mark' => '梦想DIY获得',
-                            'type' => 6,
-                            'num' => 1,
-                            'price'=>$prize->price,
-                            'grade'=>$prize->grade,
-                        ]);
-                    }
-
-                    // 查询奖品信息
-                    $prizes = BoxPrize::whereIn('id', $prize_ids)->get()->keyBy('id');
-
-                    // 计算利润
-                    $order->profit = $order->pay_amount - $prizes->sum('price');
-                    // 保存订单信息
-                    $order->save();
-                    $winnerPrize = ['gt_n'=>0];
-                    // 构建最终结果数组，保留重复的条目
-                    $winnerPrize['list'][] = $prize_ids->map(function ($prize_id) use ($prizes,&$winnerPrize) {
-                        $prize =  $prizes[$prize_id];
+                        $prize = $is_big_prize ?  $order->bigPrize : $order->smallPrize;
+                        $winnerPrize['list'][] = $prize;
                         if ($prize->grade >= 3){
                             $winnerPrize['gt_n'] = 1;
                         }
-                        return $prize;
-                    });
+
+                    }
 
                     $online = Cache::has("private-user-{$order->user_id}");
-
                     if (!$online) {
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
@@ -394,8 +354,39 @@ class NotifyController extends BaseController
                             'winner_prize' => $winnerPrize
                         ]);
                     }
+                    $data = [];
+                    $total_price = 0;
+                    foreach ($winnerPrize['list'] as $item) {
+                        if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                            $userPrize->increment('num');
+                        } else {
+                            UsersPrize::create([
+                                'user_id' => $order->user_id,
+                                'box_prize_id' => $item->id,
+                                'price' => $item->price,
+                                'num' => 1,
+                                'mark' => '梦想DIY获得',
+                                'grade' => $item->grade,
+                            ]);
+                        }
+                        UsersPrizeLog::create([
+                            'user_id' => $order->user_id,
+                            'box_prize_id' => $item->id,
+                            'mark' => '梦想DIY获得',
+                            'type' => 6,
+                            'num' => 1,
+                            'price'=>$item->price,
+                            'grade'=>$item->grade,
+                        ]);
+                        $data[] = ['box_prize_id'=>$item->id];
+                        $total_price +=  $item->price;
+                    }
+                    $order->orderPrize()->createMany($data);
+                    // 计算利润
+                    $order->profit = $order->pay_amount - $total_price;
+                    // 保存订单信息
+                    $order->save();
 
-                    // 处理微信支付的额外逻辑
                     UsersDisburse::create([
                         'user_id' => $order->user_id,
                         'amount' => $order->pay_amount,
@@ -409,8 +400,8 @@ class NotifyController extends BaseController
             }
 
         } catch (\Throwable $e) {
-            dump($e->getMessage());
-            dump($e->getLine());
+            Log::error('支付错误');
+            Log::error($e->getMessage());
             throw new \Exception($e->getMessage());
         }
     }

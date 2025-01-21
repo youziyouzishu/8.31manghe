@@ -70,6 +70,7 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
             Cache::set($event['channel'],1);
             $winner_prize = Cache::get($event['channel']."-winner_prize");
             if ($winner_prize){
+                dump('发离线消息');
                 $api = new Api(
                     'http://127.0.0.1:3232',
                     config('plugin.webman.push.app.app_key'),

@@ -127,6 +127,7 @@ class UserController extends BaseController
         $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])->with(['boxPrize'=>function ($query) {
             $query->withTrashed();
         }])
+            ->orderByDesc('price')
             ->paginate()
             ->items();
         return $this->success('成功', $rows);
