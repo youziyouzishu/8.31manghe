@@ -59,7 +59,7 @@ class UserController extends Crud
         $todayStart = Carbon::today()->startOfDay(); // 今天的开始时间
         $todayEnd = Carbon::today()->endOfDay(); // 今天的结束时间
         $query = $this->doSelect($where, $field, $order)
-            ->with(['children'])
+            ->with(['children','parent'])
             ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) use ($where, $todayStart, $todayEnd) {
                 $query->whereIn('type', [1, 3])->whereBetween('created_at', [$todayStart, $todayEnd]);
             }], 'amount')
@@ -137,7 +137,7 @@ class UserController extends Crud
                 //赠送好友的赏品价值
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
                 //水晶余额
-                $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->first()->value('after') ?? 0;
+                $money = UsersMoneyLog::where(['user_id' => $item->id])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->orderByDesc('id')->value('after') ?? 0;
                 //赏袋和保险箱剩余商品价值
                 $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])
                     ->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])
@@ -224,13 +224,20 @@ class UserController extends Crud
     public function update(Request $request): Response
     {
         if ($request->method() === 'POST') {
-            $user = $this->model->find($request->input('id'));
+            $params = $request->post();
+            if (empty($params['parent_id'])){
+                $request->set('post',['parent_id'=>0]);
+            }
+            $user = $this->model->find($params['id']);
+            if ($user->id == $params['parent_id']){
+                return $this->fail('不能选择自己为上级');
+            }
             $originmoney = $user->money;
             $changemoney = $request->post('money');
-
             if (!empty($changemoney) && (function_exists('bccomp') ? bccomp($changemoney, $originmoney, 2) !== 0 : (double)$changemoney !== (double)$originmoney)) {
                 UsersMoneyLog::create(['user_id' => $user->id, 'money' => $changemoney - $originmoney, 'before' => $originmoney, 'after' => $changemoney, 'memo' => '系统赠送']);
             }
+
             return parent::update($request);
         }
         return view('user/update');

@@ -17,7 +17,7 @@ class DreamController extends BaseController
 {
     function index(Request $request)
     {
-        $order = $request->post('order','desc');
+        $order = $request->post('order', 'desc');
         $type = $request->post('type');
         if (!in_array($type, [1, 2])) {
             return $this->fail('参数错误');
@@ -25,7 +25,7 @@ class DreamController extends BaseController
         // 加载 dreams 并按 boxPrize 的 price 排序
         $box_prize_ids = Dream::where('type', $type)->pluck('box_prize_id');
 
-        $boxPrizes = BoxPrize::whereIn('id', $box_prize_ids)->orderBy('price',$order)->get();
+        $boxPrizes = BoxPrize::whereIn('id', $box_prize_ids)->orderBy('price', $order)->get();
 
         return $this->success('成功', $boxPrizes);
     }
@@ -37,7 +37,9 @@ class DreamController extends BaseController
         $probability = $request->post('probability');//高价值中奖概率
         $big_prize = BoxPrize::find($big_prize_id);
         $small_prize = BoxPrize::find($small_prize_id);
-
+        if ($probability < 1 || $probability > 70) {
+            return $this->fail('请滑动调整概率');
+        }
         if (!$big_prize || !$small_prize) {
             return $this->fail('大奖或小奖不存在');
         }
@@ -53,7 +55,7 @@ class DreamController extends BaseController
         $big_probability = $probability / 100;
         $small_probability = 1 - $big_probability;//低价值中奖概率
 
-        $price = round(($big_prize_price * $big_probability + $small_prize_price * $small_probability) * (1 + $r),2); //单抽价格
+        $price = round(($big_prize_price * $big_probability + $small_prize_price * $small_probability) * (1 + $r), 2); //单抽价格
 
         $data = [
             'one_times_price' => round($price, 2),
@@ -69,8 +71,12 @@ class DreamController extends BaseController
         $big_prize_id = $request->post('big_prize_id');
         $small_prize_id = $request->post('small_prize_id');
         $probability = $request->post('probability');//高价值中奖概率
+
         // 启动事务
         try {
+            if ($probability < 1 || $probability > 70) {
+                return $this->fail('请滑动调整概率');
+            }
             $big_prize = BoxPrize::find($big_prize_id);
             $small_prize = BoxPrize::find($small_prize_id);
 
@@ -114,7 +120,7 @@ class DreamController extends BaseController
 
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();
-                $request->set('get',['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'dream']);
+                $request->set('get', ['paytype' => 'balance', 'out_trade_no' => $ordersn, 'attach' => 'dream']);
                 $res = $notify->balance($request);
                 $res = json_decode($res->rawBody());
                 if ($res->code == 1) {
@@ -123,10 +129,10 @@ class DreamController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
-                $ret = ['scene'=>'dream','ordersn'=>$ordersn];
+                $ret = ['scene' => 'dream', 'ordersn' => $ordersn];
                 $code = 4;
             }
-            return $this->success('成功',['code'=>$code,'ret'=>$ret]);
+            return $this->success('成功', ['code' => $code, 'ret' => $ret]);
         } catch (\Throwable $e) {
             return $this->fail($e->getMessage());
         }

@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\common;
 
+use plugin\admin\app\model\User;
 use process\Monitor;
 use Throwable;
 use Illuminate\Database\Connection;

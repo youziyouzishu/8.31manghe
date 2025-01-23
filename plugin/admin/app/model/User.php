@@ -56,7 +56,9 @@ class User extends Base
         parent::boot();
 
         static::creating(function ($model) {
-            $model->{$model->getKeyName()} = self::generateRandomId($model);
+            $id = self::generateRandomId($model);
+            $model->{$model->getKeyName()} = $id;
+            $model->nickname = '昵称'.$id;
         });
     }
 
@@ -161,6 +163,11 @@ class User extends Base
     function children()
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     function boxPrize()

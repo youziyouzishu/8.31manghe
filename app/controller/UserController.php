@@ -56,9 +56,7 @@ class UserController extends BaseController
         }
         if (!$user) {
             // 获取下一个自增ID
-            $nextId = User::max('id') + 1;
             $userData = [
-                'nickname' => '昵称' . $nextId,
                 'avatar' => '/app/admin/upload/files/20241205/675118b32fcb.jpg',
                 'openid' => $openid??'',
                 'mobile' => $mobile??'',

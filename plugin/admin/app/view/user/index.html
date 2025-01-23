@@ -419,13 +419,7 @@
                 title: "上级",align: "center",
                 field: "parent_id",
                 templet: function (d) {
-                    let field = "parent_id";
-                    if (typeof d[field] == "undefined") return "";
-                    let items = [];
-                    layui.each((d[field] + "").split(","), function (k , v) {
-                        items.push(apiResults[field][v] || v);
-                    });
-                    return util.escape(items.join(","));
+                    return d.parent?d.parent.nickname:'';
                 }
             },{
                 title: "盈亏", align: "center",
@@ -568,11 +562,7 @@
 
         // 获取表格中下拉或树形组件数据
         let apis = [];
-        apis.push(["sex", "/app/admin/dict/get/sex"]);
-        apis.push(["parent_id", "/app/admin/user/select?format=select"]);
         let apiResults = {};
-        apiResults["parent_id"] = [];
-        apiResults["sex"] = [];
         apiResults["official"] = {"1": "是", "2": "否"};
         apiResults["kol"] = {"0": "否", "1": "是"};
         apiResults["new"] = {"0": "否", "1": "是"};

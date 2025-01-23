@@ -92,7 +92,7 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if ($params['rate'] < 0 || $params['rate'] > 1) {
+            if (!empty($params['rate'])&&($params['rate'] < 0 || $params['rate'] > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             return parent::insert($request);
@@ -110,7 +110,7 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if ($params['rate'] < 0 || $params['rate'] > 1) {
+            if (!empty($params['rate'])&&($params['rate'] < 0 || $params['rate'] > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             return parent::update($request);
