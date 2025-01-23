@@ -10,7 +10,7 @@ use Webman\RedisQueue\Consumer;
 class CouponExpire implements Consumer
 {
     // 要消费的队列名
-    public $queue = 'userCoupon-expire';
+    public $queue = 'coupon-expire';
 
     // 连接名，对应 plugin/webman/redis-queue/redis.php 里的连接`
     public $connection = 'default';

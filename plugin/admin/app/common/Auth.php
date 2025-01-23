@@ -13,6 +13,7 @@ class Auth
      * 获取权限范围内的所有角色id
      * @param bool $with_self
      * @return array
+     * @throws \Exception
      */
     public static function getScopeRoleIds(bool $with_self = false): array
     {
@@ -35,6 +36,7 @@ class Auth
      * 获取权限范围内的所有管理员id
      * @param bool $with_self
      * @return array
+     * @throws \Exception
      */
     public static function getScopeAdminIds(bool $with_self = false): array
     {
@@ -62,6 +64,7 @@ class Auth
      * 是否是超级管理员
      * @param int $admin_id
      * @return bool
+     * @throws \Exception
      */
     public static function isSuperAdmin(int $admin_id = 0): bool
     {

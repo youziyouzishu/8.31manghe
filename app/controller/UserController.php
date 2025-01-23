@@ -247,10 +247,13 @@ class UserController extends BaseController
                 ->paginate()
                 ->getCollection()
                 ->map(function (GoodsOrder $order) {
+                    // 使用 withTrashed 包含被软删除的 goods 数据
+                    $goods = $order->goods()->withTrashed()->first();
+                    $boxPrize = $goods ? $goods->boxPrize()->withTrashed()->first() : null;
                     return [
-                        'boxPrize' => $order->goods->boxPrize,
+                        'boxPrize' => $boxPrize ?: null,
                         'ordersn' => $order->ordersn,
-                        'id'=>$order->id
+                        'id' => $order->id
                     ];
                 });
         } else {

@@ -2,7 +2,6 @@
 
 namespace plugin\admin\app\common;
 
-use plugin\admin\app\model\User;
 use process\Monitor;
 use Throwable;
 use Illuminate\Database\Connection;
@@ -46,8 +45,8 @@ class Util
 
     /**
      * 验证密码哈希
-     * @param $password
-     * @param $hash
+     * @param string $password
+     * @param string $hash
      * @return bool
      */
     public static function passwordVerify(string $password, string $hash): bool
@@ -128,7 +127,7 @@ class Util
      */
     public static function pdoQuote($var)
     {
-        return Util::db()->getPdo()->quote($var, \PDO::PARAM_STR);
+        return Util::db()->getPdo()->quote($var);
     }
 
     /**
@@ -180,15 +179,23 @@ class Util
     }
 
     /**
-     * 检测是否是合法URL Path
+     * @desc 检测是否是合法URL Path
      * @param $var
      * @return string
      * @throws BusinessException
      */
     public static function filterUrlPath($var): string
     {
-        if (!is_string($var) || !preg_match('/^[a-zA-Z0-9_\-\/&?.]+$/', $var)) {
-            throw new BusinessException('参数不合法');
+        if (!is_string($var)) {
+            throw new BusinessException('参数不合法，地址必须是一个字符串！');
+        }
+
+        if (strpos($var, 'https://') === 0 || strpos($var, 'http://') === 0) {
+            if (!filter_var($var, FILTER_VALIDATE_URL)) {
+                throw new BusinessException('参数不合法，不是合法的URL地址！');
+            }
+        } elseif (!preg_match('/^[a-zA-Z0-9_\-\/&?.]+$/', $var)) {
+            throw new BusinessException('参数不合法，不是合法的Path！');
         }
         return $var;
     }

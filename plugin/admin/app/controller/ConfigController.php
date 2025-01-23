@@ -48,7 +48,7 @@ class ConfigController extends Base
         $name = 'system_config';
         $config = Option::where('name', $name)->value('value');
         if (empty($config)) {
-            $config = file_get_contents(base_path(false) . DIRECTORY_SEPARATOR . 'public/config/pear.config.json');
+            $config = file_get_contents(base_path('plugin/admin/public/config/pear.config.json'));
             if ($config) {
                 $option = new Option();
                 $option->name = $name;

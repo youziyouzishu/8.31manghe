@@ -3,10 +3,8 @@
 namespace plugin\admin\app\controller;
 
 use Exception;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
+use Intervention\Image\ImageManagerStatic as Image;
 use plugin\admin\app\model\Upload;
-use Random\RandomException;
 use support\exception\BusinessException;
 use support\Request;
 use support\Response;
@@ -17,7 +15,6 @@ use Throwable;
  */
 class UploadController extends Crud
 {
-
     /**
      * @var Upload
      */
@@ -106,7 +103,7 @@ class UploadController extends Crud
         if (!$file || !$file->isValid()) {
             return $this->json(1, '未找到文件');
         }
-        $data = $this->base($request, '/upload/files/'.date('Ymd'));
+        $data = $this->base($request, '/upload/files/' . date('Ymd'));
         $upload = new Upload;
         $upload->admin_id = admin_id();
         $upload->name = $data['name'];
@@ -138,7 +135,6 @@ class UploadController extends Crud
     public function file(Request $request): Response
     {
         $file = current($request->file());
-
         if (!$file || !$file->isValid()) {
             return $this->json(1, '未找到文件');
         }
@@ -151,7 +147,7 @@ class UploadController extends Crud
         if (in_array($file->getUploadExtension(), $img_exts)) {
             return $this->image($request);
         }
-        $data = $this->base($request, '/upload/files/'.date('Ymd'));
+        $data = $this->base($request, '/upload/files/' . date('Ymd'));
         return $this->json(0, '上传成功', [
             'url' => $data['url'],
             'name' => $data['name'],
@@ -167,10 +163,10 @@ class UploadController extends Crud
      */
     public function image(Request $request): Response
     {
-        $data = $this->base($request, '/upload/img/'.date('Ymd'));
+        $data = $this->base($request, '/upload/img/' . date('Ymd'));
         $realpath = $data['realpath'];
         try {
-            $img = ImageManager::withDriver(new Driver())->read($realpath);
+            $img = Image::make($realpath);
             $max_height = 1170;
             $max_width = 1170;
             $width = $img->width();
@@ -179,17 +175,17 @@ class UploadController extends Crud
             if ($height > $max_height || $width > $max_width) {
                 $ratio = $width > $height ? $max_width / $width : $max_height / $height;
             }
-            $img->resize($width*$ratio, $height*$ratio)->save($realpath);
+            $img->resize($width * $ratio, $height * $ratio)->save($realpath);
         } catch (Exception $e) {
             unlink($realpath);
-            return json( [
-                'code'  => 500,
-                'msg'  => '处理图片发生错误'
+            return json([
+                'code' => 500,
+                'msg' => '处理图片发生错误'
             ]);
         }
-        return json( [
-            'code'  => 0,
-            'msg'  => '上传成功',
+        return json([
+            'code' => 0,
+            'msg' => '上传成功',
             'data' => [
                 'url' => $data['url'],
                 'name' => $data['name'],
@@ -212,29 +208,34 @@ class UploadController extends Crud
             if (!in_array($ext, ['jpg', 'jpeg', 'gif', 'png'])) {
                 return json(['code' => 2, 'msg' => '仅支持 jpg jpeg gif png格式']);
             }
-            $image = ImageManager::withDriver(new Driver())->read($file);
+            $image = Image::make($file);
             $width = $image->width();
             $height = $image->height();
             $size = min($width, $height);
             $relative_path = 'upload/avatar/' . date('Ym');
-            $real_path =  base_path(false) . "/public/";
-            if (!is_dir($real_path.$relative_path)) {
-                mkdir($real_path.$relative_path, 0777, true);
+            $real_path = base_path() . "/plugin/admin/public/$relative_path";
+            if (!is_dir($real_path)) {
+                mkdir($real_path, 0777, true);
             }
-            $name = bin2hex(pack('Nn',time(), random_int(1, 65535)));
+            $name = bin2hex(pack('Nn', time(), random_int(1, 65535)));
             $ext = $file->getUploadExtension();
+
             $image->crop($size, $size)->resize(300, 300);
-            $path = $real_path.$relative_path."/$name.lg.$ext";
+            $path = base_path() . "/plugin/admin/public/$relative_path/$name.lg.$ext";
             $image->save($path);
+
             $image->resize(120, 120);
-            $path = $real_path.$relative_path."/$name.md.$ext";
+            $path = base_path() . "/plugin/admin/public/$relative_path/$name.md.$ext";
             $image->save($path);
+
             $image->resize(60, 60);
-            $path = $real_path.$relative_path."/$name.$ext";
+            $path = base_path() . "/plugin/admin/public/$relative_path/$name.$ext";
             $image->save($path);
+
             $image->resize(30, 30);
-            $path = $real_path.$relative_path."/$name.sm.$ext";
+            $path = base_path() . "/plugin/admin/public/$relative_path/$name.sm.$ext";
             $image->save($path);
+
             return json([
                 'code' => 0,
                 'msg' => '上传成功',
@@ -250,6 +251,7 @@ class UploadController extends Crud
      * 删除附件
      * @param Request $request
      * @return Response
+     * @throws BusinessException
      */
     public function delete(Request $request): Response
     {
@@ -257,14 +259,14 @@ class UploadController extends Crud
         $primary_key = $this->model->getKeyName();
         $files = $this->model->whereIn($primary_key, $ids)->get()->toArray();
         $file_list = array_map(function ($item) {
-          $path =$item['url'];
-          if (preg_match("#^/app/admin#",$path)){
-              $admin_public_path = config('plugin.admin.app.public_path') ?: base_path() . "/plugin/admin/public";
-              return $admin_public_path . str_replace("/app/admin", "", $item['url']);
-          }
-          return null;
-        },$files);
-        $file_list = array_filter($file_list,function ($item){
+            $path = $item['url'];
+            if (preg_match("#^/app/admin#", $path)) {
+                $admin_public_path = config('plugin.admin.app.public_path') ?: base_path() . "/plugin/admin/public";
+                return $admin_public_path . str_replace("/app/admin", "", $item['url']);
+            }
+            return null;
+        }, $files);
+        $file_list = array_filter($file_list, function ($item) {
             return !empty($item);
         });
         $result = parent::delete($request);
@@ -281,7 +283,7 @@ class UploadController extends Crud
      * @param Request $request
      * @param $relative_dir
      * @return array
-     * @throws BusinessException|RandomException
+     * @throws BusinessException|\Random\RandomException
      */
     protected function base(Request $request, $relative_dir): array
     {
@@ -314,7 +316,7 @@ class UploadController extends Crud
             throw new BusinessException('不支持该格式的文件上传', 400);
         }
 
-        $relative_path = $relative_dir . '/' . bin2hex(pack('Nn',time(), random_int(1, 65535))) . ".$ext";
+        $relative_path = $relative_dir . '/' . bin2hex(pack('Nn', time(), random_int(1, 65535))) . ".$ext";
         $full_path = $base_dir . $relative_path;
         $file->move($full_path);
         $image_with = $image_height = 0;
@@ -323,10 +325,10 @@ class UploadController extends Crud
             $mime_type = $img_info['mime'];
         }
         return [
-            'url'     => "/app/admin/$relative_path",
-            'name'     => $file_name,
+            'url' => "/app/admin/$relative_path",
+            'name' => $file_name,
             'realpath' => $full_path,
-            'size'     => $file_size,
+            'size' => $file_size,
             'mime_type' => $mime_type,
             'image_with' => $image_with,
             'image_height' => $image_height,

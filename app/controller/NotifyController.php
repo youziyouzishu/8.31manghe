@@ -378,7 +378,7 @@ class NotifyController extends BaseController
                             'price'=>$item->price,
                             'grade'=>$item->grade,
                         ]);
-                        $data[] = ['box_prize_id'=>$item->id];
+                        $data[] = ['box_prize_id'=>$item->id,'type'=>$item->id == $order->big_prize_id ? 1 : 0];
                         $total_price +=  $item->price;
                     }
                     $order->orderPrize()->createMany($data);

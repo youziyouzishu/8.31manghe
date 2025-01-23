@@ -23,17 +23,10 @@
     "wiki": "https://workerman.net/doc/webman",
     "source": "https://github.com/walkor/webman"
   },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/YouZiXiL/admin.git"
-    }
-  ],
   "require": {
     "php": ">=8.2",
     "workerman/webman-framework": "^1.5.0",
     "monolog/monolog": "^2.0",
-    "webman/admin": "dev-main",
     "tinywan/jwt": "^1.10",
     "webman/console": "^1.3",
     "symfony/var-dumper": "^7.1",
@@ -41,7 +34,10 @@
     "yansongda/pay": "^3.7",
     "webman/push": "^1.0",
     "w7corp/easywechat": "^6.15",
-    "phpoffice/phpspreadsheet": "^3.3"
+    "phpoffice/phpspreadsheet": "^3.3",
+    "chance-fyi/operation-log": "^3.0",
+    "webman/admin": "^0.6.33",
+    "endroid/qrcode": "^6.0"
   },
   "autoload": {
     "psr-4": {

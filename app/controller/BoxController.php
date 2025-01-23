@@ -212,8 +212,6 @@ class BoxController extends BaseController
      */
     function draw(Request $request)
     {
-        $start_time = microtime(true);
-        dump($start_time);
         $box_id = $request->post('box_id');
         $times = $request->post('times');
         $coupon_id = $request->post('coupon_id', 0);
@@ -485,7 +483,21 @@ class BoxController extends BaseController
     #获取中奖记录等级
     function getGradeByDrawLog(Request $request)
     {
-        $grade = [5,4,3,2];
+        $box_id = $request->post('box_id');
+        $level_id = $request->post('level_id', 0);
+        if (empty($box_id)) {
+            return $this->fail('所选盲盒不能为空');
+        }
+        #盲盒内大于N赏的奖品
+        $grade = BoxPrize::where(['box_id' => $box_id])
+            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                $builder->where('level_id', $level_id);
+            })
+            ->orderByDesc('grade')
+            ->pluck('grade')
+            ->unique()
+            ->values();
+
         return $this->success('成功', $grade);
     }
 
