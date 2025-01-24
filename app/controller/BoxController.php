@@ -135,7 +135,7 @@ class BoxController extends BaseController
             $prizes = BoxPrize::where(['level_id' => $level_id, 'grade' => $grade])->get();
             $prizeData[] = [
                 'name' => $grade,
-                'chance' => $prizes->sum('chance'),
+                'chance' => round($prizes->sum('chance'),1),
                 'boxPrize' => $prizes,
             ];
         });

@@ -101,7 +101,7 @@ class NotifyController extends BaseController
 
             switch ($attach) {
                 case 'box':
-                    dump('抽奖');
+
                     $order = BoxOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
@@ -183,11 +183,10 @@ class NotifyController extends BaseController
 
 
                     if (!$online) {
-                        dump('离线');
+
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
-                        dump('在线');
-                        dump('发在线消息');
+
                         $api = new Api(
                             'http://127.0.0.1:3232',
                             config('plugin.webman.push.app.app_key'),
@@ -198,8 +197,6 @@ class NotifyController extends BaseController
                             'winner_prize' => $winnerPrize
                         ]);
                     }
-                    $end_time = microtime(true);
-                    dump($end_time);
                     foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
                         if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {

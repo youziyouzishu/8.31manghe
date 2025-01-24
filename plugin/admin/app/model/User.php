@@ -3,6 +3,7 @@
 namespace plugin\admin\app\model;
 
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use support\Db;
 
 /**
@@ -51,26 +52,7 @@ use support\Db;
 class User extends Base
 {
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            $id = self::generateRandomId($model);
-            $model->{$model->getKeyName()} = $id;
-            $model->nickname = '昵称'.$id;
-        });
-    }
-
-
-    protected static function generateRandomId($model)
-    {
-        $keyName = $model->getKeyName();
-        do {
-            $id = mt_rand(100000, 999999); // 生成6位随机数字
-        } while (self::where($keyName, $id)->exists());
-        return $id;
-    }
+    use SoftDeletes;
 
     /**
      * The table associated with the model.

@@ -54,9 +54,11 @@ class UserController extends BaseController
         }else{
             $parent = null;
         }
+        $inviteCode = Util::createInvitecode();
         if (!$user) {
             // 获取下一个自增ID
             $userData = [
+                'nickname'=>'新用户'.$inviteCode,
                 'avatar' => '/app/admin/upload/files/20241205/675118b32fcb.jpg',
                 'openid' => $openid??'',
                 'mobile' => $mobile??'',
@@ -64,7 +66,7 @@ class UserController extends BaseController
                 'join_ip' => $request->getRealIp(),
                 'last_time' => date('Y-m-d H:i:s'),
                 'last_ip' => $request->getRealIp(),
-                'invitecode' => Util::createInvitecode()
+                'invitecode' =>$inviteCode
             ];
             if ($parent) {
                 $userData['parent_id'] = $parent->id;

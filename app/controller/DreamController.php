@@ -141,6 +141,7 @@ class DreamController extends BaseController
     function getOrders(Request $request)
     {
         $rows = DreamOrdersPrize::with(['boxPrize', 'orders.user'])
+            ->where('type',1)
             ->orderByDesc('id')
             ->paginate()
             ->items();
