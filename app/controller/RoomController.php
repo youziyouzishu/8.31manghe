@@ -40,45 +40,52 @@ class RoomController extends BaseController
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
         }
+
+        // 开启事务
+        Db::connection('plugin.admin.mysql')->beginTransaction();
         $roomPrizesData = [];
-        foreach ($prizes as $prize) {
-            $res = UsersPrize::find($prize['id']);
-            if (!$res) {
-                return $this->fail('奖品不存在');
+        try {
+            foreach ($prizes as $prize) {
+                $res = UsersPrize::find($prize['id']);
+                if (!$res) {
+                    throw new \Exception('奖品不存在');
+                }
+                if ($res->safe == 1) {
+                    throw new \Exception('奖品已锁定');
+                }
+                if ($res->num < $prize['num']) {
+                    throw new \Exception('奖品库存不足');
+                }
+                $res->decrement('num', $prize['num']);
+                if ($res->num <= 0) {
+                    $res->delete();
+                }
+                $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price, 'grade' => $res->grade, 'total' => $prize['num']];
             }
-            if ($res->safe == 1) {
-                return $this->fail('奖品已锁定');
-            }
-            if ($res->num < $prize['num']) {
-                return $this->fail('奖品数量不足');
-            }
-            $res->decrement('num', $prize['num']);
-            if ($res->num <= 0) {
-                $res->delete();
-            }
-            $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price, 'grade' => $res->grade, 'total' => $prize['num']];
+
+            $room = Room::create([
+                'user_id' => $request->uid,
+                'name' => $name,
+                'content' => $content,
+                'type' => $type,
+                'password' => $password,
+                'start_at' => $start_at,
+                'end_at' => $end_at,
+                'num' => $num,
+            ]);
+            // 批量创建关联模型
+            $room->roomPrize()->createMany($roomPrizesData);
+            // 提交事务
+            Db::connection('plugin.admin.mysql')->commit();
+        }catch (\Throwable $e){
+            Db::connection('plugin.admin.mysql')->rollBack();
+            return $this->fail($e->getMessage());
         }
-
-        $room = Room::create([
-            'user_id' => $request->uid,
-            'name' => $name,
-            'content' => $content,
-            'type' => $type,
-            'password' => $password,
-            'start_at' => $start_at,
-            'end_at' => $end_at,
-            'num' => $num,
-        ]);
-
-        // 批量创建关联模型
-        $room->roomPrize()->createMany($roomPrizesData);
-
         //加入队列倒计时开始
         // 队列名
         $queue = 'create-room';
         // 投递延迟消息
         Client::send($queue, ['id' => $room->id, 'event' => 'start'], $start_time - time());
-
         return $this->success();
     }
 
@@ -210,7 +217,7 @@ class RoomController extends BaseController
             return $this->fail('房间已开奖');
         }
         // 开启事务，确保操作的原子性
-        DB::beginTransaction();
+        Db::connection('plugin.admin.mysql')->beginTransaction();
 
         try {
             // 更新房间状态
@@ -234,10 +241,10 @@ class RoomController extends BaseController
 
             });
             // 提交事务
-            DB::commit();
+            Db::connection('plugin.admin.mysql')->commit();
         } catch (\Exception $e) {
             // 回滚事务
-            DB::rollBack();
+            Db::connection('plugin.admin.mysql')->rollBack();
             return $this->fail('操作失败: ' . $e->getMessage());
         }
         return $this->success();
@@ -279,7 +286,7 @@ class RoomController extends BaseController
         }
 
         // 开启事务
-        DB::beginTransaction();
+        Db::connection('plugin.admin.mysql')->beginTransaction();
 
         try {
             // 更新房间信息
@@ -336,10 +343,10 @@ class RoomController extends BaseController
             }
             $room->roomPrize()->createMany($roomPrizes);
             // 提交事务
-            DB::commit();
+            Db::connection('plugin.admin.mysql')->commit();
         } catch (\Exception $e) {
             // 回滚事务
-            DB::rollBack();
+            Db::connection('plugin.admin.mysql')->rollBack();
             return $this->fail('操作失败: ' . $e->getMessage());
         }
 

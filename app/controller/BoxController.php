@@ -135,7 +135,7 @@ class BoxController extends BaseController
             $prizes = BoxPrize::where(['level_id' => $level_id, 'grade' => $grade])->get();
             $prizeData[] = [
                 'name' => $grade,
-                'chance' => round($prizes->sum('chance'),1),
+                'chance' => round($prizes->sum('chance'), 1),
                 'boxPrize' => $prizes,
             ];
         });
@@ -260,9 +260,14 @@ class BoxController extends BaseController
                     $user = User::find($request->uid);
                     for ($i = 0; $i < $times; $i++) {
                         //开始抽奖
-                        $prizes = BoxPrize::where(['level_id' => $level_id])->when($endLevel->id == $level_id, function ($query) use ($level) {
-                            $query->whereBetween('price', [0, $level->box->pool_amount]);
-                        })->get();
+                        $prizes = BoxPrize::where(['level_id' => $level_id])
+                            ->when($endLevel->id == $level_id, function ($query) use ($level,$user) {
+                                //如果是普通用户才受奖金池限制
+                                if ($user->kol == 0) {
+                                    $query->whereBetween('price', [0, $level->box->pool_amount]);
+                                }
+                            })
+                            ->get();
                         // 如果没有可用奖品，返回提示
                         if ($prizes->isEmpty()) {
                             $prizes = BoxPrize::where(['level_id' => $level_id])->orderBy('price')->limit(3)->get();
@@ -277,7 +282,7 @@ class BoxController extends BaseController
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
-                        if ($user->kol == 0) {
+                        if ($user->kol == 1) {
                             $currentChance += $user->chance;
                         }
                         foreach ($prizes as $prize) {
@@ -467,12 +472,18 @@ class BoxController extends BaseController
             ->orderBy('id', 'desc')
             ->paginate()
             ->getCollection()
-            ->each(function ($item) use ($request, $grade) {
-                $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $grade)->first();
+            ->each(function ($item) use ($request, $grade,$box_id) {
+                $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                    $query->where('box_id', $box_id);
+                })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $grade)->first();
                 if (!$last) {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->count();
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                        $query->where('box_id', $box_id);
+                    })->where('id', '<', $item->id)->count();
                 } else {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
+                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                        $query->where('box_id', $box_id);
+                    })->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }
                 $item->setAttribute('times', $prizes);
             });

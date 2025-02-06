@@ -3,7 +3,8 @@
 namespace app\controller;
 
 use Exception;
-use Intervention\Image\ImageManagerStatic as Image;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 use Random\RandomException;
 use support\exception\BusinessException;
 use support\Request;
@@ -55,7 +56,7 @@ class UploadController extends BaseController
         $data = $this->base($request, '/upload/img/'.date('Ymd'));
         $realpath = $data['realpath'];
         try {
-            $img = Image::make($realpath);
+            $img = ImageManager::withDriver(new Driver())->read($realpath);
             $max_height = 1170;
             $max_width = 1170;
             $width = $img->width();
@@ -64,7 +65,7 @@ class UploadController extends BaseController
             if ($height > $max_height || $width > $max_width) {
                 $ratio = $width > $height ? $max_width / $width : $max_height / $height;
             }
-            $img->resize($width*$ratio, $height*$ratio)->save($realpath);
+            $img->resize(round($width*$ratio), round($height*$ratio))->save($realpath);
         } catch (Exception $e) {
             unlink($realpath);
             return json( [
@@ -97,7 +98,7 @@ class UploadController extends BaseController
             if (!in_array($ext, ['jpg', 'jpeg', 'gif', 'png'])) {
                 return json(['code' => 2, 'msg' => '仅支持 jpg jpeg gif png格式']);
             }
-            $image = Image::make($file);
+            $image = ImageManager::withDriver(new Driver())->read($file);
             $width = $image->width();
             $height = $image->height();
             $size = min($width, $height);

@@ -23,12 +23,8 @@ class AuthCheck implements MiddlewareInterface
             // 是否存在
 
             if (!in_array(strtolower($request->action), $arr) && !in_array('*', $arr)) {
-
                 // 访问的方法需要登录
                 $request->uid = JwtToken::getCurrentId();
-                dump($request);
-                dump('用户ID');
-                dump(JwtToken::getCurrentId());
             }
         }
         // 如果是options请求则返回一个空响应，否则继续向洋葱芯穿越，并得到一个响应

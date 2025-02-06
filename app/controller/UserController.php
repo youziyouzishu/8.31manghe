@@ -49,24 +49,25 @@ class UserController extends BaseController
             }
             $user = User::where('mobile', $mobile)->first();
         }
-        if (!empty($parentInviteCode)){
+        if (!empty($parentInviteCode)) {
             $parent = User::where('invitecode', $parentInviteCode)->first();
-        }else{
+        } else {
             $parent = null;
         }
         $inviteCode = Util::createInvitecode();
         if (!$user) {
             // 获取下一个自增ID
+            $nextId = User::max('id') + 1;
             $userData = [
-                'nickname'=>'新用户'.$inviteCode,
+                'nickname' => '新用户' . $nextId,
                 'avatar' => '/app/admin/upload/files/20241205/675118b32fcb.jpg',
-                'openid' => $openid??'',
-                'mobile' => $mobile??'',
+                'openid' => $openid ?? '',
+                'mobile' => $mobile ?? '',
                 'join_time' => date('Y-m-d H:i:s'),
                 'join_ip' => $request->getRealIp(),
                 'last_time' => date('Y-m-d H:i:s'),
                 'last_ip' => $request->getRealIp(),
-                'invitecode' =>$inviteCode
+                'invitecode' => $inviteCode
             ];
             if ($parent) {
                 $userData['parent_id'] = $parent->id;
@@ -104,19 +105,13 @@ class UserController extends BaseController
         }
         $user->client = JwtToken::TOKEN_CLIENT_MOBILE;
         $token = JwtToken::generateToken($user->toArray());
-        return $this->success('成功', ['token' => $token,'user'=>$user]);
+        return $this->success('成功', ['token' => $token, 'user' => $user]);
     }
 
     function getinfo(Request $request)
     {
-        $weekStart = Carbon::now()->startOfWeek();
-        $weekEnd = Carbon::now()->endOfWeek();
-        $row = User::withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) {
-            $query->whereDate('created_at', date('Y-m-d'));
-        }], 'amount')->withSum(['userDisburse as week_user_disburse_sum_amount_amount' => function ($query)use($weekStart,$weekEnd) {
-            $query->whereBetween('created_at', [$weekStart, $weekEnd]);
-        }], 'amount')->find($request->uid);
-        $row->week_text = $weekStart->format('m.d') . '~' . $weekEnd->format('m.d日');
+
+        $row = User::find($request->uid);
         return $this->success('成功', $row);
     }
 
@@ -124,7 +119,7 @@ class UserController extends BaseController
     {
         $safe = $request->post('safe', 0);
 
-        $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])->with(['boxPrize'=>function ($query) {
+        $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])->with(['boxPrize' => function ($query) {
             $query->withTrashed();
         }])
             ->orderByDesc('price')
@@ -141,8 +136,8 @@ class UserController extends BaseController
             ->orderByDesc('id')
             ->when(!empty($status), function ($query) use ($status) {
                 $query->where('status', $status);
-            },function ($query){
-                $query->whereIn('status', [1,2,3]);
+            }, function ($query) {
+                $query->whereIn('status', [1, 2, 3]);
             })
             ->paginate()
             ->items();
@@ -267,15 +262,15 @@ class UserController extends BaseController
         $type = $request->post('type');
         $id = $request->post('id');
         if ($type == 1) {
-            $row = UsersDrawLog::with(['box','prizeLog'=>function ($query) {
+            $row = UsersDrawLog::with(['box', 'prizeLog' => function ($query) {
                 $query->with(['boxPrize']);
-            },'orders'])
+            }, 'orders'])
                 ->where(['user_id' => $request->uid, 'id' => $id])
                 ->first();
         } elseif ($type == 2) {
             $row = GoodsOrder::with(['goods.boxPrize'])->where(['user_id' => $request->uid, 'id' => $id])
                 ->first();
-        }else{
+        } else {
             return $this->fail('参数错误');
         }
         return $this->success('成功', $row);
@@ -294,7 +289,7 @@ class UserController extends BaseController
     function getUserInfoById(Request $request)
     {
         $user_id = $request->post('user_id');
-        $row = User::select(['id','avatar','nickname'])->find($user_id);
+        $row = User::select(['id', 'avatar', 'nickname'])->find($user_id);
         return $this->success('成功', $row);
     }
 
@@ -307,14 +302,14 @@ class UserController extends BaseController
         }
         $user = User::find($request->uid);
 
-        if ($user->parent_id!=0 || $user->new!=1 ){
+        if ($user->parent_id != 0 || $user->new != 1) {
             return $this->fail('不属于新用户');
         }
 
         $user->parent_id = $row->id;
         $user->save();
         $coupon = Coupon::where(['fuli' => 1])->get();
-        foreach ($coupon as $item){
+        foreach ($coupon as $item) {
             UsersCoupon::create([
                 'user_id' => $request->uid,
                 'coupon_id' => $item->id,

@@ -64,7 +64,7 @@ class GoodsController extends BaseController
 
         $pay_amount = $amount;
 
-        Db::beginTransaction();
+        Db::connection('plugin.admin.mysql')->beginTransaction();
         try {
 
             $goodsData = [
@@ -114,14 +114,14 @@ class GoodsController extends BaseController
                 $code = 4;
             }
 
-            Db::commit();
+            Db::connection('plugin.admin.mysql')->commit();
             return $this->success('成功',[
                 'code'=>$code,
                 'ret'=>$ret
             ]);
         } catch (\Throwable $e) {
             // 回滚事务
-            Db::rollBack();
+            Db::connection('plugin.admin.mysql')->rollBack();
             return $this->fail($e->getMessage());
         }
 

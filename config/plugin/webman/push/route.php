@@ -13,6 +13,7 @@
  */
 
 use support\Cache;
+use support\Log;
 use support\Request;
 use Webman\Route;
 use Webman\Push\Api;
@@ -21,7 +22,7 @@ use Webman\Push\Api;
  * 推送js客户端文件
  */
 Route::get('/plugin/webman/push/push.js', function (Request $request) {
-    return response()->file(base_path().'/vendor/webman/push/src/push.js');
+    return response()->file(base_path() . '/vendor/webman/push/src/push.js');
 });
 
 /**
@@ -67,20 +68,20 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     foreach ($payload['events'] as $event) {
         if ($event['name'] === 'channel_added') {
             $channels_online[] = $event['channel'];
-            Cache::set($event['channel'],1);
-            $winner_prize = Cache::get($event['channel']."-winner_prize");
-            if ($winner_prize){
-                dump('发离线消息');
+            Cache::set($event['channel'], 1);
+            $winner_prize = Cache::get($event['channel'] . "-winner_prize");
+            if ($winner_prize) {
                 $api = new Api(
                     'http://127.0.0.1:3232',
                     config('plugin.webman.push.app.app_key'),
                     config('plugin.webman.push.app.app_secret')
                 );
                 // 给客户端推送私有 prize_draw 事件的消息
-                 $api->trigger($event['channel'], 'prize_draw', [
+                $api->trigger($event['channel'], 'prize_draw', [
                     'winner_prize' => $winner_prize
                 ]);
-                Cache::delete($event['channel']."-winner_prize");
+                Log::info('推送离线消息成功');
+                Cache::delete($event['channel'] . "-winner_prize");
             }
 
         } else if ($event['name'] === 'channel_removed') {
@@ -93,9 +94,9 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
     // 上线的所有channel
 
 
-    dump('online channels: ' . implode(',', $channels_online)) ;
+    dump('online channels: ' . implode(',', $channels_online));
     // 下线的所有channel
-    dump('offline channels: ' . implode(',', $channels_offline)) ;
+    dump('offline channels: ' . implode(',', $channels_offline));
 
     return 'OK';
 });

@@ -61,7 +61,7 @@ class PrizeController extends BaseController
             return $this->fail('错误');
         }
         $xiaofei = UsersDisburse::where(['user_id' => $request->uid, 'type' => 1])->sum('amount');
-        if ($xiaofei < 100) {
+        if ($xiaofei < 50) {
             return $this->fail('转赠失败');
         }
 

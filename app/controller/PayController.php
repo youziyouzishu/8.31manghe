@@ -50,7 +50,11 @@ class PayController extends BaseController
         }
         $ret = Pay::pay($pay_type,$pay_amount,$ordersn,$mark,$scene);
         $ret = json_decode($ret);
-        $qr_code =  $ret->data->qr_code;
+        $ret = $ret->data;
+        if ($ret->trans_stat == 'F'){
+            return  $this->fail($ret->resp_desc);
+        }
+        $qr_code =  $ret->qr_code;
         // 使用构建器创建 QR Code
         $writer = new PngWriter();
         $qrCode = new QrCode(

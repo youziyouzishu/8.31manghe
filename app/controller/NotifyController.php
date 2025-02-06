@@ -73,6 +73,7 @@ class NotifyController extends BaseController
      */
     private function pay(Request $request)
     {
+
         try {
             $paytype = $request->input('paytype');
 
@@ -93,6 +94,11 @@ class NotifyController extends BaseController
             } elseif ($paytype == 'alipay' || $paytype == 'unipay') {
                 $ret = $request->all();
                 $data = json_decode($ret['resp_data']);
+                if ($data->trans_stat == 'F'){
+                    Log::error('回调支付失败');
+                    Log::error($ret['resp_data']);
+                    throw new \Exception($data->bank_message);
+                }
                 $attach = $data->remark;
                 $out_trade_no = $data->mer_ord_id;
             } else {
@@ -135,7 +141,10 @@ class NotifyController extends BaseController
                             ->when(!empty($order->level_id), function (Builder $query) use ($order) {
                                 $query->where('level_id', $order->level_id);
                             }, function (Builder $query) use($order){
-                                $query->whereBetween('price',[0,$order->box->pool_amount]);
+                                //如果是普通用户才受奖金池限制
+                                if ($order->user->kol == 0) {
+                                    $query->whereBetween('price',[0,$order->box->pool_amount]);
+                                }
                             })
                             ->get();
 
@@ -183,7 +192,6 @@ class NotifyController extends BaseController
 
 
                     if (!$online) {
-
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
 
@@ -196,6 +204,7 @@ class NotifyController extends BaseController
                         $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
                             'winner_prize' => $winnerPrize
                         ]);
+                        Log::info("推送消息成功");
                     }
                     foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
@@ -397,7 +406,7 @@ class NotifyController extends BaseController
             }
 
         } catch (\Throwable $e) {
-            Log::error('支付错误');
+            Log::error('支付回调错误');
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());
         }
