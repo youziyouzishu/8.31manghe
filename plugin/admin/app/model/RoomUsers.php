@@ -37,6 +37,7 @@ class RoomUsers extends Pivot
     protected $primaryKey = 'id';
 
     protected $fillable = ['room_id','user_id'];
+
     /**
      * 格式化日期
      *

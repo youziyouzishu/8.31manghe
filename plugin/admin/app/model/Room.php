@@ -73,12 +73,12 @@ class Room extends Base
 
     public function boxPrizes()
     {
-        return $this->belongsToMany(User::class, RoomUsers::class, 'room_id', 'user_id');
+        return $this->belongsToMany(BoxPrize::class, RoomPrize::class, 'room_id', 'box_prize_id')->withTimestamps();
     }
 
     function userPrize()
     {
-        return $this->hasManyThrough(UsersPrize::class, RoomPrize::class, 'room_id', 'id','id','user_prize_id');
+        return $this->belongsToMany(BoxPrize::class, RoomPrize::class, 'room_id', 'user_prize_id')->withTimestamps();
     }
 
     function roomPrize()
@@ -95,7 +95,7 @@ class Room extends Base
 
     public function roomUserUser()
     {
-        return $this->belongsToMany(User::class, RoomUsers::class, 'room_id', 'user_id')->withPivot('created_at');
+        return $this->belongsToMany(User::class, RoomUsers::class, 'room_id', 'user_id')->withTimestamps();
     }
 
 

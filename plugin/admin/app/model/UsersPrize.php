@@ -2,6 +2,8 @@
 
 namespace plugin\admin\app\model;
 
+use DateTimeInterface;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use plugin\admin\app\model\Base;
 use support\Request;
@@ -31,7 +33,7 @@ use support\Request;
  * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
  * @mixin \Eloquent
  */
-class UsersPrize extends Base
+class UsersPrize extends Pivot
 {
     use SoftDeletes;
     /**
@@ -49,6 +51,16 @@ class UsersPrize extends Base
     protected $primaryKey = 'id';
 
     protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price','num','grade'];
+
+    /**
+     * 格式化日期
+     *
+     * @return string
+     */
+    public function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {

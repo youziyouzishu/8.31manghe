@@ -2,6 +2,8 @@
 
 namespace plugin\admin\app\model;
 
+use DateTimeInterface;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use plugin\admin\app\model\Base;
 
 
@@ -26,8 +28,17 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @mixin \Eloquent
  */
-class RoomPrize extends Base
+class RoomPrize extends Pivot
 {
+    /**
+     * 格式化日期
+     *
+     * @return string
+     */
+    public function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
     /**
      * The table associated with the model.
      *

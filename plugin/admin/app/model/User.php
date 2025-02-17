@@ -157,7 +157,7 @@ class User extends Base
 
     function boxPrize()
     {
-        return $this->hasManyThrough(BoxPrize::class, UsersPrize::class, 'user_id', 'id', 'id', 'box_prize_id');
+        return $this->belongsToMany(BoxPrize::class, UsersPrize::class, 'user_id', 'box_prize_id')->withTimestamps();
     }
 
     function userPrize()
