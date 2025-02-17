@@ -90,6 +90,7 @@ class PrizeController extends BaseController
             }
 
             //记录
+            //收到
             UsersPrizeLog::create([
                 'type' => 2,
                 'source_user_id' => $request->uid,
@@ -100,12 +101,13 @@ class PrizeController extends BaseController
                 'grade' => $res->boxPrize->grade,
                 'num' => $prize['num']
             ]);
+            //赠送
             UsersPrizeLog::create([
                 'type' => 1,
                 'source_user_id' => $to_user_id,
                 'user_id' => $request->uid,
                 'box_prize_id' => $res->box_prize_id,
-                'mark' => '赠送',
+                'mark' => '赠送给了'.$to_user->nickname.' '.$to_user->id,
                 'price' => $res->price,
                 'grade' => $res->boxPrize->grade,
                 'num' => $prize['num']

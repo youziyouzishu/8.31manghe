@@ -160,7 +160,7 @@ class UserController extends Crud
                 Deliver::where('user_id', $item->id)
                     ->whereIn('status', [1, 2, 3])
                     ->get()
-                    ->each(function ($item)use(&$deliver_amount) {
+                    ->each(function ($item) use (&$deliver_amount) {
                         $deliver_amount += optional($item->userPrize())->withTrashed()->first()->price * $item->num;
                     });
                 //赠送好友的赏品价值
@@ -225,18 +225,21 @@ class UserController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if (empty($params['parent_id'])){
-                $request->set('post',['parent_id'=>0]);
+            if (empty($params['parent_id'])) {
+                $request->set('post', ['parent_id' => 0]);
             }
             $user = $this->model->find($params['id']);
-            if ($user->id == $params['parent_id']){
+            if ($user->id == $params['parent_id']) {
                 return $this->fail('不能选择自己为上级');
             }
-            $originmoney = $user->money;
-            $changemoney = $request->post('money');
-            if (!empty($changemoney) && (function_exists('bccomp') ? bccomp($changemoney, $originmoney, 2) !== 0 : (double)$changemoney !== (double)$originmoney)) {
-                UsersMoneyLog::create(['user_id' => $user->id, 'money' => $changemoney - $originmoney, 'before' => $originmoney, 'after' => $changemoney, 'memo' => '系统赠送']);
+
+            $money = $request->post('money');
+            if ($user->money != $money) {
+                //变了账户
+                $difference = $money - $user->money;
+                User::money($difference, $user->id, $difference > 0 ? '系统赠送' : '系统扣除');
             }
+
 
             return parent::update($request);
         }

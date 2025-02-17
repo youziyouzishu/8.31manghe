@@ -141,19 +141,7 @@ class RoomController extends BaseController
         $room = Room::with(['roomUser.user'])
             ->withCount('roomUser')
             ->find($room_id);
-
-        // 提取所有 user 并添加 created_at 字段
-        $users = $room->roomUser->map(function (RoomUsers $roomUser) {
-            $user = $roomUser->user;
-            $user->created_at = $roomUser->created_at;
-            return $user;
-        });
-        // 将 roomUser 数量和用户列表放在同一层
-        $result = [
-            'users_count' => $room->room_user_count,
-            'users' => $users
-        ];
-        return $this->success('成功', $result);
+        return $this->success('成功', $room);
 
     }
 

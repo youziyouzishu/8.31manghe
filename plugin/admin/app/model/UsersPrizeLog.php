@@ -43,7 +43,7 @@ class UsersPrizeLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id','box_prize_id','mark','price','draw_id','type','grade','num'];
+    protected $fillable = ['user_id','box_prize_id','mark','price','draw_id','type','grade','num','source_user_id'];
 
     function boxPrize()
     {

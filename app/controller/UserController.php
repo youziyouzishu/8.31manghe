@@ -26,7 +26,6 @@ class UserController extends BaseController
 
     function login(Request $request)
     {
-        dump($request->post());
         // 处理父级关系
         $parentInviteCode = $request->post('invitecode');
         $login_type = $request->post('login_type'); # 1微信登录 2手机号
@@ -207,8 +206,13 @@ class UserController extends BaseController
     function giveLog(Request $request)
     {
         $month = $request->post('month', date('Y-m'));
+        $date = Carbon::parse($month);
+        // 提取年份和月份
+        $year = $date->year;
+        $month = $date->month;
         $rows = UsersPrizeLog::with(['boxPrize', 'sourceUser'])
             ->where(['user_id' => $request->uid, 'type' => 1])
+            ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
             ->paginate()
@@ -220,8 +224,13 @@ class UserController extends BaseController
     function receiveLog(Request $request)
     {
         $month = $request->post('month', date('Y-m'));
+        $date = Carbon::parse($month);
+        // 提取年份和月份
+        $year = $date->year;
+        $month = $date->month;
         $rows = UsersPrizeLog::with(['boxPrize', 'sourceUser'])
             ->where(['user_id' => $request->uid, 'type' => 2])
+            ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
             ->paginate()

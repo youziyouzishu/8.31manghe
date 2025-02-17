@@ -94,23 +94,21 @@ class User extends Base
      */
     public static function money($money, $user_id, $memo)
     {
-        Db::beginTransaction();
+        Db::connection('plugin.admin.mysql')->beginTransaction();
         try {
             $user = self::lockForUpdate()->find($user_id);
             if ($user && $money != 0) {
                 $before = $user->money;
-                //$after = $user->money + $money;
-                $after = function_exists('bcadd') ? bcadd($user->money, $money, 2) : $user->money + $money;
+                $after = $user->money + $money;
                 //更新会员信息
                 $user->money = $after;
                 $user->save();
                 //写入日志
                 UsersMoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
             }
-            Db::commit();
+            Db::connection('plugin.admin.mysql')->commit();
         } catch (\Throwable $e) {
-            Db::rollback();
-            throw $e;
+            Db::connection('plugin.admin.mysql')->rollback();
         }
     }
 

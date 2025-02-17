@@ -41,6 +41,13 @@
                         </div>
                     </div>
 
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">备注</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="mark" value="" class="layui-input">
+                        </div>
+                    </div>
+
 
                     
                     <div class="layui-form-item">
@@ -435,6 +442,7 @@
 
                 // 表格顶部搜索事件
                 form.on("submit(table-query)", function(data) {
+                    data.field.mark = ['like', data.field.mark];
                     table.reload("data-table", {
                         page: {
                             curr: 1
