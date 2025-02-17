@@ -40,10 +40,11 @@ class RoomController extends BaseController
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
         }
-
+        $user = User::find($request->uid);
         // 开启事务
         Db::connection('plugin.admin.mysql')->beginTransaction();
         $roomPrizesData = [];
+        $total_price = 0;
         try {
             foreach ($prizes as $prize) {
                 $res = UsersPrize::find($prize['id']);
@@ -55,6 +56,10 @@ class RoomController extends BaseController
                 }
                 if ($res->num < $prize['num']) {
                     throw new \Exception('奖品库存不足');
+                }
+                $total_price += $prize['num'] * $res->price;
+                if ($user->kol == 1 && $total_price >= 300){
+                    throw new \Exception('价值不能超过300');
                 }
                 $res->decrement('num', $prize['num']);
                 if ($res->num <= 0) {
@@ -111,7 +116,7 @@ class RoomController extends BaseController
                 $query->with(['boxPrize']);
             },
             'user',
-            'roomUserUser' => function (HasManyThrough $query) {
+            'roomUserUser' => function ($query) {
                 $query->limit(10);
             }])->find($room_id);
         if (empty($row)) {

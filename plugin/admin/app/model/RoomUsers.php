@@ -2,7 +2,8 @@
 
 namespace plugin\admin\app\model;
 
-use plugin\admin\app\model\Base;
+use DateTimeInterface;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 
 /**
@@ -19,7 +20,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
-class RoomUsers extends Base
+class RoomUsers extends Pivot
 {
     /**
      * The table associated with the model.
@@ -36,7 +37,16 @@ class RoomUsers extends Base
     protected $primaryKey = 'id';
 
     protected $fillable = ['room_id','user_id'];
-
+    /**
+     * 格式化日期
+     *
+     * @param DateTimeInterface $date
+     * @return string
+     */
+    public function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 
     function user()
     {

@@ -118,4 +118,31 @@ class BoxController extends Crud
         return view('box/update');
     }
 
+    /**
+     * 删除
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function delete(Request $request): Response
+    {
+        $ids = $this->deleteInput($request);
+        $this->doDelete($ids);
+        return $this->json(0);
+    }
+
+    /**
+     * 修改毛利率
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function rate(Request $request): Response
+    {
+        $ids = $request->post('id');
+        $rate = $request->post('rate');
+        $this->model->whereIn('id', $ids)->update(['rate'=>$rate]);
+        return $this->json(0);
+    }
+
 }

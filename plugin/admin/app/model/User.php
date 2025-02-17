@@ -42,6 +42,7 @@ use support\Db;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersDisburse> $userDisburse
  * @property float $chance 额外中奖率
  * @property int $parent_id
+ * @property int $fuli
  * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $children
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxPrize> $boxPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
@@ -78,7 +79,9 @@ class User extends Base
         'mobile', 'level', 'birthday', 'money', 'score', 'last_time', 'last_ip',
         'join_time', 'join_ip', 'token', 'created_at', 'updated_at', 'role', 'status', 'openid', 'official', 'invitecode',
         'new',
-        'new_time'
+        'new_time',
+        'parent_id',
+        'fuli'
     ];
 
     protected $appends = ['official_text'];

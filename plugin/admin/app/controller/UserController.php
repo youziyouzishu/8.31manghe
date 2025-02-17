@@ -59,7 +59,7 @@ class UserController extends Crud
         $todayStart = Carbon::today()->startOfDay(); // 今天的开始时间
         $todayEnd = Carbon::today()->endOfDay(); // 今天的结束时间
         $query = $this->doSelect($where, $field, $order)
-            ->with(['children','parent'])
+            ->with(['children'])
             ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) use ($where, $todayStart, $todayEnd) {
                 $query->whereIn('type', [1, 3])->whereBetween('created_at', [$todayStart, $todayEnd]);
             }], 'amount')

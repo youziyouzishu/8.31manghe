@@ -86,7 +86,7 @@
             </div>
 
             <div class="layui-form-item">
-                <label class="layui-form-label required">上级</label>
+                <label class="layui-form-label">上级</label>
                 <div class="layui-input-block">
                     <div name="parent_id" id="parent_id" value="0"></div>
                 </div>
@@ -235,13 +235,12 @@
                                     name: 'name',
                                     value: 'value',
                                 },
-                                layVerify: "required",
                                 remoteMethod: function (val, cb, show, pageIndex) {
                                     layui.$.ajax({
                                         url: "/app/admin/user/select?format=select",
                                         dataType: "json",
                                         data: {
-                                            id: [['<>', user_id], ['=', val]],
+                                            id: val
                                         },
                                         success: function (res) {
                                             cb(res.data);

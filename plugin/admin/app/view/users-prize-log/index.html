@@ -20,6 +20,28 @@
                             <input type="number" name="id" value="" class="layui-input">
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">用户</label>
+                        <div class="layui-input-block">
+                            <div name="user_id" id="user_id" value="" ></div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">操作类型</label>
+                        <div class="layui-input-block">
+                            <div name="type" id="type" value="" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">奖品</label>
+                        <div class="layui-input-block">
+                            <div name="box_prize_id" id="box_prize_id" value="" ></div>
+                        </div>
+                    </div>
+
+
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
@@ -32,19 +54,7 @@
                         </div>
                     </div>
                     
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">用户</label>
-                        <div class="layui-input-block">
-                            <div name="user_id" id="user_id" value="" ></div>
-                        </div>
-                    </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">奖品</label>
-                        <div class="layui-input-block">
-                            <div name="box_prize_id" id="box_prize_id" value="" ></div>
-                        </div>
-                    </div>
+
                     
                     <div class="layui-form-item layui-inline">
                         <label class="layui-form-label"></label>
@@ -93,9 +103,8 @@
         
         <script>
 
-            const ordersn = layui.url().search['ordersn'];
+            const draw_id = layui.url().search['draw_id'];
             const user_id = layui.url().search['user_id'];
-            let draw_id = 0;
 
             // 相关常量
             const PRIMARY_KEY = "id";
@@ -107,22 +116,8 @@
             if (typeof user_id !== 'undefined'){
                 SELECT_API = "/app/admin/users-prize-log/select?user_id="+user_id+"&type=3";
             }
-            if (typeof ordersn !== 'undefined' ) {
-                layui.$.ajax({
-                    url: "/app/admin/users-draw-log/select?format=normal&ordersn="+ordersn,
-                    dataType: "json",
-                    success: function (res) {
-                        if (!res.code) {
-                            if (res.data.length === 0 ){
-                                SELECT_API = "/app/admin/users-prize-log/select?draw_id=-1";
-                            }else{
-                                SELECT_API = "/app/admin/users-prize-log/select?draw_id="+res.data[0].id;
-                            }
-                        }else{
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
+            if (typeof draw_id !== 'undefined' ) {
+                SELECT_API = "/app/admin/users-prize-log/select?draw_id="+draw_id;
             }
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
@@ -132,6 +127,35 @@
                     type: "datetime",
                 });
             })
+
+            layui.use(["jquery", "xmSelect"], function() {
+                let value = layui.$("#type").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: "#type",
+                    name: "type",
+                    filterable: true,
+                    initValue: initValue,
+                    //类型:0=抽奖获得,1=赠送,2=收到赠送,3=平台赠送,4=发货奖品,5=购买商品,6=diy获得,7=房间获得,8=房间抽出,9=取消发货,10=房间抽奖完成返还剩余
+                    data: [
+                        {name: "抽奖获得", value: "0"},
+                        {name: "赠送", value: "1"},
+                        {name: "收到赠送", value: "2"},
+                        {name: "平台赠送", value: "3"},
+                        {name: "发货奖品", value: "4"},
+                        {name: "购买商品", value: "5"},
+                        {name: "diy获得", value: "6"},
+                        {name: "房间获得", value: "7"},
+                        {name: "房间抽出", value: "8"},
+                        {name: "取消发货", value: "9"},
+                        {name: "房间抽奖完成返还剩余", value: "10"},
+                    ],
+                    value: "0",
+                    model: {"icon":"hidden","label":{"type":"text"}},
+                    clickClose: true,
+                    radio: true,
+                })
+            });
 
             // 字段 用户 user_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
@@ -249,6 +273,18 @@
                         title: "数量",align: "center",
                         field: "num",
                     },{
+                        title: "操作类型",align: "center",
+                        field: "type",
+                        templet: function (d) {
+                            let field = "type";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "奖品",align: "center",
 						templet: function (d) {
                             return d.box_prize.name;
@@ -301,6 +337,7 @@
 						align: "center",
 						fixed: "right",
 						width: 120,
+                        hide: true,
 					}
 				];
 				
@@ -330,6 +367,20 @@
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
 				let apiResults = {};
+                //类型:0=抽奖获得,1=赠送,2=收到赠送,3=平台赠送,4=发货奖品,5=购买商品,6=diy获得,7=房间获得,8=房间抽出,9=取消发货,10=房间抽奖完成返还剩余
+                apiResults["type"] = [
+                    "抽奖获得",
+                    "赠送",
+                    "收到赠送",
+                    "平台赠送",
+                    "发货奖品",
+                    "购买商品",
+                    "diy获得",
+                    "房间获得",
+                    "房间抽出",
+                    "取消发货",
+                    "房间抽奖完成返还剩余"
+                ];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

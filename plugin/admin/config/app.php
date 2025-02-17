@@ -14,6 +14,7 @@
 
 return [
     'debug' => config('app.debug'),
+    'default_timezone' => 'Asia/Shanghai',
     'controller_suffix' => 'Controller',
     'controller_reuse' => false,
     'public_path' => base_path(false) . DIRECTORY_SEPARATOR . 'public',

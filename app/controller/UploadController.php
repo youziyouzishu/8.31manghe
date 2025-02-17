@@ -3,8 +3,7 @@
 namespace app\controller;
 
 use Exception;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
+use Intervention\Image\ImageManagerStatic as Image;
 use Random\RandomException;
 use support\exception\BusinessException;
 use support\Request;
@@ -56,7 +55,7 @@ class UploadController extends BaseController
         $data = $this->base($request, '/upload/img/'.date('Ymd'));
         $realpath = $data['realpath'];
         try {
-            $img = ImageManager::withDriver(new Driver())->read($realpath);
+            $img = Image::make($realpath);
             $max_height = 1170;
             $max_width = 1170;
             $width = $img->width();
@@ -98,7 +97,7 @@ class UploadController extends BaseController
             if (!in_array($ext, ['jpg', 'jpeg', 'gif', 'png'])) {
                 return json(['code' => 2, 'msg' => '仅支持 jpg jpeg gif png格式']);
             }
-            $image = ImageManager::withDriver(new Driver())->read($file);
+            $image = Image::make($file);
             $width = $image->width();
             $height = $image->height();
             $size = min($width, $height);

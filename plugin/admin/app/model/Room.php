@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\model;
 
+use DateTimeInterface;
 use plugin\admin\app\model\Base;
 
 
@@ -34,6 +35,9 @@ use plugin\admin\app\model\Base;
  */
 class Room extends Base
 {
+
+
+
     /**
      * The table associated with the model.
      *
@@ -69,7 +73,7 @@ class Room extends Base
 
     public function boxPrizes()
     {
-        return $this->hasManyThrough(BoxPrize::class, RoomPrize::class, 'room_id', 'id', 'id', 'box_prize_id');
+        return $this->belongsToMany(User::class, RoomUsers::class, 'room_id', 'user_id');
     }
 
     function userPrize()
@@ -88,9 +92,10 @@ class Room extends Base
         return $this->belongsTo(User::class,'user_id');
     }
 
+
     public function roomUserUser()
     {
-        return $this->hasManyThrough(User::class, RoomUsers::class, 'room_id', 'id', 'id', 'user_id');
+        return $this->belongsToMany(User::class, RoomUsers::class, 'room_id', 'user_id')->withPivot('created_at');
     }
 
 

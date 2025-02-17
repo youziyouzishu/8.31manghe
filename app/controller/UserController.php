@@ -26,6 +26,7 @@ class UserController extends BaseController
 
     function login(Request $request)
     {
+        dump($request->post());
         // 处理父级关系
         $parentInviteCode = $request->post('invitecode');
         $login_type = $request->post('login_type'); # 1微信登录 2手机号
@@ -49,6 +50,7 @@ class UserController extends BaseController
             }
             $user = User::where('mobile', $mobile)->first();
         }
+        dump($parentInviteCode);
         if (!empty($parentInviteCode)) {
             $parent = User::where('invitecode', $parentInviteCode)->first();
         } else {
@@ -69,6 +71,7 @@ class UserController extends BaseController
                 'last_ip' => $request->getRealIp(),
                 'invitecode' => $inviteCode
             ];
+            dump($parent);
             if ($parent) {
                 $userData['parent_id'] = $parent->id;
             }
@@ -301,12 +304,15 @@ class UserController extends BaseController
             return $this->fail('邀请码不存在');
         }
         $user = User::find($request->uid);
-
-        if ($user->parent_id != 0 || $user->new != 1) {
-            return $this->fail('不属于新用户');
+        if ($row->fuli == 1) {
+            return $this->fail('不能重复领取');
         }
 
+        if (($user->parent_id != 0 && $user->parent_id != $row->id) || $user->new != 1) {
+            return $this->fail('不属于新用户');
+        }
         $user->parent_id = $row->id;
+        $user->fuli = 1;
         $user->save();
         $coupon = Coupon::where(['fuli' => 1])->get();
         foreach ($coupon as $item) {

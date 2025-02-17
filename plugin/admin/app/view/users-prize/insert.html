@@ -157,6 +157,9 @@
                         name: 'name',
                         value: 'id',
                     },
+                    template({item, sels, name, value}) {
+                        return item.name + '<span style="position: absolute; right: 10px; color: #8799a3">' + item.price + '</span>';
+                    },
                     //数据处理
                     remoteMethod: function(val, cb, show, pageIndex){
                         //val: 搜索框的内容, 不开启搜索默认为空, cb: 回调函数, show: 当前下拉框是否展开, pageIndex: 当前第几页
@@ -164,7 +167,7 @@
                             url: "/app/admin/box/select?format=normal",
                             dataType: "json",
                             data: {
-                                name: val
+                                name: ['like', val]
                             },
                             success: function (res) {
                                 //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
@@ -185,7 +188,7 @@
                                             url: '/app/admin/box-prize/select?format=normal&box_id=' + selectedBoxId,
                                             dataType: "json",
                                             data: {
-                                                name: val
+                                                name: ['like', val]
                                             },
                                             success: function (res) {
                                                 cb(res.data);
@@ -208,6 +211,9 @@
                     radio: true,
                     remoteSearch:true,
                     layVerify: "required",
+                    template({item, sels, name, value}) {
+                        return item.name + '<span style="position: absolute; right: 10px; color: #8799a3">' + item.price + '</span>';
+                    },
                     prop: {
                         name: 'name',
                         value: 'id',

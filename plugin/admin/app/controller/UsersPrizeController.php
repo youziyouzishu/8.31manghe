@@ -60,9 +60,10 @@ class UsersPrizeController extends Crud
 
             if ($userPrize = UsersPrize::where(['user_id' => $param['user_id'], 'box_prize_id' => $param['box_prize_id'], 'price' => $boxPrize->price])->first()) {
                 $userPrize->increment('num',$param['num']);
+                $id = $userPrize->id;
             } else {
                 //给用户发放赏袋
-                UsersPrize::create([
+                $userPrize = UsersPrize::create([
                     'user_id' => $param['user_id'],
                     'box_prize_id' => $param['box_prize_id'],
                     'price' => $boxPrize->price,
@@ -70,8 +71,8 @@ class UsersPrizeController extends Crud
                     'num' => $param['num'],
                     'grade' => $boxPrize->grade,
                 ]);
+                $id = $userPrize->id;
             }
-
 
             UsersPrizeLog::create([
                 'user_id'=>$param['user_id'],
@@ -82,7 +83,7 @@ class UsersPrizeController extends Crud
                 'grade'=>$boxPrize->grade,
                 'num' => $param['num'],
             ]);
-            return parent::insert($request);
+            return $this->json(0, 'ok', ['id' => $id]);
         }
         return view('users-prize/insert');
     }

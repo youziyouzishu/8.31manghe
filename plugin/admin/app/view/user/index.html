@@ -418,9 +418,6 @@
             }, {
                 title: "上级",align: "center",
                 field: "parent_id",
-                templet: function (d) {
-                    return d.parent?d.parent.nickname:'';
-                }
             },{
                 title: "盈亏", align: "center",
                 field: "profit",
@@ -530,7 +527,9 @@
             table.render({
                 elem: "#data-table",
                 url: SELECT_API,
-                page: true,
+                page: {
+                    limits: [10, 50, 100, 200,],
+                },
                 cols: [cols],
                 skin: "line",
                 size: "lg",

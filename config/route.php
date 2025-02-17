@@ -17,7 +17,7 @@ use Tinywan\Jwt\JwtToken;
 use Webman\Route;
 
 
-Route::any('/log', [\app\controller\IndexController::class, 'log']);
+Route::any('/index', [\app\controller\IndexController::class, 'test']);
 
 Route::group('/notify', function () {
     Route::any('/wechat', [\app\controller\NotifyController::class, 'wechat']);
@@ -142,8 +142,12 @@ Route::group('/token', function () {
 });
 
 
-Route::fallback(function () {
-    return json(['code' => 404, 'msg' => '404 not found']);
+Route::fallback(function (Request $request) {
+        if (request()->header('accept') == 'application/json'){
+            return json(['code' => 404, 'msg' => '404 not found']);
+        }else{
+            return not_found();
+        }
 });
 
 Route::disableDefaultRoute();

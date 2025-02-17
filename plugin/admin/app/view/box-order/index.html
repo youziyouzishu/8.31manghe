@@ -537,14 +537,31 @@
 
                 let detail = function(obj) {
                     let value = obj.data.ordersn;
-                    layer.open({
-                        type: 2,
-                        title: "中奖详情",
-                        shade: 0.1,
-                        maxmin: true,
-                        area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
-                        content: DETAIL_URL + "?" + "ordersn" + "=" + value
+                    layui.$.ajax({
+                        url: "/app/admin/users-draw-log/select?format=normal&ordersn="+value,
+                        dataType: "json",
+                        success: function (res) {
+                            if (!res.code) {
+                                if (res.data.length === 0 ){
+                                    draw_id = -1;
+                                }else{
+                                    draw_id = res.data[0].id
+                                }
+                                layer.open({
+                                    type: 2,
+                                    title: "中奖详情",
+                                    shade: 0.1,
+                                    maxmin: true,
+                                    area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
+                                    content: DETAIL_URL + "?" + "draw_id" + "=" + draw_id
+                                });
+                            }else{
+                                layui.popup.failure(res.msg);
+                            }
+                        }
                     });
+
+
                 }
 
                 // 删除一行

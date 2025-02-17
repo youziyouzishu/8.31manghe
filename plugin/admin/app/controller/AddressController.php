@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\Address;
@@ -13,6 +14,7 @@ use support\exception\BusinessException;
  */
 class AddressController extends Crud
 {
+    use SoftDeletes;
     
     /**
      * @var Address

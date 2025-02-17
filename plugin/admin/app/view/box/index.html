@@ -71,6 +71,9 @@
             <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.box.delete">
                 <i class="layui-icon layui-icon-delete"></i>删除
             </button>
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editRate" permission="app.admin.box.rate">
+                <i class="layui-icon layui-icon-senior"></i>修改毛利率
+            </button>
         </script>
 
         <!-- 表格行工具栏 -->
@@ -94,6 +97,7 @@
             const SELECT_API = "/app/admin/box/select";
             const UPDATE_API = "/app/admin/box/update";
             const DELETE_API = "/app/admin/box/delete";
+            const RATE_API = "/app/admin/box/rate";
             const INSERT_URL = "/app/admin/box/insert";
             const UPDATE_URL = "/app/admin/box/update";
             const PRIZE_URL = "/app/admin/box-prize/index";
@@ -293,6 +297,8 @@
                         refreshTable();
                     } else if (obj.event === "batchRemove") {
                         batchRemove(obj);
+                    } else if (obj.event === "editRate") {
+                        editRate(obj);
                     }
                 });
 
@@ -402,6 +408,15 @@
                     doRemove(checkIds.split(","));
                 }
 
+                let editRate = function(obj) {
+                    let checkIds = common.checkField(obj, PRIMARY_KEY);
+                    if (checkIds === "") {
+                        layui.popup.warning("未选中数据");
+                        return false;
+                    }
+                    doRate(checkIds.split(","));
+                }
+
                 // 执行删除
                 let doRemove = function (ids) {
                     let data = {};
@@ -419,6 +434,28 @@
                             type: "post",
                             success: function(res) {
                                 layer.close(loading);
+                                if (res.code) {
+                                    return layui.popup.failure(res.msg);
+                                }
+                                return layui.popup.success("操作成功", refreshTable);
+                            }
+                        })
+                    });
+                }
+
+                let doRate = function (ids) {
+                    let data = {};
+                    data[PRIMARY_KEY] = ids;
+                    layer.prompt({title: '毛利率', formType: 0}, function(value, index, elem){
+                        if(value === '') return elem.focus();
+                        data.rate = value;
+                        $.ajax({
+                            url: RATE_API,
+                            data: data,
+                            dataType: "json",
+                            type: "post",
+                            success: function(res) {
+                                layer.close(index);
                                 if (res.code) {
                                     return layui.popup.failure(res.msg);
                                 }
