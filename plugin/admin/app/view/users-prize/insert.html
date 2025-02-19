@@ -42,21 +42,7 @@
                         </div>
                     </div>
 
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">保险箱</label>
-                        <div class="layui-input-block">
-                            <div name="safe" id="safe" value="0" ></div>
-                        </div>
-                    </div>
 
-                    
-<!--                    <div class="layui-form-item">-->
-<!--                        <label class="layui-form-label">删除时间</label>-->
-<!--                        <div class="layui-input-block">-->
-<!--                            <input type="text" name="deleted_at" id="deleted_at" autocomplete="off" class="layui-input">-->
-<!--                        </div>-->
-<!--                    </div>-->
                     
                 </div>
             </div>
@@ -120,23 +106,6 @@
                             }
                         });
                     }
-                })
-            });
-
-            // 字段 保险箱 safe
-            layui.use(["jquery", "xmSelect"], function() {
-                let value = layui.$("#safe").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#safe",
-                    name: "safe",
-                    filterable: true,
-                    initValue: initValue,
-                    data: [{"value":"0","name":"否"},{"value":"1","name":"是"}],
-                    value: "0",
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
                 })
             });
 

@@ -285,30 +285,39 @@
         })
     });
 
-    layui.use(["jquery", "xmSelect", "popup"], function() {
-        layui.$.ajax({
-            url: "/app/admin/user/select?format=select",
-            dataType: "json",
-            success: function (res) {
-                let value = layui.$("#parent_id").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#parent_id",
-                    name: "parent_id",
-                    initValue: initValue,
-                    filterable: true,
-                    data: res.data,
-                    model: {"icon":"hidden","label":{"type":"text"}},
-                    clickClose: true,
-                    radio: true,
+    // 字段 用户 parent_id
+    layui.use(["jquery", "xmSelect", "popup"], function () {
+        let value = layui.$("#parent_id").attr("value");
+        let initValue = value ? value.split(",") : [0];
+        layui.xmSelect.render({
+            el: '#parent_id',
+            name: "parent_id",
+            initValue: initValue,
+            filterable: true,
+            clickClose: true,
+            radio: true,
+            remoteSearch: true,
+            template({item, sels, name, value}) {
+                return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">' + item.name + '</span>';
+            },
+            prop: {
+                name: 'name',
+                value: 'value',
+            },
+            remoteMethod: function (val, cb, show, pageIndex) {
+                layui.$.ajax({
+                    url: "/app/admin/user/select?format=select",
+                    dataType: "json",
+                    data: {
+                        id: val
+                    },
+                    success: function (res) {
+                        cb(res.data);
+                    }
                 });
-                if (res.code) {
-                    layui.popup.failure(res.msg);
-                }
             }
         });
     });
-
 
     // 表格渲染
     layui.use(["table", "form", "common", "popup", "util" ], function () {
@@ -500,19 +509,12 @@
                     });
                     return util.escape(items.join(","));
                 }
-            }, {
-                title: "登录时间", align: "center",
-                field: "last_time",
-                hide: true,
-            }, {
-                title: "登录ip", align: "center",
-                field: "last_ip",
-                hide: true,
-            }, {
-                title: "注册时间", align: "center",
-                field: "join_time",
-                hide: true,
-            }, {
+            },{
+                title: "注册时间",align: "center",
+                field: "created_at",
+                sort: true,
+                minWidth:170,
+            },{
                 title: "操作",
                 toolbar: "#table-bar",
                 align: "center",

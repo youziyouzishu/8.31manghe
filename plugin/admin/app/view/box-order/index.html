@@ -332,45 +332,23 @@
 					},{
 						title: "订单编号",align: "center",
 						field: "ordersn",
+                        minWidth: 170,
 					},{
 						title: "支付时间",align: "center",
 						field: "pay_at",
-					},{
-						title: "优惠券",align: "center",
-						field: "user_coupon_id",
-                        templet: function (d) {
-                            let field = "user_coupon_id";
-                            if (typeof d[field] == "undefined") return "";
-                            let items = [];
-                            layui.each((d[field] + "").split(","), function (k , v) {
-                                items.push(apiResults[field][v] || v);
-                            });
-                            return util.escape(items.join(","));
-                        },
-                        hide:true
+                        minWidth: 170,
 					},{
 						title: "抽奖次数",align: "center",
 						field: "times",
 					},{
-						title: "所属关卡",align: "center",
-						field: "level_id",
-						templet: function (d) {
-							let field = "level_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						},
-                        hide:true
-					},{
 						title: "创建时间",align: "center",
 						field: "created_at",
+                        minWidth: 170,
 						sort: true,
 					},{
 						title: "更新时间",align: "center",
 						field: "updated_at",
+                        minWidth: 170,
 					},{
 						title: "操作",
 						toolbar: "#table-bar",
@@ -390,6 +368,7 @@
 				        cols: [cols],
 				        skin: "line",
 				        size: "lg",
+                        cellMinWidth:100,
 				        toolbar: "#table-toolbar",
 				        autoSort: false,
 				        defaultToolbar: [{
@@ -405,17 +384,10 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["box_id", "/app/admin/box/select?format=select"]);
-				apis.push(["level_id", "/app/admin/box-level/select?format=select"]);
-				apis.push(["user_coupon_id", "/app/admin/users-coupon/select?format=select"]);
+
 				let apiResults = {};
-				apiResults["user_id"] = [];
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
                 apiResults["pay_type"] = {"0":"无","1":"支付宝","2":"水晶","3":"云闪付"};
-				apiResults["box_id"] = [];
-				apiResults["level_id"] = [];
-				apiResults["user_coupon_id"] = [];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

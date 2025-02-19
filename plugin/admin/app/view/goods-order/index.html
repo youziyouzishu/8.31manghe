@@ -266,7 +266,7 @@
                         title: "用户ID",align: "center",
                         field: "user_id",
                     },{
-						title: "用户",align: "center",
+						title: "用户",align: "left",
 						field: "user.nickname",
 						templet: function (d) {
 							return d.user ? d.user.nickname : "";
@@ -274,6 +274,7 @@
 					},{
 						title: "商品",align: "center",
 						field: "goods.name",
+                        minWidth:200,
 						templet: function (d) {
 							return d.goods.box_prize? d.goods.box_prize.name : '';
 						}
@@ -313,20 +314,16 @@
 					},{
 						title: "支付时间",align: "center",
 						field: "pay_at",
+                        minWidth:170,
 					},{
                         title: "创建时间",align: "center",
                         field: "created_at",
                         sort: true,
+                        minWidth:170,
                     },{
                         title: "更新时间",align: "center",
                         field: "updated_at",
-                    },{
-						title: "操作",
-						toolbar: "#table-bar",
-						align: "center",
-						fixed: "right",
-						width: 120,
-					}
+                    }
 				];
 				
 				// 渲染表格
@@ -357,7 +354,7 @@
 				let apis = [];
 				let apiResults = {};
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
-                apiResults["pay_type"] = {"1":"微信","2":"余额"};
+                apiResults["pay_type"] = {"0":"无","1":"支付宝","2":"水晶","3":"云闪付"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

@@ -304,6 +304,7 @@
 
                 // 表格顶部搜索事件
                 form.on("submit(table-query)", function(data) {
+                    data.field.name = ['like',data.field.name]
                     table.reload("data-table", {
                         page: {
                             curr: 1
