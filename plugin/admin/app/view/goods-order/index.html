@@ -263,28 +263,19 @@
 						field: "id",
 						sort: true,
 					},{
+                        title: "用户ID",align: "center",
+                        field: "user_id",
+                    },{
 						title: "用户",align: "center",
-						field: "user_id",
+						field: "user.nickname",
 						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.user ? d.user.nickname : "";
 						}
 					},{
 						title: "商品",align: "center",
-						field: "goods_id",
+						field: "goods.name",
 						templet: function (d) {
-							let field = "goods_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.goods.box_prize? d.goods.box_prize.name : '';
 						}
 					},{
 						title: "订单编号",align: "center",
@@ -346,6 +337,7 @@
 				        url: SELECT_API,
 				        page: true,
 				        cols: [cols],
+                        cellMinWidth:100,
 				        skin: "line",
 				        size: "lg",
 				        toolbar: "#table-toolbar",
@@ -363,11 +355,7 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["goods_id", "/app/admin/goods/select?format=select"]);
 				let apiResults = {};
-				apiResults["user_id"] = [];
-				apiResults["goods_id"] = [];
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
                 apiResults["pay_type"] = {"1":"微信","2":"余额"};
 				let count = apis.length;

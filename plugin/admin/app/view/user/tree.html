@@ -173,7 +173,8 @@
                         $.ajax({
                             url: SELECT_API,
                             data: {
-                                parent_id: trData.id
+                                parent_id: trData.id,
+                                limit:1000
                             },
                             success(r){
                                 r.data.map(d=>{

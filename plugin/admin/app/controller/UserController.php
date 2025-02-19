@@ -146,7 +146,7 @@ class UserController extends Crud
                 //活动赠送部分
                 $give_prize_price = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
                 //系统增加的水晶
-                $system_money = UsersMoneyLog::where(['user_id' => $item->id, 'memo' => '系统赠送'])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('money') ?? 0;
+                $system_money = UsersMoneyLog::where(['user_id' => $item->id,'memo' => '活动赠送'])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('money') ?? 0;
 
                 $item->profit = round($profit_sum_amount - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money, 2);
                 $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {
@@ -175,7 +175,7 @@ class UserController extends Crud
                 //活动赠送部分
                 $give_prize_price = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
                 //系统增加的水晶
-                $system_money = UsersMoneyLog::where(['user_id' => $item->id, 'memo' => '系统赠送'])->sum('money') ?? 0;
+                $system_money = UsersMoneyLog::where(['user_id' => $item->id,'memo' => '活动赠送'])->sum('money') ?? 0;
 
                 $item->profit = round($profit_sum_amount - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money, 2);
             }
@@ -237,7 +237,7 @@ class UserController extends Crud
             if ($user->money != $money) {
                 //变了账户
                 $difference = $money - $user->money;
-                User::money($difference, $user->id, $difference > 0 ? '系统赠送' : '系统扣除');
+                User::money($difference, $user->id, $difference > 0 ? '活动赠送' : '系统扣除');
             }
 
 
