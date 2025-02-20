@@ -185,12 +185,14 @@ class NotifyController extends BaseController
                                 if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
                                 }
-                                $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price;
+
                                 if ($order->user->kol == 0) {
                                     //普通用户才增加奖金池
                                     // 增加奖金池金额
+                                    $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price;
                                     $prize->box->increment('pool_amount', $pool_amount);
                                 }else{
+                                    $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->kol_rate) - $prize->price;
                                     $prize->box->increment('kol_pool_amount', $pool_amount);
                                 }
                                 break;

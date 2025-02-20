@@ -141,7 +141,21 @@ class BoxController extends Crud
     {
         $ids = $request->post('id');
         $rate = $request->post('rate');
-        $this->model->whereIn('id', $ids)->update(['rate'=>$rate]);
+        $kol_rate = $request->post('kol_rate');
+        $data = [];
+        if (!empty($rate)) {
+            if ($rate < 0 || $rate > 1){
+                return $this->fail('毛利率必须大于0且小于1');
+            }
+            $data['rate'] = $rate;
+        }
+        if (!empty($kol_rate)) {
+            if ($kol_rate < 0 || $kol_rate > 1){
+                return $this->fail('KOL毛利率必须大于0且小于1');
+            }
+            $data['kol_rate'] = $kol_rate;
+        }
+        $this->model->whereIn('id', $ids)->update($data);
         return $this->json(0);
     }
 

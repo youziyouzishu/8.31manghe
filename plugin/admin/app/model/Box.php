@@ -29,6 +29,7 @@ use plugin\admin\app\model\Base;
  * @property string $kol_pool_amount KOL奖金池
  * @property string $kol_consume_amount KOL消费金额
  * @property string $rate 毛利率
+ * @property string $kol_rate KOL毛利率
  * @mixin \Eloquent
  */
 class Box extends Base

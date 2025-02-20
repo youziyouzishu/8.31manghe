@@ -71,8 +71,11 @@
             <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.box.delete">
                 <i class="layui-icon layui-icon-delete"></i>删除
             </button>
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editRate" permission="app.admin.box.rate">
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editRate" permission="app.admin.box.editRate">
                 <i class="layui-icon layui-icon-senior"></i>修改毛利率
+            </button>
+            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editKolRate" permission="app.admin.box.editKolRate">
+                <i class="layui-icon layui-icon-senior"></i>修改KOL毛利率
             </button>
         </script>
 
@@ -184,11 +187,20 @@
                         title: "消费金额",align: "center",
                         field: "consume_amount",
                     },{
+                        title: "KOL消费金额",align: "center",
+                        field: "kol_consume_amount",
+                    },{
                         title: "奖池金额",align: "center",
                         field: "pool_amount",
                     },{
+                        title: "KOL奖池金额",align: "center",
+                        field: "kol_pool_amount",
+                    },{
                         title: "毛利率",align: "center",
                         field: "rate",
+                    },{
+                        title: "KOL毛利率",align: "center",
+                        field: "kol_rate",
                     },{
                         title: "上下架",align: "center",
                         field: "status",
@@ -251,7 +263,7 @@
 				    elem: "#data-table",
 				    url: SELECT_API,
 				    page: true,
-                    cellMinWidth:100,
+                    cellMinWidth:120,
 				    cols: [cols],
 				    skin: "line",
 				    size: "lg",
@@ -299,6 +311,8 @@
                         batchRemove(obj);
                     } else if (obj.event === "editRate") {
                         editRate(obj);
+                    } else if (obj.event === "editKolRate") {
+                        editKolRate(obj);
                     }
                 });
 
@@ -418,6 +432,15 @@
                     doRate(checkIds.split(","));
                 }
 
+                let editKolRate = function(obj) {
+                    let checkIds = common.checkField(obj, PRIMARY_KEY);
+                    if (checkIds === "") {
+                        layui.popup.warning("未选中数据");
+                        return false;
+                    }
+                    doKolRate(checkIds.split(","));
+                }
+
                 // 执行删除
                 let doRemove = function (ids) {
                     let data = {};
@@ -450,6 +473,28 @@
                     layer.prompt({title: '毛利率', formType: 0}, function(value, index, elem){
                         if(value === '') return elem.focus();
                         data.rate = value;
+                        $.ajax({
+                            url: RATE_API,
+                            data: data,
+                            dataType: "json",
+                            type: "post",
+                            success: function(res) {
+                                layer.close(index);
+                                if (res.code) {
+                                    return layui.popup.failure(res.msg);
+                                }
+                                return layui.popup.success("操作成功", refreshTable);
+                            }
+                        })
+                    });
+                }
+
+                let doKolRate = function (ids) {
+                    let data = {};
+                    data[PRIMARY_KEY] = ids;
+                    layer.prompt({title: '毛利率', formType: 0}, function(value, index, elem){
+                        if(value === '') return elem.focus();
+                        data.kol_rate = value;
                         $.ajax({
                             url: RATE_API,
                             data: data,
