@@ -141,6 +141,9 @@ class NotifyController extends BaseController
                     ]); #创建抽奖记录
                     $winnerPrize = ['gt_n' => 0, 'list' => []];
                     for ($i = 0; $i < $order->times; $i++) {
+                        //每次循环都刷新盲盒数据
+                        $order->box->refresh();
+
                         // 从数据库中获取奖品列表
                         $prizes = BoxPrize::where(['box_id' => $order->box_id])
                             ->when(!empty($order->level_id), function (Builder $query) use ($order) {
@@ -185,7 +188,6 @@ class NotifyController extends BaseController
                                 if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
                                 }
-
                                 if ($order->user->kol == 0) {
                                     //普通用户才增加奖金池
                                     // 增加奖金池金额
