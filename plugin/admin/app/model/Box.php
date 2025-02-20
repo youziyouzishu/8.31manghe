@@ -26,6 +26,8 @@ use plugin\admin\app\model\Base;
  * @property int $weigh 权重
  * @property string $consume_amount 消费金额
  * @property string $pool_amount 奖金池
+ * @property string $kol_pool_amount KOL奖金池
+ * @property string $kol_consume_amount KOL消费金额
  * @property string $rate 毛利率
  * @mixin \Eloquent
  */

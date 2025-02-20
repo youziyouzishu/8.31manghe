@@ -94,7 +94,7 @@ class NotifyController extends BaseController
             } elseif ($paytype == 'alipay' || $paytype == 'unipay') {
                 $ret = $request->all();
                 $data = json_decode($ret['resp_data']);
-                if ($data->trans_stat == 'F'){
+                if ($data->trans_stat == 'F') {
                     Log::error('回调支付失败');
                     Log::error($ret['resp_data']);
                     throw new \Exception($data->bank_message);
@@ -125,7 +125,12 @@ class NotifyController extends BaseController
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
-                    $order->box->increment('consume_amount',$order->pay_amount);#增加盲盒消费金额
+                    #增加盲盒消费金额
+                    if ($order->user->kol == 0) {
+                        $order->box->increment('consume_amount', $order->pay_amount);
+                    }else{
+                        $order->box->increment('kol_consume_amount', $order->pay_amount);
+                    }
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
                         'user_id' => $order->user_id,
@@ -134,27 +139,29 @@ class NotifyController extends BaseController
                         'level_id' => $order->level_id,
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
-                    $winnerPrize = ['gt_n'=>0,'list'=>[]];
+                    $winnerPrize = ['gt_n' => 0, 'list' => []];
                     for ($i = 0; $i < $order->times; $i++) {
                         // 从数据库中获取奖品列表
                         $prizes = BoxPrize::where(['box_id' => $order->box_id])
                             ->when(!empty($order->level_id), function (Builder $query) use ($order) {
                                 $query->where('level_id', $order->level_id);
-                            }, function (Builder $query) use($order){
+                            }, function (Builder $query) use ($order) {
                                 //如果是普通用户才受奖金池限制
                                 if ($order->user->kol == 0) {
-                                    $query->whereBetween('price',[0,$order->box->pool_amount]);
+                                    $query->whereBetween('price', [0, $order->box->pool_amount]);
+                                }else{
+                                    $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
                                 }
                             })
                             ->get();
 
                         // 如果没有可用奖品，返回提示
-                        if ($prizes->isEmpty()){
+                        if ($prizes->isEmpty()) {
                             if (!empty($order->level_id)) {
                                 throw new \Exception('闯关赏没有奖品');
-                            }else{
+                            } else {
                                 $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                                    ->where('grade',2)
+                                    ->where('grade', 2)
                                     ->get();
                                 if ($prizes->isEmpty()) {
                                     throw new \Exception('盲盒没有设置奖品');
@@ -175,26 +182,27 @@ class NotifyController extends BaseController
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
-                                if ($prize->grade >= 3){
+                                if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
                                 }
+                                $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price;
                                 if ($order->user->kol == 0) {
                                     //普通用户才增加奖金池
                                     // 增加奖金池金额
-                                    $prize->box->increment('pool_amount', $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price);
+                                    $prize->box->increment('pool_amount', $pool_amount);
+                                }else{
+                                    $prize->box->increment('kol_pool_amount', $pool_amount);
                                 }
                                 break;
                             }
                         }
 
                     }
+
                     $online = Cache::has("private-user-{$order->user_id}");
-
-
                     if (!$online) {
                         Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                     } else {
-
                         $api = new Api(
                             'http://127.0.0.1:3232',
                             config('plugin.webman.push.app.app_key'),
@@ -204,8 +212,10 @@ class NotifyController extends BaseController
                         $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
                             'winner_prize' => $winnerPrize
                         ]);
-                        Log::info("推送消息成功");
+                        Log::info("推送消息成功:private-user-{$order->user_id}-winner_prize");
                     }
+
+
                     foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
                         if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
@@ -332,13 +342,13 @@ class NotifyController extends BaseController
                         $order->user->new_time = date('Y-m-d H:i:s');
                         $order->user->save();
                     }
-                    $winnerPrize = ['gt_n'=>0,'list'=>[]];
+                    $winnerPrize = ['gt_n' => 0, 'list' => []];
                     // 生成奖品ID数组并创建订单奖品记录
                     for ($i = 0; $i < $order->times; $i++) {
                         $is_big_prize = mt_rand(1, 100) <= $probability;
-                        $prize = $is_big_prize ?  $order->bigPrize : $order->smallPrize;
+                        $prize = $is_big_prize ? $order->bigPrize : $order->smallPrize;
                         $winnerPrize['list'][] = $prize;
-                        if ($prize->grade >= 3){
+                        if ($prize->grade == 5) {
                             $winnerPrize['gt_n'] = 1;
                         }
 
@@ -360,6 +370,8 @@ class NotifyController extends BaseController
                             'winner_prize' => $winnerPrize
                         ]);
                     }
+
+
                     $data = [];
                     $total_price = 0;
                     foreach ($winnerPrize['list'] as $item) {
@@ -381,11 +393,11 @@ class NotifyController extends BaseController
                             'mark' => '梦想DIY获得',
                             'type' => 6,
                             'num' => 1,
-                            'price'=>$item->price,
-                            'grade'=>$item->grade,
+                            'price' => $item->price,
+                            'grade' => $item->grade,
                         ]);
-                        $data[] = ['box_prize_id'=>$item->id,'type'=>$item->id == $order->big_prize_id ? 1 : 0];
-                        $total_price +=  $item->price;
+                        $data[] = ['box_prize_id' => $item->id, 'type' => $item->id == $order->big_prize_id ? 1 : 0];
+                        $total_price += $item->price;
                     }
                     $order->orderPrize()->createMany($data);
                     // 计算利润

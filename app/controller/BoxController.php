@@ -265,6 +265,8 @@ class BoxController extends BaseController
                                 //如果是普通用户才受奖金池限制
                                 if ($user->kol == 0) {
                                     $query->whereBetween('price', [0, $level->box->pool_amount]);
+                                }else{
+                                    $query->whereBetween('price', [0, $level->box->kol_pool_amount]);
                                 }
                             })
                             ->get();
@@ -289,11 +291,15 @@ class BoxController extends BaseController
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
-                                if ($prize->grade >= 3) {
+                                if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
                                 }
                                 // 减少奖金池金额
-                                $prize->box->decrement('pool_amount', $prize->price);
+                                if ($user->kol == 0) {
+                                    $prize->box->decrement('pool_amount', $prize->price);
+                                }else{
+                                    $prize->box->decrement('kol_pool_amount', $prize->price);
+                                }
                                 //删除用户通关券
                                 $ticket = $lastTicket->first(); // 返回第一个元素
                                 if ($ticket) {

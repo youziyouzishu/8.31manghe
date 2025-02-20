@@ -43,6 +43,13 @@
             </div>
 
             <div class="layui-form-item">
+                <label class="layui-form-label">上级</label>
+                <div class="layui-input-block">
+                    <div name="parent_id" id="parent_id" value="" ></div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
                 <label class="layui-form-label">支付流水周期</label>
                 <div class="layui-input-block">
                     <div class="layui-input-block" id="user_disburse_at">
@@ -149,6 +156,40 @@
         });
     })
 
+    // 字段 用户 parent_id
+    layui.use(["jquery", "xmSelect", "popup"], function () {
+        let value = layui.$("#parent_id").attr("value");
+        let initValue = value ? value.split(",") : [0];
+        layui.xmSelect.render({
+            el: '#parent_id',
+            name: "parent_id",
+            initValue: initValue,
+            filterable: true,
+            clickClose: true,
+            radio: true,
+            remoteSearch: true,
+            template({item, sels, name, value}) {
+                return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">' + item.name + '</span>';
+            },
+            prop: {
+                name: 'name',
+                value: 'value',
+            },
+            remoteMethod: function (val, cb, show, pageIndex) {
+                layui.$.ajax({
+                    url: "/app/admin/user/select?format=select",
+                    dataType: "json",
+                    data: {
+                        id: val
+                    },
+                    success: function (res) {
+                        cb(res.data);
+                    }
+                });
+            }
+        });
+    });
+
     layui.use(['table', 'form', 'common', 'jquery'], function () {
         let table = layui.table;
         let form = layui.form;
@@ -200,6 +241,9 @@
                     title: "昵称", align: "left",
                     field: "nickname",
                 }, {
+                    title: "上级",align: "center",
+                    field: "parent_id",
+                },{
                     title: "头像", align: "center",
                     field: "avatar",
                     templet: function (d) {

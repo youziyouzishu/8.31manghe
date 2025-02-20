@@ -32,8 +32,6 @@ Route::any(config('plugin.webman.push.app.auth'), function (Request $request) {
 
     $pusher = new Api(str_replace('0.0.0.0', '127.0.0.1', config('plugin.webman.push.app.api')), config('plugin.webman.push.app.app_key'), config('plugin.webman.push.app.app_secret'));
     $channel_name = $request->post('channel_name');
-    dump('进入鉴权');
-    dump($channel_name);
     $has_authority = true;
     if ($has_authority) {
         return response($pusher->socketAuth($channel_name, $request->post('socket_id')));
@@ -80,7 +78,7 @@ Route::post(parse_url(config('plugin.webman.push.app.channel_hook'), PHP_URL_PAT
                 $api->trigger($event['channel'], 'prize_draw', [
                     'winner_prize' => $winner_prize
                 ]);
-                Log::info('推送离线消息成功');
+                Log::info('推送离线消息成功:'.$event['channel']);
                 Cache::delete($event['channel'] . "-winner_prize");
             }
 
