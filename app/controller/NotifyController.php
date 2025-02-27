@@ -107,7 +107,6 @@ class NotifyController extends BaseController
 
             switch ($attach) {
                 case 'box':
-
                     $order = BoxOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
@@ -141,8 +140,8 @@ class NotifyController extends BaseController
                     ]); #创建抽奖记录
                     $winnerPrize = ['gt_n' => 0, 'list' => []];
                     for ($i = 0; $i < $order->times; $i++) {
-                        //每次循环都刷新盲盒数据
-                        $order->box->refresh();
+                        //每次循环都刷新盲盒
+                        $order->refresh();
 
                         // 从数据库中获取奖品列表
                         $prizes = BoxPrize::where(['box_id' => $order->box_id])

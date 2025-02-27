@@ -188,7 +188,10 @@ class UserController extends BaseController
     function getMoneyLog(Request $request)
     {
         $month = $request->post('month');
-        list($year, $month) = explode('-', $month);
+        $date = Carbon::parse($month);
+        // 提取年份和月份
+        $year = $date->year;
+        $month = $date->month;
         $rows = UsersMoneyLog::where(['user_id' => $request->uid])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)

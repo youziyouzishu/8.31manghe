@@ -18,6 +18,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property-read \plugin\admin\app\model\Room|null $room
  * @property-read \plugin\admin\app\model\RoomPrize|null $roomPrize
+ * @property-read \plugin\admin\app\model\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RoomWinprize newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RoomWinprize newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RoomWinprize query()
@@ -55,6 +56,11 @@ class RoomWinprize extends Base
     function roomPrize()
     {
         return $this->belongsTo(RoomPrize::class,'room_prize_id');
+    }
+
+    function user()
+    {
+        return $this->belongsTo(User::class,'user_id');
     }
 
 

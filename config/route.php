@@ -120,8 +120,9 @@ Route::group('/room', function () {
     Route::post('/list', [\app\controller\RoomController::class, 'list']);
     Route::post('/roomDetail', [\app\controller\RoomController::class, 'roomDetail']);
     Route::post('/roomUsers', [\app\controller\RoomController::class, 'roomUsers']);
+    Route::post('/getWinerList', [\app\controller\RoomController::class, 'getWinerList']);
     Route::post('/joinRoom', [\app\controller\RoomController::class, 'joinRoom']);
-    Route::post('/winList', [\app\controller\RoomController::class, 'winList']);
+    Route::post('/getMyWinList', [\app\controller\RoomController::class, 'getMyWinList']);
     Route::post('/createList', [\app\controller\RoomController::class, 'createList']);
     Route::post('/cancel', [\app\controller\RoomController::class, 'cancel']);
     Route::post('/edit', [\app\controller\RoomController::class, 'edit']);

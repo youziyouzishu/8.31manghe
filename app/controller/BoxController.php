@@ -135,7 +135,7 @@ class BoxController extends BaseController
             $prizes = BoxPrize::where(['level_id' => $level_id, 'grade' => $grade])->get();
             $prizeData[] = [
                 'name' => $grade,
-                'chance' => round($prizes->sum('chance'), 1),
+                'chance' => round($prizes->sum('chance'), 3),
                 'boxPrize' => $prizes,
             ];
         });
@@ -258,7 +258,11 @@ class BoxController extends BaseController
 
                     $winnerPrize = ['gt_n' => 0, 'list' => []];
                     $user = User::find($request->uid);
+
+
                     for ($i = 0; $i < $times; $i++) {
+                        #每次抽奖刷新盲盒数据
+                        $level->refresh();
                         //开始抽奖
                         $prizes = BoxPrize::where(['level_id' => $level_id])
                             ->when($endLevel->id == $level_id, function ($query) use ($level,$user) {

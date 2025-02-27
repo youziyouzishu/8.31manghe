@@ -17,6 +17,7 @@ use plugin\admin\app\model\Base;
  * @property string $password 密码
  * @property int $status 房间状态:1=进行中,2=未开始,3=已结束
  * @property int $num 最大参与人数
+ * @property int $min 最低流水
  * @property \Illuminate\Support\Carbon|null $start_at 开始时间
  * @property \Illuminate\Support\Carbon|null $end_at 结束时间
  * @property \Illuminate\Support\Carbon|null $created_at 创建时间
@@ -25,6 +26,7 @@ use plugin\admin\app\model\Base;
  * @property-read mixed $status_text
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomPrize> $roomPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomUsers> $roomUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\RoomWinprize> $winPrize
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\User> $roomUserUser
  * @property-read \plugin\admin\app\model\User|null $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
@@ -52,7 +54,7 @@ class Room extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['name','content','type','password','status','num','user_id','start_at','end_at'];
+    protected $fillable = ['name','content','type','password','status','num','user_id','start_at','end_at','min'];
 
 
     /**
@@ -84,6 +86,11 @@ class Room extends Base
     function roomPrize()
     {
         return $this->hasMany(RoomPrize::class);
+    }
+
+    function winPrize()
+    {
+        return $this->hasMany(RoomWinprize::class,'room_id','id');
     }
 
 

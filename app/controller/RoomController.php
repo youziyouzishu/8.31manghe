@@ -13,6 +13,7 @@ use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersPrize;
 use support\Db;
+use support\Log;
 use support\Request;
 use Webman\RedisQueue\Client;
 
@@ -22,7 +23,8 @@ class RoomController extends BaseController
     {
         $name = $request->post('name');
         $content = $request->post('content');
-        $type = $request->post('type');
+        $type = $request->post('type');#房间类型:1=密码,2=流水
+        $min = $request->post('min');
         $password = $request->post('password');
         $start_at = $request->post('start_at');
         $end_at = $request->post('end_at');
@@ -31,11 +33,15 @@ class RoomController extends BaseController
         if (empty($prizes)) {
             return $this->fail('奖品不能为空');
         }
+        if ($type == 2 && (empty($min) || $min < 0)) {
+            return $this->fail('流水不能小于0');
+        }
         $start_time = strtotime($start_at);
         $end_time = strtotime($end_at);
         if ($start_time >= $end_time) {
             return $this->fail('开始时间不能大于结束时间');
         }
+
 
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
@@ -58,12 +64,15 @@ class RoomController extends BaseController
                     throw new \Exception('奖品库存不足');
                 }
                 $total_price += $prize['num'] * $res->price;
-                if ($user->kol == 1 && $total_price >= 300){
+                if ($user->kol == 1 && $total_price >= 300) {
                     throw new \Exception('价值不能超过300');
                 }
+                Log::info("Decrementing num by {$prize['num']} for user_prize_id: {$res->id}");
                 $res->decrement('num', $prize['num']);
                 if ($res->num <= 0) {
+                    Log::info("Deleting user_prize_id: {$res->id}");
                     $res->delete();
+                    Log::info("User_prize_id: {$res->id} still has {$res->num} items left");
                 }
                 $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price, 'grade' => $res->grade, 'total' => $prize['num']];
             }
@@ -77,13 +86,17 @@ class RoomController extends BaseController
                 'start_at' => $start_at,
                 'end_at' => $end_at,
                 'num' => $num,
+                'min' => $min ?? 0,
             ]);
             // 批量创建关联模型
             $room->roomPrize()->createMany($roomPrizesData);
             // 提交事务
             Db::connection('plugin.admin.mysql')->commit();
-        }catch (\Throwable $e){
+            Log::info('Transaction committed successfully');
+        } catch (\Throwable $e) {
             Db::connection('plugin.admin.mysql')->rollBack();
+            Log::error('创建房间失败');
+            Log::error($e->getMessage());
             return $this->fail($e->getMessage());
         }
         //加入队列倒计时开始
@@ -101,6 +114,7 @@ class RoomController extends BaseController
             'user',
             'boxPrizes'
         ])
+            ->withCount('boxPrizes')
             ->where('status', $status)
             ->paginate()
             ->items();
@@ -142,7 +156,13 @@ class RoomController extends BaseController
             ->withCount('roomUser')
             ->find($room_id);
         return $this->success('成功', $room);
+    }
 
+    function getWinerList(Request $request)
+    {
+        $room_id = $request->post('room_id');
+        $rows = RoomWinprize::with(['boxPrize', 'user'])->where('room_id', $room_id)->paginate()->items();
+        return $this->success('成功', $rows);
     }
 
     function joinRoom(Request $request)
@@ -153,10 +173,8 @@ class RoomController extends BaseController
         if ($rooms->type == 1 && $rooms->password != $password) {
             return $this->fail('密码错误');
         }
-        // 获取本周的开始时间和结束时间
-        $startDate = Carbon::now()->startOfWeek(); // 默认一周从周一开始
-        $endDate = Carbon::now()->endOfWeek(); // 默认一周到周日结束
-        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->uid])->whereBetween('created_at', [$startDate, $endDate])->sum('amount') < 50) {
+
+        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->uid])->whereBetween('created_at', [$rooms->start_at, $rooms->end_at])->sum('amount') < $rooms->min) {
             return $this->fail('流水不足');
         }
         if (RoomUsers::where(['room_id' => $room_id, 'user_id' => $request->uid])->exists()) {
@@ -172,7 +190,8 @@ class RoomController extends BaseController
         return $this->success();
     }
 
-    function winList(Request $request)
+
+    function getMyWinList(Request $request)
     {
         $winList = RoomWinprize::with(['room', 'boxPrize'])
             ->where(['user_id' => $request->uid])

@@ -42,7 +42,7 @@ class UsersPrize extends Pivot
      * @var string
      */
     protected $table = 'wa_users_prize';
-
+    protected $connection = 'plugin.admin.mysql';
     /**
      * The primary key associated with the table.
      *
@@ -51,6 +51,8 @@ class UsersPrize extends Pivot
     protected $primaryKey = 'id';
 
     protected $fillable = ['id', 'user_id', 'box_prize_id', 'safe', 'mark' , 'price','num','grade'];
+
+
 
     /**
      * 格式化日期
