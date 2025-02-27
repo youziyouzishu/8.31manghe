@@ -86,7 +86,7 @@ class RoomController extends BaseController
                 'start_at' => $start_at,
                 'end_at' => $end_at,
                 'num' => $num,
-                'min' => $min ?? 0,
+                'min' => !empty($min) ? $min : 0,
             ]);
             // 批量创建关联模型
             $room->roomPrize()->createMany($roomPrizesData);

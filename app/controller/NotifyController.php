@@ -176,12 +176,13 @@ class NotifyController extends BaseController
                         $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
-                        //达人拥有额外的中奖率
-                        if ($order->user->kol == 1) {
-                            $currentChance += $order->user->chance;
-                        }
+                        // 用户可能单独增加额外的概率
+                        $currentChance += $order->user->chance;
+                        Log::info('用户额外概率：'.$order->user->chance);
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
+                            Log::info('随机概率：'.$randomNumber.'------'.'当前概率：'.$currentChance);
+                            Log::info('奖品ID：'.$prize->id);
                             if ($randomNumber < $currentChance) {
                                 $winnerPrize['list'][] = $prize;
                                 if ($prize->grade == 5) {
@@ -199,7 +200,6 @@ class NotifyController extends BaseController
                                 break;
                             }
                         }
-
                     }
 
                     $online = Cache::has("private-user-{$order->user_id}");

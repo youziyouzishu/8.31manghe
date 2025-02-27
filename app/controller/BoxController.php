@@ -288,9 +288,9 @@ class BoxController extends BaseController
                         // 累加概率，确定中奖奖品
                         $currentChance = 0.0;
                         //达人拥有额外的中奖率
-                        if ($user->kol == 1) {
-                            $currentChance += $user->chance;
-                        }
+
+                        $currentChance += $user->chance;
+
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
                             if ($randomNumber < $currentChance) {

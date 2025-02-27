@@ -138,6 +138,10 @@
     <button class="pear-btn pear-btn-success pear-btn-md" lay-event="importe" id="importe" permission="app.admin.user.importe">
         <i class="layui-icon layui-icon-add"></i>批量增加余额
     </button>
+
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editChance" permission="app.admin.user.editChance">
+        <i class="layui-icon layui-icon-senior"></i>修改中奖率
+    </button>
 </script>
 
 <!-- 表格行工具栏 -->
@@ -165,6 +169,7 @@
     const DELETE_API = "/app/admin/user/delete";
     const INSERT_URL = "/app/admin/user/insert";
     const UPDATE_URL = "/app/admin/user/update";
+    const CHANCE_API = "/app/admin/user/chance";
 
     // 字段 性别 sex
     layui.use(["jquery", "xmSelect", "popup"], function () {
@@ -624,6 +629,8 @@
                 batchRemove(obj);
             } else if (obj.event === "importe") {
 
+            } else if (obj.event === "editChance") {
+                editChance(obj);
             }
         });
 
@@ -748,6 +755,37 @@
                 return false;
             }
             doRemove(checkIds.split(","));
+        }
+
+        let editChance = function(obj) {
+            let checkIds = common.checkField(obj, PRIMARY_KEY);
+            if (checkIds === "") {
+                layui.popup.warning("未选中数据");
+                return false;
+            }
+            doChance(checkIds.split(","));
+        }
+
+        let doChance = function (ids) {
+            let data = {};
+            data[PRIMARY_KEY] = ids;
+            layer.prompt({title: '中奖率', formType: 0}, function(value, index, elem){
+                if(value === '') return elem.focus();
+                data.chance = value;
+                $.ajax({
+                    url: CHANCE_API,
+                    data: data,
+                    dataType: "json",
+                    type: "post",
+                    success: function(res) {
+                        layer.close(index);
+                        if (res.code) {
+                            return layui.popup.failure(res.msg);
+                        }
+                        return layui.popup.success("操作成功", refreshTable);
+                    }
+                })
+            });
         }
 
         // 执行删除

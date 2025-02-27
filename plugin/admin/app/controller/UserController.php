@@ -389,4 +389,27 @@ class UserController extends Crud
     }
 
 
+    /**
+     * 修改中奖率
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function chance(Request $request): Response
+    {
+        $ids = $request->post('id');
+        $chance = $request->post('chance');
+        $data = [];
+        if (!empty($chance)) {
+            if ($chance < 0 || $chance > 100){
+                return $this->fail('中奖率必须大于0且小于100');
+            }
+            $data['chance'] = $chance;
+        }
+
+        $this->model->whereIn('id', $ids)->update($data);
+        return $this->json(0);
+    }
+
+
 }

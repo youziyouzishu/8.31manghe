@@ -70,7 +70,6 @@ class UserController extends BaseController
                 'last_ip' => $request->getRealIp(),
                 'invitecode' => $inviteCode
             ];
-            dump($parent);
             if ($parent) {
                 $userData['parent_id'] = $parent->id;
             }
