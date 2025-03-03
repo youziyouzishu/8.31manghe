@@ -44,7 +44,7 @@ class UsersDrawLog extends Base
 
     function prizeLog()
     {
-        return $this->hasMany(UsersPrizeLog::class, 'draw_id', 'id');
+        return $this->hasMany(UsersPrizeLog::class, 'draw_id', 'id')->where('type',0);
     }
 
     function box()

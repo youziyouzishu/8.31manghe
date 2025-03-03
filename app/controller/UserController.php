@@ -251,7 +251,9 @@ class UserController extends BaseController
         // 提取年份和月份
         $year = $date->year;
         $month = $date->month;
-        $rows = UsersGiveLog::with(['giveLog','toUser'])
+        $rows = UsersGiveLog::with(['giveLog'=>function ($query) {
+            $query->with('boxPrize');
+        },'toUser'])
             ->withSum('giveLog as total_price',DB::raw('num * price'))
             ->where(['user_id' => $request->uid])
             ->whereYear('created_at', $year)
@@ -272,7 +274,9 @@ class UserController extends BaseController
         // 提取年份和月份
         $year = $date->year;
         $month = $date->month;
-        $rows = UsersGiveLog::with(['receiveLog','user'])
+        $rows = UsersGiveLog::with(['receiveLog'=>function ($query) {
+            $query->with('boxPrize');
+        },'user'])
             ->withSum('receiveLog as total_price',DB::raw('num * price'))
             ->where(['to_user_id' => $request->uid])
             ->whereYear('created_at', $year)

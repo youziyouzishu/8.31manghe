@@ -51,11 +51,15 @@ class PrizeController extends BaseController
 
     function give(Request $request)
     {
+        Log::info('1111111111111111');
         $prizes = $request->post('prizes');
         $to_user_id = $request->post('to_user_id');
         $to_user = User::find($to_user_id);
         if (!$to_user) {
             return $this->fail('转增对象不存在');
+        }
+        if ($to_user->id == $request->uid) {
+            return $this->fail('不能转赠给自己');
         }
         $user = User::find($request->uid);
         if ($user->kol == 1) {

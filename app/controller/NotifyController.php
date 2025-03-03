@@ -208,11 +208,7 @@ class NotifyController extends BaseController
                             }
                         }
                     }
-
-                    $online = Cache::has("private-user-{$order->user_id}");
-                    if (!$online) {
-                        Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
-                    } else {
+                    if ($paytype == 'balance'){
                         $api = new Api(
                             'http://127.0.0.1:3232',
                             config('plugin.webman.push.app.app_key'),
@@ -223,7 +219,24 @@ class NotifyController extends BaseController
                             'winner_prize' => $winnerPrize
                         ]);
                         Log::info("推送消息成功:private-user-{$order->user_id}-winner_prize");
+                    }else{
+                        $online = Cache::has("private-user-{$order->user_id}");
+                        if (!$online) {
+                            Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
+                        } else {
+                            $api = new Api(
+                                'http://127.0.0.1:3232',
+                                config('plugin.webman.push.app.app_key'),
+                                config('plugin.webman.push.app.app_secret')
+                            );
+                            // 给客户端推送私有 prize_draw 事件的消息
+                            $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                                'winner_prize' => $winnerPrize
+                            ]);
+                            Log::info("推送消息成功:private-user-{$order->user_id}-winner_prize");
+                        }
                     }
+
 
 
                     foreach ($winnerPrize['list'] as $item) {
@@ -363,11 +376,7 @@ class NotifyController extends BaseController
                         }
 
                     }
-
-                    $online = Cache::has("private-user-{$order->user_id}");
-                    if (!$online) {
-                        Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
-                    } else {
+                    if ($paytype == 'balance'){
                         // 初始化API客户端
                         $api = new Api(
                             'http://127.0.0.1:3232',
@@ -379,7 +388,27 @@ class NotifyController extends BaseController
                         $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
                             'winner_prize' => $winnerPrize
                         ]);
+                    }else{
+                        $online = Cache::has("private-user-{$order->user_id}");
+                        if (!$online) {
+                            Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
+                        } else {
+                            // 初始化API客户端
+                            $api = new Api(
+                                'http://127.0.0.1:3232',
+                                config('plugin.webman.push.app.app_key'),
+                                config('plugin.webman.push.app.app_secret')
+                            );
+
+                            // 给客户端推送私有 prize_draw 事件的消息
+                            $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                                'winner_prize' => $winnerPrize
+                            ]);
+                        }
                     }
+
+
+
 
 
                     $data = [];

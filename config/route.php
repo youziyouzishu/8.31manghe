@@ -151,7 +151,6 @@ Route::fallback(function (Request $request) {
         }
 });
 
-Route::disableDefaultRoute();
 
 
 
