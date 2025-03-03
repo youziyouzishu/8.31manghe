@@ -95,8 +95,6 @@ class NotifyController extends BaseController
                 $ret = $request->all();
                 $data = json_decode($ret['resp_data']);
                 if ($data->trans_stat == 'F') {
-                    Log::error('回调支付失败');
-                    Log::error($ret['resp_data']);
                     throw new \Exception($data->bank_message);
                 }
                 $attach = $data->remark;
@@ -107,6 +105,7 @@ class NotifyController extends BaseController
 
             switch ($attach) {
                 case 'box':
+                    Log::info('抽奖了');
                     $order = BoxOrder::where(['ordersn' => $out_trade_no, 'status' => 1])->first();
                     if (!$order) {
                         throw new \Exception('订单不存在');
@@ -155,6 +154,7 @@ class NotifyController extends BaseController
                                     $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
                                 }
                             })
+                            ->inRandomOrder()
                             ->get();
 
                         // 如果没有可用奖品，返回提示
@@ -170,6 +170,7 @@ class NotifyController extends BaseController
                                 }
                             }
                         }
+
                         // 计算总概率
                         $totalChance = $prizes->sum('chance');
                         // 生成一个介于 0 和总概率之间的随机数
@@ -178,12 +179,18 @@ class NotifyController extends BaseController
                         $currentChance = 0.0;
                         // 用户可能单独增加额外的概率
                         $currentChance += $order->user->chance;
-                        Log::info('用户额外概率：'.$order->user->chance);
+//                        Log::info('第'.$i+1 .'次抽奖');
+//                        Log::info('总概率：'.$totalChance);
+//                        Log::info('用户额外概率：'.$order->user->chance);
+//                        Log::info('随机概率：'.$randomNumber);
+                        // 对奖品列表进行随机排序
+                        $prizes = $prizes->shuffle();
+
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
-                            Log::info('随机概率：'.$randomNumber.'------'.'当前概率：'.$currentChance);
-                            Log::info('奖品ID：'.$prize->id);
-                            if ($randomNumber < $currentChance) {
+//                            Log::info('当前概率：'.$currentChance.'-------'.'奖品概率：'.$prize->chance.'-------'.'奖品等级：'.$prize->grade_text);
+                            if ($randomNumber <= $currentChance) {
+//                                Log::info('中奖了=====奖品ID：'.$prize->id);
                                 $winnerPrize['list'][] = $prize;
                                 if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
@@ -422,6 +429,7 @@ class NotifyController extends BaseController
 
         } catch (\Throwable $e) {
             Log::error('支付回调错误');
+            Log::error(json_encode($request->all()));
             Log::error($e->getMessage());
             throw new \Exception($e->getMessage());
         }

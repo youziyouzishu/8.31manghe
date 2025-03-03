@@ -9,9 +9,11 @@ use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
+use plugin\admin\app\model\UsersGiveLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
+use support\Log;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
 
@@ -50,7 +52,6 @@ class PrizeController extends BaseController
     function give(Request $request)
     {
         $prizes = $request->post('prizes');
-
         $to_user_id = $request->post('to_user_id');
         $to_user = User::find($to_user_id);
         if (!$to_user) {
@@ -64,60 +65,77 @@ class PrizeController extends BaseController
         if ($xiaofei < 50) {
             return $this->fail('转赠失败');
         }
+        // 开启事务
+        Db::connection('plugin.admin.mysql')->beginTransaction();
+        try {
+            $give = UsersGiveLog::create([
+                'user_id'=>$request->uid,
+                'to_user_id'=>$to_user_id,
+            ]);
+            foreach ($prizes as $prize) {
+                $res = UsersPrize::find($prize['id']);
+                if ($res->safe == 1) {
+                    return $this->fail('奖品已锁定，不能赠送');
+                }
+                if ($prize['num'] <= 0) {
+                    return $this->fail('请输入正确的数量');
+                }
+                if ($res->num < $prize['num']) {
+                    return $this->fail('奖品数量不足');
+                }
+                if ($touserprize = UsersPrize::where(['user_id' => $to_user_id, 'box_prize_id' => $res->box_prize_id, 'price' => $res->price])->first()) {
+                    $touserprize->increment('num', $prize['num']);
+                } else {
+                    UsersPrize::create([
+                        'user_id' => $to_user_id,
+                        'box_prize_id' => $res->box_prize_id,
+                        'price' => $res->price,
+                        'num' => $prize['num'],
+                        'mark' => $user->nickname . '赠送',
+                        'grade' => $res->grade,
+                    ]);
+                }
 
-        foreach ($prizes as $prize) {
-            $res = UsersPrize::find($prize['id']);
-            if ($res->safe == 1) {
-                return $this->fail('奖品已锁定，不能赠送');
-            }
-            if ($prize['num'] <= 0) {
-                return $this->fail('请输入正确的数量');
-            }
-            if ($res->num < $prize['num']) {
-                return $this->fail('奖品数量不足');
-            }
-            if ($touserprize = UsersPrize::where(['user_id' => $to_user_id, 'box_prize_id' => $res->box_prize_id, 'price' => $res->price])->first()) {
-                $touserprize->increment('num', $prize['num']);
-            } else {
-                UsersPrize::create([
+                //收到
+                UsersPrizeLog::create([
+                    'type' => 2,
+                    'source_user_id' => $request->uid,
+                    'draw_id'=>$give->id,
                     'user_id' => $to_user_id,
                     'box_prize_id' => $res->box_prize_id,
+                    'mark' => $user->nickname . ' ' . $user->id . ' 赠送',
                     'price' => $res->price,
-                    'num' => $prize['num'],
-                    'mark' => $user->nickname . '赠送',
-                    'grade' => $res->grade,
+                    'grade' => $res->boxPrize->grade,
+                    'num' => $prize['num']
                 ]);
+
+                //赠送
+                UsersPrizeLog::create([
+                    'type' => 1,
+                    'source_user_id' => $to_user_id,
+                    'draw_id'=>$give->id,
+                    'user_id' => $request->uid,
+                    'box_prize_id' => $res->box_prize_id,
+                    'mark' => '赠送给了'.$to_user->nickname.' '.$to_user->id,
+                    'price' => $res->price,
+                    'grade' => $res->boxPrize->grade,
+                    'num' => $prize['num']
+                ]);
+
+                $res->decrement('num', $prize['num']);
+                if ($res->num <= 0) {
+                    $res->delete();
+                }
             }
 
-            //记录
-            //收到
-            UsersPrizeLog::create([
-                'type' => 2,
-                'source_user_id' => $request->uid,
-                'user_id' => $to_user_id,
-                'box_prize_id' => $res->box_prize_id,
-                'mark' => $user->nickname . ' ' . $user->id . ' 赠送',
-                'price' => $res->price,
-                'grade' => $res->boxPrize->grade,
-                'num' => $prize['num']
-            ]);
-            //赠送
-            UsersPrizeLog::create([
-                'type' => 1,
-                'source_user_id' => $to_user_id,
-                'user_id' => $request->uid,
-                'box_prize_id' => $res->box_prize_id,
-                'mark' => '赠送给了'.$to_user->nickname.' '.$to_user->id,
-                'price' => $res->price,
-                'grade' => $res->boxPrize->grade,
-                'num' => $prize['num']
-            ]);
-
-            $res->decrement('num', $prize['num']);
-            if ($res->num <= 0) {
-                $res->delete();
-            }
+            Db::connection('plugin.admin.mysql')->commit();
+        }catch ( \Throwable $e){
+            Db::connection('plugin.admin.mysql')->rollBack();
+            Log::error('赠送失败');
+            Log::error($e->getMessage());
+            return $this->fail('赠送失败');
         }
+
         return $this->success();
     }
 

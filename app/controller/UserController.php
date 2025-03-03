@@ -13,10 +13,12 @@ use plugin\admin\app\model\GoodsOrder;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersCoupon;
 use plugin\admin\app\model\UsersDrawLog;
+use plugin\admin\app\model\UsersGiveLog;
 use plugin\admin\app\model\UsersLayer;
 use plugin\admin\app\model\UsersMoneyLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
+use support\Db;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
 
@@ -49,7 +51,6 @@ class UserController extends BaseController
             }
             $user = User::where('mobile', $mobile)->first();
         }
-        dump($parentInviteCode);
         if (!empty($parentInviteCode)) {
             $parent = User::where('invitecode', $parentInviteCode)->first();
         } else {
@@ -232,6 +233,48 @@ class UserController extends BaseController
         $month = $date->month;
         $rows = UsersPrizeLog::with(['boxPrize', 'sourceUser'])
             ->where(['user_id' => $request->uid, 'type' => 2])
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->orderByDesc('id')
+            ->paginate()
+            ->items();
+
+        return $this->success('成功', $rows);
+    }
+
+
+    #赠送记录
+    function giveLogV2(Request $request)
+    {
+        $month = $request->post('month', date('Y-m'));
+        $date = Carbon::parse($month);
+        // 提取年份和月份
+        $year = $date->year;
+        $month = $date->month;
+        $rows = UsersGiveLog::with(['giveLog','toUser'])
+            ->withSum('giveLog as total_price',DB::raw('num * price'))
+            ->where(['user_id' => $request->uid])
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->orderByDesc('id')
+            ->paginate()
+            ->items();
+
+        return $this->success('成功', $rows);
+    }
+
+
+    #领取记录
+    function receiveLogV2(Request $request)
+    {
+        $month = $request->post('month', date('Y-m'));
+        $date = Carbon::parse($month);
+        // 提取年份和月份
+        $year = $date->year;
+        $month = $date->month;
+        $rows = UsersGiveLog::with(['receiveLog','user'])
+            ->withSum('receiveLog as total_price',DB::raw('num * price'))
+            ->where(['to_user_id' => $request->uid])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')

@@ -12,6 +12,7 @@ use plugin\admin\app\model\RoomWinprize;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersPrize;
+use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
 use support\Log;
 use support\Request;
@@ -67,13 +68,20 @@ class RoomController extends BaseController
                 if ($user->kol == 1 && $total_price >= 300) {
                     throw new \Exception('价值不能超过300');
                 }
-                Log::info("Decrementing num by {$prize['num']} for user_prize_id: {$res->id}");
                 $res->decrement('num', $prize['num']);
                 if ($res->num <= 0) {
-                    Log::info("Deleting user_prize_id: {$res->id}");
                     $res->delete();
-                    Log::info("User_prize_id: {$res->id} still has {$res->num} items left");
                 }
+                UsersPrizeLog::create([
+                    'type' => 11,
+                    'user_id' => $request->uid,
+                    'box_prize_id' => $res->box_prize_id,
+                    'mark' => '创建房间',
+                    'price' => $res->price,
+                    'grade' => $res->grade,
+                    'num' => $prize['num']
+                ]);
+
                 $roomPrizesData[] = ['user_prize_id' => $res->id, 'box_prize_id' => $res->box_prize_id, 'num' => $prize['num'], 'price' => $res->price, 'grade' => $res->grade, 'total' => $prize['num']];
             }
 
@@ -92,12 +100,11 @@ class RoomController extends BaseController
             $room->roomPrize()->createMany($roomPrizesData);
             // 提交事务
             Db::connection('plugin.admin.mysql')->commit();
-            Log::info('Transaction committed successfully');
         } catch (\Throwable $e) {
             Db::connection('plugin.admin.mysql')->rollBack();
             Log::error('创建房间失败');
             Log::error($e->getMessage());
-            return $this->fail($e->getMessage());
+            return $this->fail('创建房间失败');
         }
         //加入队列倒计时开始
         // 队列名

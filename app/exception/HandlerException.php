@@ -3,6 +3,7 @@
 namespace app\exception;
 
 use support\exception\BusinessException;
+use support\Log;
 use Tinywan\Jwt\Exception\JwtRefreshTokenExpiredException;
 use Tinywan\Jwt\Exception\JwtTokenException;
 use Tinywan\Jwt\Exception\JwtTokenExpiredException;
@@ -27,6 +28,7 @@ class HandlerException extends ExceptionHandler
 
         if ($exception instanceof JwtTokenException || $exception instanceof JwtRefreshTokenExpiredException || $exception instanceof JwtTokenExpiredException) {
             #token无效或刷新失败  重新登录
+            Log::info(json_encode($request->all()));
             return json([
                 'code' => 400,
                 'msg' => $exception->getMessage()

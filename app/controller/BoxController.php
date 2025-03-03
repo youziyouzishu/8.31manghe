@@ -290,10 +290,11 @@ class BoxController extends BaseController
                         //达人拥有额外的中奖率
 
                         $currentChance += $user->chance;
+                        $prizes = $prizes->shuffle();
 
                         foreach ($prizes as $prize) {
                             $currentChance += $prize->chance;
-                            if ($randomNumber < $currentChance) {
+                            if ($randomNumber <= $currentChance) {
                                 $winnerPrize['list'][] = $prize;
                                 if ($prize->grade == 5) {
                                     $winnerPrize['gt_n'] = 1;
