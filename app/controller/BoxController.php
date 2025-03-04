@@ -85,28 +85,28 @@ class BoxController extends BaseController
             return $this->fail('不属于闯关盲盒');
         }
 
-        $ulevel = UsersLevel::where(['user_id' => $request->uid, 'box_id' => $box_id])->first();
+        $ulevel = UsersLevel::where(['user_id' => $request->user_id, 'box_id' => $box_id])->first();
         if (empty($ulevel)) {
             //第一次进入当前闯关盲盒 初始化用户关卡数据
             $firstLevel = BoxLevel::getFirstLevel($box_id);
             UsersLevel::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'box_id' => $box_id,
                 'level_id' => $firstLevel->id
             ]);
             UsersLevelLog::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'box_id' => $box_id,
                 'level_id' => $firstLevel->id
             ]);
         }
         $level = $box->level()->orderBy('name')->get()->each(function (BoxLevel $item) use ($request) {
-            if (UsersLevelLog::where(['level_id' => $item->id, 'user_id' => $request->uid])->exists()) {
+            if (UsersLevelLog::where(['level_id' => $item->id, 'user_id' => $request->user_id])->exists()) {
                 $item->pass = true;
             } else {
                 $item->pass = false;
             }
-            $item->ticket_count = UsersPrize::getUserPresentLevelTicketCount($item->box_id, $item->name, $request->uid);
+            $item->ticket_count = UsersPrize::getUserPresentLevelTicketCount($item->box_id, $item->name, $request->user_id);
         });
         return $this->success('成功', $level);
     }
@@ -143,14 +143,14 @@ class BoxController extends BaseController
         // 将 boxPrize 数据嵌套在 level 对象中
         $level->grade = $prizeData;
         $level->hasparent = $parentlevel;
-        $ticket_count = UsersPrize::getUserPresentLevelTicketCount($level->box_id, $level->name, $request->uid);
-        if ($ticket_count > 0 && !UsersLevelLog::existsUsersLevelLog($level_id, $request->uid)) {
+        $ticket_count = UsersPrize::getUserPresentLevelTicketCount($level->box_id, $level->name, $request->user_id);
+        if ($ticket_count > 0 && !UsersLevelLog::existsUsersLevelLog($level_id, $request->user_id)) {
             //如果查看的关卡是未通关并且有通关票  则进入这一关
-            $usersLevel = UsersLevel::where(['user_id' => $request->uid, 'box_id' => $level->box_id])->first();
+            $usersLevel = UsersLevel::where(['user_id' => $request->user_id, 'box_id' => $level->box_id])->first();
             $usersLevel->level_id = $level_id;
             $usersLevel->save();
             UsersLevelLog::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'box_id' => $level->box_id,
                 'level_id' => $level_id
             ]);
@@ -173,7 +173,7 @@ class BoxController extends BaseController
 
         $amount = $box->price * $times; #需要支付金额
 
-        $rows = UsersCoupon::with(['coupon'])->where(['user_id' => $request->uid, 'status' => 1])
+        $rows = UsersCoupon::with(['coupon'])->where(['user_id' => $request->user_id, 'status' => 1])
             ->whereDoesntHave('coupon', function ($query) use ($amount) {
                 $query->where([
                     ['type', '=', 2],
@@ -245,7 +245,7 @@ class BoxController extends BaseController
                     $getLastLevel = BoxLevel::getLastLevel($box_id, $level->name);
 
                     $lastPrizes = $getLastLevel->boxPrize()->where(['grade' => 1])->pluck('id');//获取上一关通关券
-                    $lastTicket = UsersPrize::where(['user_id' => $request->uid])->whereIn('box_prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
+                    $lastTicket = UsersPrize::where(['user_id' => $request->user_id])->whereIn('box_prize_id', $lastPrizes)->get();//获取用户拥有的上一关通关券
 
                     $lastTicketCount = $lastTicket->sum('num');
 
@@ -253,11 +253,11 @@ class BoxController extends BaseController
                         return $this->fail('通关券不足');
                     }
                     //记录
-                    $draw = UsersDrawLog::create(['user_id' => $request->uid, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
+                    $draw = UsersDrawLog::create(['user_id' => $request->user_id, 'times' => $times, 'box_id' => $box_id, 'level_id' => $level_id, 'ordersn' => '']); #创建抽奖记录
 
 
                     $winnerPrize = ['gt_n' => 0, 'list' => []];
-                    $user = User::find($request->uid);
+                    $user = User::find($request->user_id);
 
 
                     for ($i = 0; $i < $times; $i++) {
@@ -319,9 +319,9 @@ class BoxController extends BaseController
                             }
                         }
                     }
-                    $online = Cache::has("private-user-{$request->uid}");
+                    $online = Cache::has("private-user-{$request->user_id}");
                     if (!$online) {
-                        Cache::set("private-user-{$request->uid}-winner_prize", $winnerPrize);
+                        Cache::set("private-user-{$request->user_id}-winner_prize", $winnerPrize);
                     } else {
                         // 初始化API客户端
                         $api = new Api(
@@ -330,7 +330,7 @@ class BoxController extends BaseController
                             config('plugin.webman.push.app.app_secret')
                         );
                         // 给客户端推送私有 prize_draw 事件的消息
-                        $api->trigger("private-user-{$request->uid}", 'prize_draw', [
+                        $api->trigger("private-user-{$request->user_id}", 'prize_draw', [
                             'winner_prize' => $winnerPrize
                         ]);
                     }
@@ -338,11 +338,11 @@ class BoxController extends BaseController
 
                     foreach ($winnerPrize['list'] as $item) {
                         // 发放奖品并且记录
-                        if ($userPrize = UsersPrize::where(['user_id' => $request->uid, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                        if ($userPrize = UsersPrize::where(['user_id' => $request->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
                             $userPrize->increment('num');
                         } else {
                             UsersPrize::create([
-                                'user_id' => $request->uid,
+                                'user_id' => $request->user_id,
                                 'box_prize_id' => $item->id,
                                 'price' => $item->price,
                                 'num' => 1,
@@ -352,7 +352,7 @@ class BoxController extends BaseController
                         }
                         UsersPrizeLog::create([
                             'draw_id' => $draw->id,
-                            'user_id' => $request->uid,
+                            'user_id' => $request->user_id,
                             'box_prize_id' => $item->id,
                             'mark' => '抽奖获得',
                             'price' => $item->price,
@@ -373,7 +373,7 @@ class BoxController extends BaseController
             $pay_amount = function_exists('bcsub') ? bcsub($amount, $coupon_amount, 2) : $amount - $coupon_amount;
             $ordersn = Util::ordersn();
             $orderData = [
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'box_id' => $box->id,
                 'amount' => $amount,
                 'pay_amount' => 0,
@@ -386,14 +386,14 @@ class BoxController extends BaseController
             $order = BoxOrder::create($orderData);
             //先用余额支付 余额不足再用微信支付
             $ret = [];
-            $user = User::find($request->uid);
+            $user = User::find($request->user_id);
             if ($user->money >= $pay_amount) {
                 if ($pay_amount <= 0) {
                     $pay_amount = 0;
                 }
                 $order->pay_amount = $pay_amount;
                 $order->save();
-                User::money(-$pay_amount, $request->uid, $box->name);
+                User::money(-$pay_amount, $request->user_id, $box->name);
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();

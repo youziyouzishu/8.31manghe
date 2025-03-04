@@ -37,7 +37,9 @@
     "phpoffice/phpspreadsheet": "^3.3",
     "chance-fyi/operation-log": "^3.0",
     "webman/admin": "^0.6.33",
-    "endroid/qrcode": "^6.0"
+    "endroid/qrcode": "^6.0",
+    "tinywan/exception-handler": "^1.6",
+    "tinywan/validate": "^1.0"
   },
   "autoload": {
     "psr-4": {

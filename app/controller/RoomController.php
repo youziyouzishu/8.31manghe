@@ -47,7 +47,7 @@ class RoomController extends BaseController
         if ($start_time <= time()) {
             return $this->fail('开始时间不能小于当前时间');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         // 开启事务
         Db::connection('plugin.admin.mysql')->beginTransaction();
         $roomPrizesData = [];
@@ -74,7 +74,7 @@ class RoomController extends BaseController
                 }
                 UsersPrizeLog::create([
                     'type' => 11,
-                    'user_id' => $request->uid,
+                    'user_id' => $request->user_id,
                     'box_prize_id' => $res->box_prize_id,
                     'mark' => '创建房间',
                     'price' => $res->price,
@@ -86,7 +86,7 @@ class RoomController extends BaseController
             }
 
             $room = Room::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'name' => $name,
                 'content' => $content,
                 'type' => $type,
@@ -181,10 +181,10 @@ class RoomController extends BaseController
             return $this->fail('密码错误');
         }
 
-        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->uid])->whereBetween('created_at', [$rooms->start_at, $rooms->end_at])->sum('amount') < $rooms->min) {
+        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->user_id])->whereBetween('created_at', [$rooms->start_at, $rooms->end_at])->sum('amount') < $rooms->min) {
             return $this->fail('流水不足');
         }
-        if (RoomUsers::where(['room_id' => $room_id, 'user_id' => $request->uid])->exists()) {
+        if (RoomUsers::where(['room_id' => $room_id, 'user_id' => $request->user_id])->exists()) {
             return $this->fail('不能重复参与');
         }
         if (RoomUsers::where(['room_id' => $room_id])->count() >= $rooms->num) {
@@ -192,7 +192,7 @@ class RoomController extends BaseController
         }
         RoomUsers::create([
             'room_id' => $room_id,
-            'user_id' => $request->uid,
+            'user_id' => $request->user_id,
         ]);
         return $this->success();
     }
@@ -201,7 +201,7 @@ class RoomController extends BaseController
     function getMyWinList(Request $request)
     {
         $winList = RoomWinprize::with(['room', 'boxPrize'])
-            ->where(['user_id' => $request->uid])
+            ->where(['user_id' => $request->user_id])
             ->paginate()
             ->items();
         return $this->success('成功', $winList);
@@ -209,7 +209,7 @@ class RoomController extends BaseController
 
     function createList(Request $request)
     {
-        $rooms = Room::where(['user_id' => $request->uid])
+        $rooms = Room::where(['user_id' => $request->user_id])
             ->paginate()
             ->getCollection()
             ->each(function ($room) {

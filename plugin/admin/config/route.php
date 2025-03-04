@@ -21,6 +21,6 @@ Route::any('/app/admin/account/captcha/{type}', [AccountController::class, 'capt
 
 Route::any('/app/admin/dict/get/{name}', [DictController::class, 'get']);
 
-Route::fallback(function (Request $request) {
-    return response($request->uri() . ' not found' , 404);
+Route::fallback(function () {
+    throw new \Tinywan\ExceptionHandler\Exception\RouteNotFoundException();
 }, 'admin');

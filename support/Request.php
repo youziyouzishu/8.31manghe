@@ -17,6 +17,7 @@ namespace support;
 /**
  * Class Request
  * @package support
+ * @property int $user_id 用户ID
  */
 class Request extends \Webman\Http\Request
 {

@@ -98,10 +98,10 @@ class DreamController extends BaseController
 
             $pay_amount = round($price * $times, 2);
 
-            $user = User::find($request->uid);
+            $user = User::find($request->user_id);
             $ordersn = Util::ordersn();
             $orders = DreamOrders::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'pay_amount' => $pay_amount,
                 'ordersn' => $ordersn,
                 'times' => $times,
@@ -115,7 +115,7 @@ class DreamController extends BaseController
                 $orders->save();
                 //水晶支付
                 $ret = [];
-                User::money(-$pay_amount, $request->uid, '梦想DIY抽奖');
+                User::money(-$pay_amount, $request->user_id, '梦想DIY抽奖');
                 $code = 3;
 
                 // 创建一个新的请求对象 直接调用支付
@@ -151,7 +151,7 @@ class DreamController extends BaseController
     function getUserOrders(Request $request)
     {
         $rows = DreamOrdersPrize::whereHas('orders', function ($query) use ($request) {
-            $query->where('user_id', $request->uid);
+            $query->where('user_id', $request->user_id);
         })
             ->with(['boxPrize', 'orders.user'])
             ->orderByDesc('id')

@@ -58,7 +58,7 @@ class GoodsController extends BaseController
         if (!$goods) {
             return $this->fail('商品不存在');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         $ordersn = Util::ordersn();
         $amount = $goods->boxPrize->price;
 
@@ -68,7 +68,7 @@ class GoodsController extends BaseController
         try {
 
             $goodsData = [
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'goods_id' => $goods->id,
                 'amount' => $amount,
                 'pay_amount' => 0,
@@ -84,7 +84,7 @@ class GoodsController extends BaseController
                 $order->save();
                 $ret = [];
                 //余额支付
-                User::money(-$pay_amount, $request->uid, '购买商品-'.$goods->boxPrize->name);
+                User::money(-$pay_amount, $request->user_id, '购买商品-'.$goods->boxPrize->name);
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();

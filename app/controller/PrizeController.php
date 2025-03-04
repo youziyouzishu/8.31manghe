@@ -19,7 +19,6 @@ use Tinywan\Jwt\JwtToken;
 
 class PrizeController extends BaseController
 {
-
     function dissolve(Request $request)
     {
         $prizes = $request->post('prizes');
@@ -44,28 +43,27 @@ class PrizeController extends BaseController
             if ($res->num <= 0) {
                 $res->delete();
             }
-            User::money($res->price * $prize['num'], $request->uid, '退货' . $res->boxPrize->name . '获得');
+            User::money($res->price * $prize['num'], $request->user_id, '退货' . $res->boxPrize->name . '获得');
         }
         return $this->success();
     }
 
     function give(Request $request)
     {
-        Log::info('1111111111111111');
         $prizes = $request->post('prizes');
         $to_user_id = $request->post('to_user_id');
         $to_user = User::find($to_user_id);
         if (!$to_user) {
             return $this->fail('转增对象不存在');
         }
-        if ($to_user->id == $request->uid) {
+        if ($to_user->id == $request->user_id) {
             return $this->fail('不能转赠给自己');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         if ($user->kol == 1) {
             return $this->fail('错误');
         }
-        $xiaofei = UsersDisburse::where(['user_id' => $request->uid, 'type' => 1])->sum('amount');
+        $xiaofei = UsersDisburse::where(['user_id' => $request->user_id, 'type' => 1])->sum('amount');
         if ($xiaofei < 50) {
             return $this->fail('转赠失败');
         }
@@ -73,7 +71,7 @@ class PrizeController extends BaseController
         Db::connection('plugin.admin.mysql')->beginTransaction();
         try {
             $give = UsersGiveLog::create([
-                'user_id'=>$request->uid,
+                'user_id'=>$request->user_id,
                 'to_user_id'=>$to_user_id,
             ]);
             foreach ($prizes as $prize) {
@@ -103,7 +101,7 @@ class PrizeController extends BaseController
                 //收到
                 UsersPrizeLog::create([
                     'type' => 2,
-                    'source_user_id' => $request->uid,
+                    'source_user_id' => $request->user_id,
                     'draw_id'=>$give->id,
                     'user_id' => $to_user_id,
                     'box_prize_id' => $res->box_prize_id,
@@ -118,7 +116,7 @@ class PrizeController extends BaseController
                     'type' => 1,
                     'source_user_id' => $to_user_id,
                     'draw_id'=>$give->id,
-                    'user_id' => $request->uid,
+                    'user_id' => $request->user_id,
                     'box_prize_id' => $res->box_prize_id,
                     'mark' => '赠送给了'.$to_user->nickname.' '.$to_user->id,
                     'price' => $res->price,
@@ -148,7 +146,7 @@ class PrizeController extends BaseController
         $ids = $request->post('ids');
         $safe = $request->post('safe');
         $rows = UsersPrize::whereIn('id', explode(',', $ids))
-            ->where(['user_id' => $request->uid, 'safe' => $safe == 0 ? 1 : 0])
+            ->where(['user_id' => $request->user_id, 'safe' => $safe == 0 ? 1 : 0])
             ->get()
             ->each(function (UsersPrize $item) use ($request, $safe) {
                 $item->safe = $safe;
@@ -194,7 +192,7 @@ class PrizeController extends BaseController
         if (empty($address_id)) {
             return $this->fail('请选择收货地址');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         if ($user->kol == 1) {
             return $this->fail('错误');
         }
@@ -217,7 +215,7 @@ class PrizeController extends BaseController
             $freight = 0;
         }
         $deliver = Deliver::create([
-            'user_id' => $request->uid,
+            'user_id' => $request->user_id,
             'ordersn' => $ordersn,
             'pay_amount' => $freight,
             'address_id' => $address_id,
@@ -240,13 +238,13 @@ class PrizeController extends BaseController
             $code = 3;
             $ret = [];
         } else {
-            $user = User::find($request->uid);
+            $user = User::find($request->user_id);
             if ($user->money >= $freight) {
 
                 $deliver->pay_type = 2;
                 $deliver->save();
                 $ret = [];
-                User::money(-$freight, $request->uid, '支付运费');
+                User::money(-$freight, $request->user_id, '支付运费');
                 $code = 3;
                 // 创建一个新的请求对象 直接调用支付
                 $notify = new NotifyController();

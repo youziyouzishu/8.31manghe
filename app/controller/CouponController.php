@@ -15,7 +15,7 @@ class CouponController extends BaseController
 
     function index(Request $request)
     {
-        $coupon_id = UsersCoupon::where(['user_id' => $request->uid])->pluck('coupon_id');
+        $coupon_id = UsersCoupon::where(['user_id' => $request->user_id])->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
@@ -29,7 +29,7 @@ class CouponController extends BaseController
 
     function receive(Request $request)
     {
-        $coupon_id = UsersCoupon::where(['user_id' => $request->uid])->pluck('coupon_id');
+        $coupon_id = UsersCoupon::where(['user_id' => $request->user_id])->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
             ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
@@ -39,7 +39,7 @@ class CouponController extends BaseController
         foreach ($rows as $row){
             $row->decrement('num');
             UsersCoupon::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'coupon_id' => $row->id,
             ]);
         }

@@ -113,7 +113,7 @@ class UserController extends BaseController
     function getinfo(Request $request)
     {
 
-        $row = User::find($request->uid);
+        $row = User::find($request->user_id);
         return $this->success('成功', $row);
     }
 
@@ -121,7 +121,7 @@ class UserController extends BaseController
     {
         $safe = $request->post('safe', 0);
 
-        $rows = UsersPrize::where(['user_id' => $request->uid, 'safe' => $safe])->with(['boxPrize' => function ($query) {
+        $rows = UsersPrize::where(['user_id' => $request->user_id, 'safe' => $safe])->with(['boxPrize' => function ($query) {
             $query->withTrashed();
         }])
             ->orderByDesc('price')
@@ -133,7 +133,7 @@ class UserController extends BaseController
     function deliverList(Request $request)
     {
         $status = $request->post('status', 0);
-        $rows = Deliver::where(['user_id' => $request->uid])
+        $rows = Deliver::where(['user_id' => $request->user_id])
             ->with(['boxPrize'])
             ->orderByDesc('id')
             ->when(!empty($status), function ($query) use ($status) {
@@ -157,7 +157,7 @@ class UserController extends BaseController
     function confirmReceipt(Request $request)
     {
         $deliver_id = $request->post('deliver_id');
-        $row = Deliver::where(['user_id' => $request->uid, 'id' => $deliver_id])->first();
+        $row = Deliver::where(['user_id' => $request->user_id, 'id' => $deliver_id])->first();
         if (!$row) {
             return $this->fail('数据不存在');
         }
@@ -174,14 +174,14 @@ class UserController extends BaseController
     function editAvatar(Request $request)
     {
         $avatar = $request->post('avatar');
-        User::where(['id' => $request->uid])->update(['avatar' => $avatar]);
+        User::where(['id' => $request->user_id])->update(['avatar' => $avatar]);
         return $this->success();
     }
 
     function editNickname(Request $request)
     {
         $nickname = $request->post('nickname');
-        User::where(['id' => $request->uid])->update(['nickname' => $nickname]);
+        User::where(['id' => $request->user_id])->update(['nickname' => $nickname]);
         return $this->success();
     }
 
@@ -192,7 +192,7 @@ class UserController extends BaseController
         // 提取年份和月份
         $year = $date->year;
         $month = $date->month;
-        $rows = UsersMoneyLog::where(['user_id' => $request->uid])
+        $rows = UsersMoneyLog::where(['user_id' => $request->user_id])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
@@ -214,7 +214,7 @@ class UserController extends BaseController
         $year = $date->year;
         $month = $date->month;
         $rows = UsersPrizeLog::with(['boxPrize', 'sourceUser'])
-            ->where(['user_id' => $request->uid, 'type' => 1])
+            ->where(['user_id' => $request->user_id, 'type' => 1])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
@@ -232,7 +232,7 @@ class UserController extends BaseController
         $year = $date->year;
         $month = $date->month;
         $rows = UsersPrizeLog::with(['boxPrize', 'sourceUser'])
-            ->where(['user_id' => $request->uid, 'type' => 2])
+            ->where(['user_id' => $request->user_id, 'type' => 2])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
@@ -255,7 +255,7 @@ class UserController extends BaseController
             $query->with('boxPrize');
         },'toUser'])
             ->withSum('giveLog as total_price',DB::raw('num * price'))
-            ->where(['user_id' => $request->uid])
+            ->where(['user_id' => $request->user_id])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
@@ -278,7 +278,7 @@ class UserController extends BaseController
             $query->with('boxPrize');
         },'user'])
             ->withSum('receiveLog as total_price',DB::raw('num * price'))
-            ->where(['to_user_id' => $request->uid])
+            ->where(['to_user_id' => $request->user_id])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderByDesc('id')
@@ -293,12 +293,12 @@ class UserController extends BaseController
         $type = $request->post('type');
         if ($type == 1) {
             $rows = UsersDrawLog::with(['box'])
-                ->where(['user_id' => $request->uid])
+                ->where(['user_id' => $request->user_id])
                 ->orderByDesc('id')
                 ->paginate()
                 ->items();
         } elseif ($type == 2) {
-            $rows = GoodsOrder::where(['user_id' => $request->uid, 'status' => 2])
+            $rows = GoodsOrder::where(['user_id' => $request->user_id, 'status' => 2])
                 ->orderByDesc('id')
                 ->paginate()
                 ->getCollection()
@@ -326,10 +326,10 @@ class UserController extends BaseController
             $row = UsersDrawLog::with(['box', 'prizeLog' => function ($query) {
                 $query->with(['boxPrize']);
             }, 'orders'])
-                ->where(['user_id' => $request->uid, 'id' => $id])
+                ->where(['user_id' => $request->user_id, 'id' => $id])
                 ->first();
         } elseif ($type == 2) {
-            $row = GoodsOrder::with(['goods.boxPrize'])->where(['user_id' => $request->uid, 'id' => $id])
+            $row = GoodsOrder::with(['goods.boxPrize'])->where(['user_id' => $request->user_id, 'id' => $id])
                 ->first();
         } else {
             return $this->fail('参数错误');
@@ -340,7 +340,7 @@ class UserController extends BaseController
     function couponList(Request $request)
     {
         $status = $request->post('status');# 状态:1=未使用,2=已使用,3=已过期
-        $rows = UsersCoupon::where(['user_id' => $request->uid, 'status' => $status])
+        $rows = UsersCoupon::where(['user_id' => $request->user_id, 'status' => $status])
             ->paginate()
             ->getCollection()
             ->pluck('coupon');
@@ -361,7 +361,7 @@ class UserController extends BaseController
         if (!$row) {
             return $this->fail('邀请码不存在');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         if ($row->fuli == 1) {
             return $this->fail('不能重复领取');
         }
@@ -375,7 +375,7 @@ class UserController extends BaseController
         $coupon = Coupon::where(['fuli' => 1])->get();
         foreach ($coupon as $item) {
             UsersCoupon::create([
-                'user_id' => $request->uid,
+                'user_id' => $request->user_id,
                 'coupon_id' => $item->id,
             ]);
         }
@@ -390,7 +390,7 @@ class UserController extends BaseController
         if (!$smsResult) {
             return $this->fail('验证码错误');
         }
-        $user = User::find($request->uid);
+        $user = User::find($request->user_id);
         $user->mobile = $mobile;
         $user->username = $mobile;
         $user->save();
@@ -411,7 +411,7 @@ class UserController extends BaseController
             return $this->fail('获取手机号失败');
         }
         $mobile = $ret->phone_info->phoneNumber;
-        $row = User::find($request->uid);
+        $row = User::find($request->user_id);
         $row->mobile = $mobile;
         $row->username = $mobile;
         $row->save();
