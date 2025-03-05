@@ -34,6 +34,9 @@ class BoxController extends BaseController
     {
         $type = $request->post('type', 1);
         $sort = $request->post('sort', 'desc');
+        if (!in_array($sort,['desc','asc'])){
+            return $this->fail('排序参数错误');
+        }
         $rows = Box::where(['type' => $type, 'status' => 1])
             ->orderBy('price', $sort)
             ->paginate()

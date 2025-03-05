@@ -18,6 +18,10 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Goods newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Goods query()
  * @property string|null $content 详情
+ * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Goods onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Goods withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Goods withoutTrashed()
  * @mixin \Eloquent
  */
 class Goods extends Base

@@ -48,6 +48,12 @@ use support\Db;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrize
  * @property int $new 新用户
  * @property-read mixed $official_text
+ * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
+ * @property-read \plugin\admin\app\model\UsersPrize|null $pivot
+ * @property-read User|null $parent
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTrashed()
  * @mixin \Eloquent
  */
 class User extends Base

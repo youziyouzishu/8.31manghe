@@ -39,7 +39,10 @@
     "webman/admin": "^0.6.33",
     "endroid/qrcode": "^6.0",
     "tinywan/exception-handler": "^1.6",
-    "tinywan/validate": "^1.0"
+    "tinywan/validate": "^1.0",
+    "kriss/webman-eloquent-ide-helper": "^1.2",
+    "webman/log": "^1.2",
+    "webman/event": "^1.0"
   },
   "autoload": {
     "psr-4": {

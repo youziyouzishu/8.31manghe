@@ -13,6 +13,7 @@
  */
 
 use support\Request;
+use support\Response;
 use Tinywan\Jwt\JwtToken;
 use Webman\Route;
 
@@ -143,12 +144,12 @@ Route::group('/token', function () {
 });
 
 
-Route::fallback(function (Request $request) {
-        if (request()->header('accept') == 'application/json'){
-            return json(['code' => 404, 'msg' => '404 not found']);
-        }else{
-            return not_found();
-        }
+Route::fallback(function () {
+    if (request()->header('accept') == 'application/json'){
+        throw new \Tinywan\ExceptionHandler\Exception\RouteNotFoundException();
+    }else{
+        return new Response(404, [], file_get_contents(base_path('plugin' . DIRECTORY_SEPARATOR. 'admin' . DIRECTORY_SEPARATOR . 'public') . '/demos/error/404.html'));
+    }
 });
 
 

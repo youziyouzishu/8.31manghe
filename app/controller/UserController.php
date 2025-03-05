@@ -246,21 +246,15 @@ class UserController extends BaseController
     #赠送记录
     function giveLogV2(Request $request)
     {
-        $month = $request->post('month', date('Y-m'));
-        $date = Carbon::parse($month);
-        // 提取年份和月份
-        $year = $date->year;
-        $month = $date->month;
         $rows = UsersGiveLog::with(['giveLog'=>function ($query) {
             $query->with('boxPrize');
         },'toUser'])
             ->withSum('giveLog as total_price',DB::raw('num * price'))
             ->where(['user_id' => $request->user_id])
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
+
             ->orderByDesc('id')
-            ->paginate()
-            ->items();
+            ->limit(50)
+            ->get();
 
         return $this->success('成功', $rows);
     }
@@ -269,21 +263,15 @@ class UserController extends BaseController
     #领取记录
     function receiveLogV2(Request $request)
     {
-        $month = $request->post('month', date('Y-m'));
-        $date = Carbon::parse($month);
-        // 提取年份和月份
-        $year = $date->year;
-        $month = $date->month;
+
         $rows = UsersGiveLog::with(['receiveLog'=>function ($query) {
             $query->with('boxPrize');
         },'user'])
             ->withSum('receiveLog as total_price',DB::raw('num * price'))
             ->where(['to_user_id' => $request->user_id])
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
             ->orderByDesc('id')
-            ->paginate()
-            ->items();
+            ->limit(50)
+            ->get();
 
         return $this->success('成功', $rows);
     }

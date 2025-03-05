@@ -33,6 +33,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Room newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Room newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Room query()
+ * @property-read \plugin\admin\app\model\RoomUsers|\plugin\admin\app\model\RoomPrize|null $pivot
  * @mixin \Eloquent
  */
 class Room extends Base
