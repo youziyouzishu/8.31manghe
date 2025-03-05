@@ -296,7 +296,7 @@ class BoxController extends BaseController
                         $prizes = $prizes->shuffle();
 
                         foreach ($prizes as $prize) {
-                            $currentChance += $prize->chance;
+                            $currentChance += $prize->real_chance;
                             if ($randomNumber <= $currentChance) {
                                 $winnerPrize['list'][] = $prize;
                                 if ($prize->grade == 5) {

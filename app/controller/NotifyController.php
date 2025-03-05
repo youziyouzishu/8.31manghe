@@ -187,7 +187,7 @@ class NotifyController extends BaseController
                         $prizes = $prizes->shuffle();
 
                         foreach ($prizes as $prize) {
-                            $currentChance += $prize->chance;
+                            $currentChance += $prize->real_chance;
 //                            Log::info('当前概率：'.$currentChance.'-------'.'奖品概率：'.$prize->chance.'-------'.'奖品等级：'.$prize->grade_text);
                             if ($randomNumber <= $currentChance) {
 //                                Log::info('中奖了=====奖品ID：'.$prize->id);

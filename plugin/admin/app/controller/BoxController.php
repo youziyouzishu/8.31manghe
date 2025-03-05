@@ -92,7 +92,7 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if (!empty($params['rate'])&&($params['rate'] < 0 || $params['rate'] > 1)) {
+            if (!empty($params['rate']) && ($params['rate'] < 0 || $params['rate'] > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             return parent::insert($request);
@@ -110,9 +110,10 @@ class BoxController extends Crud
     {
         if ($request->method() === 'POST') {
             $params = $request->post();
-            if (!empty($params['rate'])&&($params['rate'] < 0 || $params['rate'] > 1)) {
+            if (!empty($params['rate']) && ($params['rate'] < 0 || $params['rate'] > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
+
             return parent::update($request);
         }
         return view('box/update');
@@ -144,13 +145,13 @@ class BoxController extends Crud
         $kol_rate = $request->post('kol_rate');
         $data = [];
         if (!empty($rate)) {
-            if ($rate < 0 || $rate > 1){
+            if ($rate < 0 || $rate > 1) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             $data['rate'] = $rate;
         }
         if (!empty($kol_rate)) {
-            if ($kol_rate < 0 || $kol_rate > 1){
+            if ($kol_rate < 0 || $kol_rate > 1) {
                 return $this->fail('KOL毛利率必须大于0且小于1');
             }
             $data['kol_rate'] = $kol_rate;

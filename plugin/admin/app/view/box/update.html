@@ -84,22 +84,7 @@
                         </div>
                     </div>
 
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">等级</label>
-                        <div class="layui-input-block">
-                            <div name="grade" id="grade" value="" ></div>
-                        </div>
-                    </div>
 
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">增加真实概率</label>
-                        <div class="layui-input-block layui-input-wrap">
-                            <input type="text" name="real_chance" value="0" class="layui-input">
-                            <div class="layui-input-suffix layui-input-split">
-                                %
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">权重</label>
@@ -194,20 +179,6 @@
                             })
                         });
 
-                        layui.use(["jquery", "xmSelect"], function() {
-                            let value = layui.$("#grade").attr("value");
-                            let initValue = value ? value.split(",") : [];
-                            layui.xmSelect.render({
-                                el: "#grade",
-                                name: "grade",
-                                filterable: true,
-                                initValue: initValue,
-                                data: [{"value":"3","name":"S级"},{"value":"4","name":"SS级"},{"value":"5","name":"SSS级"}],
-                                model: {"icon":"hidden","label":{"type":"text"}},
-                                clickClose: true,
-                                radio: true,
-                            })
-                        });
 
                         
                         // 字段 图片 images
