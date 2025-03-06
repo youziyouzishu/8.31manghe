@@ -112,6 +112,7 @@
         <script type="text/html" id="table-bar">
 <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.room.update">编辑</button>-->
 <!--            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.room.delete">删除</button>-->
+            <button class="pear-btn pear-btn-xs tool-btn {{ d.status == 2 ? '' : 'layui-hide' }}" lay-event="cancel" permission="app.admin.room.cancel">取消</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="prizes" permission="app.admin.room.prizes">房间奖品</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="users" permission="app.admin.room.users">房间用户</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="winprizes" permission="app.admin.room.winprizes">中奖信息</button>
@@ -129,6 +130,7 @@
             const SELECT_API = "/app/admin/room/select";
             const UPDATE_API = "/app/admin/room/update";
             const DELETE_API = "/app/admin/room/delete";
+            const CANCEL_API = "/app/admin/room/cancel";
             const INSERT_URL = "/app/admin/room/insert";
             const UPDATE_URL = "/app/admin/room/update";
             const PRIZE_URL = "/app/admin/room-prize/index";
@@ -310,7 +312,7 @@
 						toolbar: "#table-bar",
 						align: "center",
 						fixed: "right",
-						width: 250,
+						width: 300,
 					}
 				];
 				
@@ -388,6 +390,8 @@
                         users(obj);
                     } else if (obj.event === "winprizes") {
                         winprizes(obj);
+                    } else if (obj.event === "cancel") {
+                        cancel(obj);
                     }
                 });
 
@@ -500,6 +504,32 @@
                         maxmin: true,
                         area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
                         content: WINPRIZE_URL + "?" + 'room_id' + "=" + value
+                    });
+                }
+
+                //取消
+                let cancel = function(obj) {
+                    let data = {};
+                    data[PRIMARY_KEY] = obj.data[PRIMARY_KEY];
+                    layer.confirm("确定取消?", {
+                        icon: 3,
+                        title: "提示"
+                    }, function(index) {
+                        layer.close(index);
+                        let loading = layer.load();
+                        $.ajax({
+                            url: CANCEL_API,
+                            data: data,
+                            dataType: "json",
+                            type: "post",
+                            success: function(res) {
+                                layer.close(loading);
+                                if (res.code) {
+                                    return layui.popup.failure(res.msg);
+                                }
+                                return layui.popup.success("操作成功", refreshTable);
+                            }
+                        })
                     });
                 }
 

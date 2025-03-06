@@ -2,6 +2,8 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\UsersPrize;
+use plugin\admin\app\model\UsersPrizeLog;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\Room;
@@ -77,5 +79,48 @@ class RoomController extends Crud
         }
         return view('room/update');
     }
+
+
+    /**
+     * 取消
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function cancel(Request $request): Response
+    {
+        $primary_key = $this->model->getKeyName();
+        $ids = (array)$request->post($primary_key, []);
+        $this->model->whereIn($primary_key, $ids)->each(function ($room) {
+            #取消房间
+            $room->status = 4;
+            $room->save();
+            $room->roomPrize()->get()->each(function ($roomPrize)use($room) {
+                if ($res = UsersPrize::where(['user_id' => $room->user_id, 'box_prize_id' => $roomPrize->box_prize_id,'price'=>$roomPrize->price])->first()){
+                    $res->increment('num',$roomPrize->num);
+                }else{
+                    UsersPrize::create([
+                        'user_id' => $room->user_id,
+                        'box_prize_id' => $roomPrize->box_prize_id,
+                        'price'=>$roomPrize->price,
+                        'num'=>$roomPrize->num,
+                        'mark'=>'房间取消返还剩余',
+                        'grade' => $roomPrize->grade,
+                    ]);
+                }
+                UsersPrizeLog::create([
+                    'user_id' => $room->user_id,
+                    'box_prize_id' => $roomPrize->box_prize_id,
+                    'mark' => '房间取消返还剩余',
+                    'type'=>12,
+                    'price'=>$roomPrize->price,
+                    'grade' => $roomPrize->grade,
+                    'num'=>$roomPrize->num,
+                ]);
+            });
+        });
+        return $this->json(0);
+    }
+
 
 }

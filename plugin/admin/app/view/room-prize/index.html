@@ -91,9 +91,30 @@
 					},{
 						title: "奖品",align: "center",
 						templet: function (d) {
-							return d.box_prize.name
+							return d.box_prize?d.box_prize.name:"";
 						}
 					},{
+                        title: "剩余数量",align: "center",
+                        field: "num",
+                    },{
+                        title: "总数量",align: "center",
+                        field: "total",
+                    },{
+                        title: "市场价",align: "center",
+                        field: "price",
+                    },{
+                        title: "评级", align: "center",
+                        field: "grade",
+                        templet: function (d) {
+                            let field = "grade";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k, v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
 						title: "创建时间",align: "center",
 						field: "created_at",
 					},{
@@ -133,13 +154,9 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["room_id", "/app/admin/room/select?format=select"]);
-				apis.push(["user_prize_id", "/app/admin/user-prize/select?format=select"]);
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
+
 				let apiResults = {};
-				apiResults["room_id"] = [];
-				apiResults["user_prize_id"] = [];
-				apiResults["box_prize_id"] = [];
+                apiResults["grade"] = {"1": "通关赏", "2": "N", "3": "S级", "4": "SS级", "5": "SSS级"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

@@ -104,7 +104,7 @@ class RoomController extends BaseController
             Db::connection('plugin.admin.mysql')->rollBack();
             Log::error('创建房间失败');
             Log::error($e->getMessage());
-            return $this->fail('创建房间失败');
+            return $this->fail($e->getMessage());
         }
         //加入队列倒计时开始
         // 队列名

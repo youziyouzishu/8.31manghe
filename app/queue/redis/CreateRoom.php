@@ -90,7 +90,7 @@ class CreateRoom implements Consumer
                     $room->roomPrize()->where('num', '>', 0)->get()->each(function ($roomPrize){
                         dump('房间抽奖完成返还剩余'.$roomPrize->id);
                         if ($res = UsersPrize::where(['user_id' => $roomPrize->room->user_id, 'box_prize_id' => $roomPrize->box_prize_id,'price'=>$roomPrize->price])->first()){
-                            $res->increment('num',$res->num);
+                            $res->increment('num',$roomPrize->num);
                         }else{
                             UsersPrize::create([
                                 'user_id' => $roomPrize->room->user_id,

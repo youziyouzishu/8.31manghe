@@ -81,7 +81,7 @@ class Room extends Base
 
     function userPrize()
     {
-        return $this->belongsToMany(BoxPrize::class, RoomPrize::class, 'room_id', 'user_prize_id')->withTimestamps();
+        return $this->belongsToMany(UsersPrize::class, RoomPrize::class, 'room_id', 'user_prize_id')->withTimestamps();
     }
 
     function roomPrize()
