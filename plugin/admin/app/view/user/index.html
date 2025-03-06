@@ -42,14 +42,6 @@
                     <input type="text" name="mobile" value="" class="layui-input">
                 </div>
             </div>
-
-            <!--                    <div class="layui-form-item">-->
-            <!--                        <label class="layui-form-label">性别</label>-->
-            <!--                        <div class="layui-input-block">-->
-            <!--                            <div name="sex" id="sex" value="" ></div>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-
             <div class="layui-form-item">
                 <label class="layui-form-label">盈亏周期</label>
                 <div class="layui-input-block">
@@ -77,6 +69,14 @@
                     <div name="kol" id="kol" value=""></div>
                 </div>
             </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">禁用状态</label>
+                <div class="layui-input-block">
+                    <div name="status" id="status" value=""></div>
+                </div>
+            </div>
+
 
             <div class="layui-form-item">
                 <label class="layui-form-label">新用户</label>
@@ -129,12 +129,6 @@
 
 <!-- 表格顶部工具栏 -->
 <script type="text/html" id="table-toolbar">
-    <!--            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.user.insert">-->
-    <!--                <i class="layui-icon layui-icon-add-1"></i>新增-->
-    <!--            </button>-->
-    <!--            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.user.delete">-->
-    <!--                <i class="layui-icon layui-icon-delete"></i>删除-->
-    <!--            </button>-->
     <button class="pear-btn pear-btn-success pear-btn-md" lay-event="importe" id="importe" permission="app.admin.user.importe">
         <i class="layui-icon layui-icon-add"></i>批量增加余额
     </button>
@@ -171,30 +165,7 @@
     const UPDATE_URL = "/app/admin/user/update";
     const CHANCE_API = "/app/admin/user/chance";
 
-    // 字段 性别 sex
-    layui.use(["jquery", "xmSelect", "popup"], function () {
-        layui.$.ajax({
-            url: "/app/admin/dict/get/sex",
-            dataType: "json",
-            success: function (res) {
-                let value = layui.$("#sex").attr("value");
-                let initValue = value ? value.split(",") : [];
-                layui.xmSelect.render({
-                    el: "#sex",
-                    name: "sex",
-                    initValue: initValue,
-                    filterable: true,
-                    data: res.data,
-                    model: {"icon": "hidden", "label": {"type": "text"}},
-                    clickClose: true,
-                    radio: true,
-                });
-                if (res.code) {
-                    layui.popup.failure(res.msg);
-                }
-            }
-        });
-    });
+
 
     layui.use(["laydate"], function () {
         layui.laydate.render({
@@ -204,32 +175,7 @@
         });
     })
 
-    // 字段 生日 birthday
-    layui.use(["laydate"], function () {
-        layui.laydate.render({
-            elem: "#birthday",
-            range: ["#birthday-date-start", "#birthday-date-end"],
 
-        });
-    })
-
-    // 字段 登录时间 last_time
-    layui.use(["laydate"], function () {
-        layui.laydate.render({
-            elem: "#last_time",
-            range: ["#last_time-date-start", "#last_time-date-end"],
-            type: "datetime",
-        });
-    })
-
-    // 字段 注册时间 join_time
-    layui.use(["laydate"], function () {
-        layui.laydate.render({
-            elem: "#join_time",
-            range: ["#join_time-date-start", "#join_time-date-end"],
-            type: "datetime",
-        });
-    })
 
     // 字段 创建时间 created_at
     layui.use(["laydate"], function() {
@@ -251,6 +197,21 @@
             initValue: initValue,
             data: [{"value": "1", "name": "是"}, {"value": "2", "name": "否"}],
             value: "2",
+            model: {"icon": "hidden", "label": {"type": "text"}},
+            clickClose: true,
+            radio: true,
+        })
+    });
+
+    layui.use(["jquery", "xmSelect"], function () {
+        let value = layui.$("#status").attr("value");
+        let initValue = value ? value.split(",") : [];
+        layui.xmSelect.render({
+            el: "#status",
+            name: "status",
+            filterable: true,
+            initValue: initValue,
+            data: [{"value": "0", "name": "否"}, {"value": "1", "name": "是"}],
             model: {"icon": "hidden", "label": {"type": "text"}},
             clickClose: true,
             radio: true,
@@ -445,39 +406,22 @@
                     } else {
                         return d[field];
                     }
-                }
+                },
             }, {
                 title: "额外中奖率", align: "center",
                 field: "chance",
-            }, {
-                title: "注册ip", align: "center",
-                field: "join_ip",
-                hide: true,
-            }, {
+            },{
                 title: "禁用", align: "center",
                 field: "status",
                 templet: function (d) {
                     let field = "status";
-                    form.on("switch(" + field + ")", function (data) {
-                        let load = layer.load();
-                        let postData = {};
-                        postData[field] = data.elem.checked ? 1 : 0;
-                        postData[PRIMARY_KEY] = this.value;
-                        $.post(UPDATE_API, postData, function (res) {
-                            layer.close(load);
-                            if (res.code) {
-                                return layui.popup.failure(res.msg, function () {
-                                    data.elem.checked = !data.elem.checked;
-                                    form.render();
-                                });
-                            }
-                            return layui.popup.success("操作成功");
-                        })
+                    if (typeof d[field] == "undefined") return "";
+                    let items = [];
+                    layui.each((d[field] + "").split(","), function (k, v) {
+                        items.push(apiResults[field][v] || v);
                     });
-                    let checked = d[field] === 1 ? "checked" : "";
-                    return '<input type="checkbox" value="' + util.escape(d[PRIMARY_KEY]) + '" lay-filter="' + util.escape(field) + '" lay-skin="switch" lay-text="' + util.escape('') + '" ' + checked + '/>';
-                },
-                hide: false
+                    return util.escape(items.join(","));
+                }
             }, {
                 title: "官方", align: "center",
                 field: "official",
@@ -572,6 +516,7 @@
         apiResults["official"] = {"1": "是", "2": "否"};
         apiResults["kol"] = {"0": "否", "1": "是"};
         apiResults["new"] = {"0": "否", "1": "是"};
+        apiResults["status"] = {"0": "否", "1": "是"};
         let count = apis.length;
         layui.each(apis, function (k, item) {
             let [field, url] = item;

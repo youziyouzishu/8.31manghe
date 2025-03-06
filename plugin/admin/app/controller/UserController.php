@@ -49,13 +49,7 @@ class UserController extends Crud
      */
     public function select(Request $request): Response
     {
-
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        if (!empty(request()->get('user_disburse_at')[0])) {
-            $user_disburse_at = request()->get('user_disburse_at');
-        } else {
-            $user_disburse_at = null;
-        }
         $todayStart = Carbon::today()->startOfDay(); // 今天的开始时间
         $todayEnd = Carbon::today()->endOfDay(); // 今天的结束时间
         $query = $this->doSelect($where, $field, $order)
@@ -71,16 +65,7 @@ class UserController extends Crud
             }], 'amount')
             ->withSum(['userDisburse as user_disburse_sum_amount_amount' => function ($query) {
                 $query->where('scene', '<>', 2);
-            }], 'amount')
-            ->when(!empty($user_disburse_at), function ($query) use ($user_disburse_at) {
-                $query
-                    ->withSum(['userDisburse as user_disburse_sum_amount_at' => function ($query) use ($user_disburse_at) {
-                        $query->whereBetween('created_at', [$user_disburse_at[0], $user_disburse_at[1]])->whereIn('type', [1, 3]);
-                    }], 'amount')
-                    ->withSum(['userDisburse as user_disburse_sum_amount_amount_at' => function ($query) use ($user_disburse_at) {
-                        $query->whereBetween('created_at', [$user_disburse_at[0], $user_disburse_at[1]])->where('scene', '<>', 2);
-                    }], 'amount');
-            });
+            }], 'amount');
 
 
         return $this->doFormat($query, $format, $limit);

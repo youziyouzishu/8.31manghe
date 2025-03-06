@@ -119,28 +119,19 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "用户",align: "center",
+						title: "用户ID",align: "center",
 						field: "user_id",
-						templet: function (d) {
-							let field = "user_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
-						}
 					},{
+                        title: "用户昵称",align: "center",
+                        field: "user.nickname",
+                        templet: function (d) {
+                            return d.user?d.user.nickname:"";
+                        }
+                    },{
 						title: "奖品",align: "center",
 						field: "box_prize_id",
 						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+                            return d.box_prize?d.box_prize.name:"";
 						}
 					},{
 						title: "创建时间",align: "center",
@@ -183,13 +174,7 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["room_id", "/app/admin/room/select?format=select"]);
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
 				let apiResults = {};
-				apiResults["user_id"] = [];
-				apiResults["room_id"] = [];
-				apiResults["box_prize_id"] = [];
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

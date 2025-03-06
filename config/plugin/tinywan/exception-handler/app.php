@@ -1,5 +1,7 @@
 <?php
 
+use Tinywan\Jwt\Exception\JwtTokenExpiredException;
+
 return [
     'enable' => true,
     // 错误异常配置
@@ -14,7 +16,7 @@ return [
             Tinywan\ExceptionHandler\Exception\TooManyRequestsHttpException::class,
             Tinywan\ExceptionHandler\Exception\ServerErrorHttpException::class,
             Tinywan\Validate\Exception\ValidateException::class,
-            Tinywan\Jwt\Exception\JwtTokenException::class
+            Tinywan\Jwt\Exception\JwtTokenException::class,
         ],
         // 自定义HTTP状态码
         'status' => [

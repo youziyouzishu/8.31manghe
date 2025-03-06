@@ -40,6 +40,7 @@ class BoxController extends Crud
         $query = $this->doSelect($where, $field, $order)
             ->withCount('boxPrize')
             ->withSum(['boxPrize'], 'chance')
+            ->withSum(['boxPrize'], 'real_chance')
             ->withSum(['boxPrize'], 'price');
         return $this->doFormat($query, $format, $limit);
     }

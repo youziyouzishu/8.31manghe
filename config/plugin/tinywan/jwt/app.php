@@ -10,7 +10,7 @@ return [
         'access_secret_key' => '2022d3d3LmJq',
 
         /** access令牌过期时间，单位：秒。默认 2 小时 */
-        'access_exp' => 7200 * 12 * 30,
+        'access_exp' => 60 * 60 * 24 * 7,
 
         /** refresh令牌秘钥 */
         'refresh_secret_key' => '2022KTxigxc9o50c',
@@ -44,7 +44,9 @@ return [
 
         /** 用户信息模型 */
         'user_model' => function ($uid) {
-            return [];
+            return \plugin\admin\app\model\User::where('id', $uid)
+                ->select('id','mobile','nickname','created_at')
+                ->first();
         },
 
         /** 是否支持 get 请求获取令牌 */

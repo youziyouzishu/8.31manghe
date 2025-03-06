@@ -29,6 +29,5 @@ class IndexController extends BaseController
     function index()
     {
 
-        return $this->success('成功');
     }
 }

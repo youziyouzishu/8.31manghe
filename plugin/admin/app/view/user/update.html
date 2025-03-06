@@ -80,8 +80,7 @@
             <div class="layui-form-item">
                 <label class="layui-form-label">禁用</label>
                 <div class="layui-input-block">
-                    <input type="checkbox" id="status" lay-filter="status" lay-skin="switch"/>
-                    <input type="text" style="display:none" name="status" value=""/>
+                    <div name="status" id="status" value=""></div>
                 </div>
             </div>
 
@@ -174,37 +173,6 @@
                     });
                 });
 
-                // 字段 生日 birthday
-                layui.use(["laydate"], function () {
-                    layui.laydate.render({
-                        elem: "#birthday",
-
-                    });
-                })
-
-                // 字段 登录时间 last_time
-                layui.use(["laydate"], function () {
-                    layui.laydate.render({
-                        elem: "#last_time",
-                        type: "datetime",
-                    });
-                })
-
-                // 字段 注册时间 join_time
-                layui.use(["laydate"], function () {
-                    layui.laydate.render({
-                        elem: "#join_time",
-                        type: "datetime",
-                    });
-                })
-
-                // 字段 创建时间 created_at
-                layui.use(["laydate"], function () {
-                    layui.laydate.render({
-                        elem: "#created_at",
-                        type: "datetime",
-                    });
-                })
 
                 // 字段 用户 parent_id
                 layui.use(["jquery", "xmSelect", "popup"], function () {
@@ -253,13 +221,21 @@
                 });
 
                 // 字段 禁用 status
-                layui.use(["form"], function () {
-                    layui.$("#status").attr("checked", layui.$('input[name="status"]').val() != 0);
-                    layui.form.render();
-                    layui.form.on("switch(status)", function (data) {
-                        layui.$('input[name="status"]').val(this.checked ? 1 : 0);
-                    });
-                })
+                layui.use(["jquery", "xmSelect"], function () {
+                    let value = layui.$("#status").attr("value");
+                    let initValue = value ? value.split(",") : [];
+                    layui.xmSelect.render({
+                        el: "#status",
+                        name: "status",
+                        filterable: true,
+                        initValue: initValue,
+                        data: [{"value": "0", "name": "否"}, {"value": "1", "name": "是"}],
+                        value: "",
+                        model: {"icon": "hidden", "label": {"type": "text"}},
+                        clickClose: true,
+                        radio: true,
+                    })
+                });
 
                 // 字段 官方 official
                 layui.use(["jquery", "xmSelect"], function () {
