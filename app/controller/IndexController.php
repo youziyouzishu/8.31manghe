@@ -30,7 +30,6 @@ class IndexController extends BaseController
     {
 
 
+
     }
-
-
 }
