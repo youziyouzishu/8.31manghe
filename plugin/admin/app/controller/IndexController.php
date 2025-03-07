@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use Carbon\Carbon;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Option;
 use plugin\admin\app\model\User;
@@ -60,37 +61,65 @@ class IndexController
      */
     public function dashboard(Request $request): Response
     {
+        // 使用 Carbon 计算今日注册人数
+        $today = Carbon::today();
+        $tomorrow = Carbon::tomorrow();
+        $yesterday = Carbon::yesterday();
         // 今日新增用户数
-        $today_user_count = User::where('created_at', '>', date('Y-m-d') . ' 00:00:00')->count();
+        $today_user_count = User::where('created_at', '>=', $today)->where('created_at', '<', $tomorrow)->count();
         // 7天内新增用户数
-        $day7_user_count = User::where('created_at', '>', date('Y-m-d H:i:s', time() - 7 * 24 * 60 * 60))->count();
+        $day7_user_count = User::where('created_at', '>', Carbon::now()->subDays(7))->count();
         // 30天内新增用户数
-        $day30_user_count = User::where('created_at', '>', date('Y-m-d H:i:s', time() - 30 * 24 * 60 * 60))->count();
+        $day30_user_count = User::where('created_at', '>', Carbon::now()->subDays(30))->count();
         // 总用户数
         $user_count = User::count();
-        // 今日充值
-        $today_recharge = UsersDisburse::where('created_at', '>', date('Y-m-d') . ' 00:00:00')->sum('amount');
-        // 昨日充值
-        $yesterday_recharge = UsersDisburse::where('created_at', '>', date('Y-m-d', strtotime('-1 day')) . ' 00:00:00')
-            ->where('created_at', '<', date('Y-m-d') . ' 00:00:00')->sum('amount');
-        // 总充值
-        $recharge = UsersDisburse::sum('amount');
+        // 今日流水
+        $today_recharge = UsersDisburse::where('created_at', '>=', $today)->whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('created_at', '<', $tomorrow)->where('scene','<>',2)->sum('amount');
+        // 昨日流水
+        $yesterday_recharge = UsersDisburse::where('created_at', '>=', $yesterday)->whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('created_at', '<', $today)->where('scene','<>',2)->sum('amount');
+        // 总流水
+        $recharge = UsersDisburse::whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('scene','<>',2)->sum('amount');
+
+
+
+        // 今日支付
+        $today_recharge_pay = UsersDisburse::where('created_at', '>=', $today)->whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('created_at', '<', $tomorrow)->where('scene','<>',2)->where('type','<>',2)->sum('amount');
+        // 昨日支付
+        $yesterday_recharge_pay = UsersDisburse::where('created_at', '>=', $yesterday)->whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('created_at', '<', $today)->where('scene','<>',2)->where('type','<>',2)->sum('amount');
+        // 总支付
+        $recharge_pay = UsersDisburse::whereHas('user',function ($query){
+            $query->where('kol',0);
+        })->where('scene','<>',2)->where('type','<>',2)->sum('amount');
+
         // mysql版本
         $version = Util::db()->select('select VERSION() as version');
         $mysql_version = $version[0]->version ?? 'unknown';
 
         $day7_detail = [];
-        $now = time();
         for ($i = 0; $i < 7; $i++) {
-            $date = date('Y-m-d', $now - 24 * 60 * 60 * $i);
-            $day7_detail[substr($date, 5)] = User::where('created_at', '>', "$date 00:00:00")
-                ->where('created_at', '<', "$date 23:59:59")->count();
+            $date = Carbon::now()->subDays($i);
+            $day7_detail[$date->format('m-d')] = User::where('created_at', '>=', $date->startOfDay())->where('created_at', '<', $date->endOfDay())->count();
         }
 
         return raw_view('index/dashboard', [
             'today_recharge' => $today_recharge,
             'yesterday_recharge' => $yesterday_recharge,
             'recharge' => $recharge,
+
+            'today_recharge_pay' => $today_recharge_pay,
+            'yesterday_recharge_pay' => $yesterday_recharge_pay,
+            'recharge_pay' => $recharge_pay,
+
             'today_user_count' => $today_user_count,
             'day7_user_count' => $day7_user_count,
             'day30_user_count' => $day30_user_count,

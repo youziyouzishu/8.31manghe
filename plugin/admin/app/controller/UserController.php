@@ -60,10 +60,10 @@ class UserController extends Crud
         $query = $this->doSelect($where, $field, $order)
             ->with(['children'])
             ->withSum(['userDisburse as today_user_disburse_sum_amount' => function ($query) use ($where, $todayStart, $todayEnd) {
-                $query->whereIn('type', [1, 3])->whereBetween('created_at', [$todayStart, $todayEnd]);
+                $query->where('type','<>',2)->whereBetween('created_at', [$todayStart, $todayEnd]);
             }], 'amount')
             ->withSum(['userDisburse as user_disburse_sum_amount' => function ($query) {
-                $query->whereIn('type', [1, 3]);
+                $query->where('type','<>',2);
             }], 'amount')
             ->withSum(['userDisburse as today_user_disburse_sum_amount_amount' => function ($query) use ($todayStart, $todayEnd) {
                 $query->where('scene', '<>', 2)->whereBetween('created_at', [$todayStart, $todayEnd]);
