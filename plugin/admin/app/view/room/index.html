@@ -217,7 +217,7 @@
                     name: "status",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"进行中"},{"value":"2","name":"未开始"},{"value":"3","name":"已结束"}],
+                    data: [{"value":"1","name":"进行中"},{"value":"2","name":"未开始"},{"value":"3","name":"已结束"},{"value":"4","name":"已取消"}],
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,
                     radio: true,
@@ -345,7 +345,7 @@
 				let apiResults = {};
 				apiResults["user_id"] = [];
 				apiResults["type"] = {"1":"密码","2":"流水"};
-				apiResults["status"] = {"1":"进行中","2":"未开始","3":"已结束"};
+				apiResults["status"] = {"1":"进行中","2":"未开始","3":"已结束","4":"已取消"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

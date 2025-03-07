@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use plugin\admin\app\model\Base;
 
 /**
@@ -30,10 +31,13 @@ use plugin\admin\app\model\Base;
  * @property string $kol_consume_amount KOL消费金额
  * @property string $rate 毛利率
  * @property string $kol_rate KOL毛利率
+ * @property string $inc_rate 增加系数
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxGrade> $grade
  * @mixin \Eloquent
  */
 class Box extends Base
 {
+    use SoftDeletes;
     /**
      * The table associated with the model.
      *
@@ -64,18 +68,19 @@ class Box extends Base
     function getTypeTextAttribute($value)
     {
         $value = $value ?: ($this->type ?? '');
-        $list = $this->getTypeList();
+        $list = ['1' => '福利赏', '2' => '高爆赏', '3' => '无限赏', '4' => '闯关赏'];
         return $list[$value] ?? '';
     }
 
-    public function getTypeList()
-    {
-        return ['1' => '福利赏', '2' => '高爆赏', '3' => '无限赏', '4' => '闯关赏'];
-    }
 
     function level()
     {
         return $this->hasMany(BoxLevel::class,'box_id');
+    }
+
+    function grade()
+    {
+        return $this->hasMany(BoxGrade::class,'box_id');
     }
 
 

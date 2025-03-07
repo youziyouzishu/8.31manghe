@@ -137,129 +137,259 @@ class NotifyController extends BaseController
                         'level_id' => $order->level_id,
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
-                    $winnerPrize = ['gt_n' => 0, 'list' => []];
-                    for ($i = 0; $i < $order->times; $i++) {
-                        //每次循环都刷新盲盒
-                        $order->refresh();
+                    if ($order->user_id == 975526){
+                        $sss_chance = $order->box->boxPrize()->where('grade',5)->sum('chance');
+                        $ss_chance = $order->box->boxPrize()->where('grade',4)->sum('chance');
+                        $s_chance = $order->box->boxPrize()->where('grade',3)->sum('chance');
+                        Log::info('SSS总概率：'.$sss_chance);
+                        Log::info('SS总概率：'.$ss_chance);
+                        Log::info('S总概率：'.$s_chance);
+                        $sss_need_num_1 =  round(100 / $sss_chance);
+                        $ss_need_num_1 =  round(100 / $ss_chance);
+                        $s_need_num_1 =  round(100 / $s_chance);
+                        Log::info('SSS理想最低发数：'.$sss_need_num_1);
+                        Log::info('SS理想最低发数：'.$ss_need_num_1);
+                        Log::info('S理想最低发数：'.$s_need_num_1);
+                        $sss_need_num_2 = round($sss_need_num_1 * (1 + $order->box->inc_rate));
+                        $ss_need_num_2 = round($ss_need_num_1 * (1 + $order->box->inc_rate));
+                        $s_need_num_2 = round($s_need_num_1 * (1 + $order->box->inc_rate));
+                        Log::info('SSS理想最高发数：'.$sss_need_num_2);
+                        Log::info('SS理想最高发数：'.$ss_need_num_2);
+                        Log::info('S理想最高发数：'.$s_need_num_2);
+                        $sss_need_num = mt_rand($sss_need_num_1 , $sss_need_num_2);
+                        $ss_need_num = mt_rand($ss_need_num_1 , $ss_need_num_2);
+                        $s_need_num = mt_rand($s_need_num_1 , $s_need_num_2);
+                        Log::info('SSS指定发数：'.$sss_need_num);
+                        Log::info('SS指定发数：'.$ss_need_num);
+                        Log::info('S指定发数：'.$s_need_num);
+                        $winnerPrize = ['gt_n' => 0, 'list' => []];
+                        for ($i = 0; $i < $order->times; $i++) {
+                            #增加盲盒所有等级抽奖次数
+                            $order->box->grade()->increment('num',1);
+                            //每次循环都刷新盲盒
+                            $order->refresh();
+                            $sss = $order->box->grade()->where('grade', 5)->first();
+                            $ss = $order->box->grade()->where('grade', 4)->first();
+                            $s = $order->box->grade()->where('grade', 3)->first();
+                            Log::info('SSS累计发数：'.$sss->num );
+                            Log::info('SS累计发数：'.$ss->num );
+                            Log::info('S累计发数：'.$s->num );
+                            if ($sss->num >= $sss_need_num){
+                                Log::info('触发SSS等级');
+                                $sss->num = 0;
+                                $sss->save();
+                                $prizes = $order->box->boxPrize()->where('grade', 5)->get();
+                            }elseif ($ss->num >= $ss_need_num){
+                                Log::info('触发SS等级');
+                                $ss->num = 0;
+                                $ss->save();
+                                $prizes = $order->box->boxPrize()->where('grade', 4)->get();
+                            }elseif ($s->num >= $s_need_num){
+                                Log::info('触发S等级');
+                                $s->num = 0;
+                                $s->save();
+                                $prizes = $order->box->boxPrize()->where('grade', 3)->get();
+                            }else{
+                                Log::info('触发N等级');
+                                $prizes = $order->box->boxPrize()->where('grade', 2)->get();
+                            }
+                            // 计算总概率
+                            $totalChance = $prizes->sum('chance');
+                            // 生成一个介于 0 和总概率之间的随机数
+                            $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
+                            $currentChance = 0.0;
+                            $prizes = $prizes->shuffle();
 
-                        // 从数据库中获取奖品列表
-                        $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                            ->when(!empty($order->level_id), function (Builder $query) use ($order) {
-                                $query->where('level_id', $order->level_id);
-                            }, function (Builder $query) use ($order) {
-                                //如果是普通用户才受奖金池限制
-                                if ($order->user->kol == 0) {
-                                    $query->whereBetween('price', [0, $order->box->pool_amount]);
-                                }else{
-                                    $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
-                                }
-                            })
-                            ->inRandomOrder()
-                            ->get();
-
-                        // 如果没有可用奖品，返回提示
-                        if ($prizes->isEmpty()) {
-                            if (!empty($order->level_id)) {
-                                throw new \Exception('闯关赏没有奖品');
-                            } else {
-                                $prizes = BoxPrize::where(['box_id' => $order->box_id])
-                                    ->where('grade', 2)
-                                    ->get();
-                                if ($prizes->isEmpty()) {
-                                    throw new \Exception('盲盒没有设置奖品');
+                            foreach ($prizes as $prize) {
+                                $currentChance += $prize->chance;
+                                if ($randomNumber <= $currentChance) {
+                                    $winnerPrize['list'][] = $prize;
+                                    if ($prize->grade == 5) {
+                                        $winnerPrize['gt_n'] = 1;
+                                    }
+                                    break;
                                 }
                             }
                         }
 
-                        // 计算总概率
-                        $totalChance = $prizes->sum('chance');
-                        // 生成一个介于 0 和总概率之间的随机数
-                        $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
-                        // 累加概率，确定中奖奖品
-                        $currentChance = 0.0;
-                        // 用户可能单独增加额外的概率
-                        $currentChance += $order->user->chance;
+                        $online = Cache::has("private-user-{$order->user_id}");
+                        if (!$online) {
+                            Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
+                        } else {
+                            $api = new Api(
+                                'http://127.0.0.1:3232',
+                                config('plugin.webman.push.app.app_key'),
+                                config('plugin.webman.push.app.app_secret')
+                            );
+                            // 给客户端推送私有 prize_draw 事件的消息
+                            $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                                'winner_prize' => $winnerPrize
+                            ]);
+                        }
+
+                        foreach ($winnerPrize['list'] as $item) {
+                            // 发放奖品并且记录
+                            if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                                $userPrize->increment('num');
+                            } else {
+                                UsersPrize::create([
+                                    'user_id' => $order->user_id,
+                                    'box_prize_id' => $item->id,
+                                    'price' => $item->price,
+                                    'num' => 1,
+                                    'mark' => '抽奖获得',
+                                    'grade' => $item->grade,
+                                ]);
+                            }
+
+                            UsersPrizeLog::create([
+                                'draw_id' => $draw->id,
+                                'user_id' => $order->user_id,
+                                'box_prize_id' => $item->id,
+                                'mark' => '抽奖获得',
+                                'price' => $item->price,
+                                'type' => 0,
+                                'grade' => $item->grade,
+                                'num' => 1,
+                            ]);
+                        }
+                        UsersDisburse::create([
+                            'user_id' => $order->user_id,
+                            'amount' => $order->pay_amount,
+                            'mark' => $order->box->name,
+                            'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
+                            'scene' => 1,
+                        ]);
+                    }else{
+                        $winnerPrize = ['gt_n' => 0, 'list' => []];
+                        for ($i = 0; $i < $order->times; $i++) {
+                            //每次循环都刷新盲盒
+                            $order->refresh();
+
+                            // 从数据库中获取奖品列表
+                            $prizes = BoxPrize::where(['box_id' => $order->box_id])
+                                ->when(!empty($order->level_id), function (Builder $query) use ($order) {
+                                    $query->where('level_id', $order->level_id);
+                                }, function (Builder $query) use ($order) {
+                                    //如果是普通用户才受奖金池限制
+                                    if ($order->user->kol == 0) {
+                                        $query->whereBetween('price', [0, $order->box->pool_amount]);
+                                    }else{
+                                        $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
+                                    }
+                                })
+                                ->inRandomOrder()
+                                ->get();
+
+                            // 如果没有可用奖品，返回提示
+                            if ($prizes->isEmpty()) {
+                                if (!empty($order->level_id)) {
+                                    throw new \Exception('闯关赏没有奖品');
+                                } else {
+                                    $prizes = BoxPrize::where(['box_id' => $order->box_id])
+                                        ->where('grade', 2)
+                                        ->get();
+                                    if ($prizes->isEmpty()) {
+                                        throw new \Exception('盲盒没有设置奖品');
+                                    }
+                                }
+                            }
+
+                            // 计算总概率
+                            $totalChance = $prizes->sum('chance');
+                            // 生成一个介于 0 和总概率之间的随机数
+                            $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
+                            // 累加概率，确定中奖奖品
+                            $currentChance = 0.0;
+                            // 用户可能单独增加额外的概率
+                            $currentChance += $order->user->chance;
 //                        Log::info('第'.$i+1 .'次抽奖');
 //                        Log::info('总概率：'.$totalChance);
 //                        Log::info('用户额外概率：'.$order->user->chance);
 //                        Log::info('随机概率：'.$randomNumber);
-                        // 对奖品列表进行随机排序
-                        $prizes = $prizes->shuffle();
+                            // 对奖品列表进行随机排序
+                            $prizes = $prizes->shuffle();
 
-                        foreach ($prizes as $prize) {
-                            $currentChance += $prize->real_chance;
+                            foreach ($prizes as $prize) {
+                                $currentChance += $prize->real_chance;
 //                            Log::info('当前概率：'.$currentChance.'-------'.'奖品概率：'.$prize->chance.'-------'.'奖品等级：'.$prize->grade_text);
-                            if ($randomNumber <= $currentChance) {
+                                if ($randomNumber <= $currentChance) {
 //                                Log::info('中奖了=====奖品ID：'.$prize->id);
-                                $winnerPrize['list'][] = $prize;
-                                if ($prize->grade == 5) {
-                                    $winnerPrize['gt_n'] = 1;
+                                    $winnerPrize['list'][] = $prize;
+                                    if ($prize->grade == 5) {
+                                        $winnerPrize['gt_n'] = 1;
+                                    }
+                                    if ($order->user->kol == 0) {
+                                        //普通用户才增加奖金池
+                                        // 增加奖金池金额
+                                        $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price;
+                                        $prize->box->increment('pool_amount', $pool_amount);
+                                    }else{
+                                        $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->kol_rate) - $prize->price;
+                                        $prize->box->increment('kol_pool_amount', $pool_amount);
+                                    }
+                                    break;
                                 }
-                                if ($order->user->kol == 0) {
-                                    //普通用户才增加奖金池
-                                    // 增加奖金池金额
-                                    $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->rate) - $prize->price;
-                                    $prize->box->increment('pool_amount', $pool_amount);
-                                }else{
-                                    $pool_amount = $order->pay_amount / $order->times * (1 - $order->box->kol_rate) - $prize->price;
-                                    $prize->box->increment('kol_pool_amount', $pool_amount);
-                                }
-                                break;
                             }
                         }
-                    }
 
-                    $online = Cache::has("private-user-{$order->user_id}");
-                    if (!$online) {
-                        Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
-                    } else {
-                        $api = new Api(
-                            'http://127.0.0.1:3232',
-                            config('plugin.webman.push.app.app_key'),
-                            config('plugin.webman.push.app.app_secret')
-                        );
-                        // 给客户端推送私有 prize_draw 事件的消息
-                        $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
-                            'winner_prize' => $winnerPrize
-                        ]);
-                        Log::info("推送消息成功:private-user-{$order->user_id}-winner_prize");
-                    }
-
-
-
-                    foreach ($winnerPrize['list'] as $item) {
-                        // 发放奖品并且记录
-                        if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
-                            $userPrize->increment('num');
+                        $online = Cache::has("private-user-{$order->user_id}");
+                        if (!$online) {
+                            Cache::set("private-user-{$order->user_id}-winner_prize", $winnerPrize);
                         } else {
-                            UsersPrize::create([
-                                'user_id' => $order->user_id,
-                                'box_prize_id' => $item->id,
-                                'price' => $item->price,
-                                'num' => 1,
-                                'mark' => '抽奖获得',
-                                'grade' => $item->grade,
+                            $api = new Api(
+                                'http://127.0.0.1:3232',
+                                config('plugin.webman.push.app.app_key'),
+                                config('plugin.webman.push.app.app_secret')
+                            );
+                            // 给客户端推送私有 prize_draw 事件的消息
+                            $api->trigger("private-user-{$order->user_id}", 'prize_draw', [
+                                'winner_prize' => $winnerPrize
                             ]);
+                            Log::info("推送消息成功:private-user-{$order->user_id}-winner_prize");
                         }
 
-                        UsersPrizeLog::create([
-                            'draw_id' => $draw->id,
+
+
+                        foreach ($winnerPrize['list'] as $item) {
+                            // 发放奖品并且记录
+                            if ($userPrize = UsersPrize::where(['user_id' => $order->user_id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                                $userPrize->increment('num');
+                            } else {
+                                UsersPrize::create([
+                                    'user_id' => $order->user_id,
+                                    'box_prize_id' => $item->id,
+                                    'price' => $item->price,
+                                    'num' => 1,
+                                    'mark' => '抽奖获得',
+                                    'grade' => $item->grade,
+                                ]);
+                            }
+
+                            UsersPrizeLog::create([
+                                'draw_id' => $draw->id,
+                                'user_id' => $order->user_id,
+                                'box_prize_id' => $item->id,
+                                'mark' => '抽奖获得',
+                                'price' => $item->price,
+                                'type' => 0,
+                                'grade' => $item->grade,
+                                'num' => 1,
+                            ]);
+                        }
+                        UsersDisburse::create([
                             'user_id' => $order->user_id,
-                            'box_prize_id' => $item->id,
-                            'mark' => '抽奖获得',
-                            'price' => $item->price,
-                            'type' => 0,
-                            'grade' => $item->grade,
-                            'num' => 1,
+                            'amount' => $order->pay_amount,
+                            'mark' => $order->box->name,
+                            'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
+                            'scene' => 1,
                         ]);
                     }
-                    UsersDisburse::create([
-                        'user_id' => $order->user_id,
-                        'amount' => $order->pay_amount,
-                        'mark' => $order->box->name,
-                        'type' => $paytype == 'alipay' ? 1 : ($paytype == 'balance' ? 2 : 3),
-                        'scene' => 1,
-                    ]);
+
+
+
+
+
 
                     break;
                 case 'goods':

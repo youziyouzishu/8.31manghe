@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\BoxGrade;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\Box;
@@ -96,7 +97,30 @@ class BoxController extends Crud
             if (!empty($params['rate']) && ($params['rate'] < 0 || $params['rate'] > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
-            return parent::insert($request);
+            $data = $this->insertInput($request);
+            $id = $this->doInsert($data);
+            BoxGrade::create([
+                'box_id' => $id,
+                'grade' => 1,
+            ]);
+            BoxGrade::create([
+                'box_id' => $id,
+                'grade' => 2,
+            ]);
+            BoxGrade::create([
+                'box_id' => $id,
+                'grade' => 3,
+            ]);
+            BoxGrade::create([
+                'box_id' => $id,
+                'grade' => 4,
+            ]);
+            BoxGrade::create([
+                'box_id' => $id,
+                'grade' => 5,
+            ]);
+
+            return $this->json(0, 'ok', ['id' => $id]);
         }
         return view('box/insert');
     }
