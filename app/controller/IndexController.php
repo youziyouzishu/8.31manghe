@@ -29,12 +29,13 @@ class IndexController extends BaseController
     function index()
     {
 
-        $order = BoxOrder::find(12765);
-        for ($i = 0; $i < $order->times; $i++) {
-            //每次循环都刷新盲盒
-            $order->box->grade()->increment('num',1);
-            $order->refresh();
-            dump($order->box->grade->toArray());
-        }
+        $collection = collect([1, 2, 3, 4, 5]);
+        $collection->each(function ($item) {
+            if ($item > 3){
+                return;
+            }
+            dump($item);
+        });
+
     }
 }

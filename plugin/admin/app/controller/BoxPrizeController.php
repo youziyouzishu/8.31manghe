@@ -127,9 +127,6 @@ class BoxPrizeController extends Crud
             if ($params['real_chance'] + $real_chance > 100) {
                 return $this->fail('真实概率不能超过100%');
             }
-
-
-
             return parent::insert($request);
         }
         return view('box-prize/insert');
@@ -174,5 +171,7 @@ class BoxPrizeController extends Crud
         }
         return view('box-prize/update');
     }
+
+
 
 }

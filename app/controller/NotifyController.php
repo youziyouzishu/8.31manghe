@@ -128,6 +128,7 @@ class NotifyController extends BaseController
                         $order->box->increment('consume_amount', $order->pay_amount);
                     }else{
                         $order->box->increment('kol_consume_amount', $order->pay_amount);
+
                     }
                     //开始执行抽奖操作
                     $draw = UsersDrawLog::create([
@@ -138,68 +139,45 @@ class NotifyController extends BaseController
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
                     if ($order->user_id == 975526){
-                        $sss_chance = $order->box->boxPrize()->where('grade',5)->sum('chance');
-                        $ss_chance = $order->box->boxPrize()->where('grade',4)->sum('chance');
-                        $s_chance = $order->box->boxPrize()->where('grade',3)->sum('chance');
-                        Log::info('SSS总概率：'.$sss_chance);
-                        Log::info('SS总概率：'.$ss_chance);
-                        Log::info('S总概率：'.$s_chance);
-                        $sss_need_num_1 =  round(100 / $sss_chance);
-                        $ss_need_num_1 =  round(100 / $ss_chance);
-                        $s_need_num_1 =  round(100 / $s_chance);
-                        Log::info('SSS理想最低发数：'.$sss_need_num_1);
-                        Log::info('SS理想最低发数：'.$ss_need_num_1);
-                        Log::info('S理想最低发数：'.$s_need_num_1);
-                        $sss_need_num_2 = round($sss_need_num_1 * (1 + $order->box->inc_rate));
-                        $ss_need_num_2 = round($ss_need_num_1 * (1 + $order->box->inc_rate));
-                        $s_need_num_2 = round($s_need_num_1 * (1 + $order->box->inc_rate));
-                        Log::info('SSS理想最高发数：'.$sss_need_num_2);
-                        Log::info('SS理想最高发数：'.$ss_need_num_2);
-                        Log::info('S理想最高发数：'.$s_need_num_2);
-                        $sss_need_num = mt_rand($sss_need_num_1 , $sss_need_num_2);
-                        $ss_need_num = mt_rand($ss_need_num_1 , $ss_need_num_2);
-                        $s_need_num = mt_rand($s_need_num_1 , $s_need_num_2);
-                        Log::info('SSS指定发数：'.$sss_need_num);
-                        Log::info('SS指定发数：'.$ss_need_num);
-                        Log::info('S指定发数：'.$s_need_num);
+                        $grades_need_num = [];
+                        #这个盲盒中的等级
+                        $grades = $order->box->boxPrize()->distinct()->pluck('grade')->toArray();
+                        foreach ($grades as $grade){
+                            $total_chance = $order->box->boxPrize()->where('grade',$grade)->sum('chance');
+                            $need_num_1 =  round(100 / $total_chance);
+                            $need_num_2 =  round($need_num_1 * (1 + $order->box->inc_rate));
+                            $need_num = mt_rand($need_num_1 , $need_num_2);
+                            $grades_need_num[$grade] = $need_num;
+                        }
                         $winnerPrize = ['gt_n' => 0, 'list' => []];
-                        for ($i = 0; $i < $order->times; $i++) {
+                        for ($i = 1; $i <= $order->times; $i++) {
+                            Log::info('第'.$i .'抽');
                             #增加盲盒所有等级抽奖次数
-                            $order->box->grade()->increment('num',1);
+                            $order->box->grade()->whereIn('grade',$grades)->increment('num',1);
                             //每次循环都刷新盲盒
                             $order->refresh();
-                            $sss = $order->box->grade()->where('grade', 5)->first();
-                            $ss = $order->box->grade()->where('grade', 4)->first();
-                            $s = $order->box->grade()->where('grade', 3)->first();
-                            Log::info('SSS累计发数：'.$sss->num );
-                            Log::info('SS累计发数：'.$ss->num );
-                            Log::info('S累计发数：'.$s->num );
-                            if ($sss->num >= $sss_need_num){
-                                Log::info('触发SSS等级');
-                                $sss->num = 0;
-                                $sss->save();
-                                $prizes = $order->box->boxPrize()->where('grade', 5)->get();
-                            }elseif ($ss->num >= $ss_need_num){
-                                Log::info('触发SS等级');
-                                $ss->num = 0;
-                                $ss->save();
-                                $prizes = $order->box->boxPrize()->where('grade', 4)->get();
-                            }elseif ($s->num >= $s_need_num){
-                                Log::info('触发S等级');
-                                $s->num = 0;
-                                $s->save();
-                                $prizes = $order->box->boxPrize()->where('grade', 3)->get();
-                            }else{
-                                Log::info('触发N等级');
-                                $prizes = $order->box->boxPrize()->where('grade', 2)->get();
+                            $box_grades = $order->box->grade()->whereIn('grade',$grades)->orderByDesc('grade')->get();
+                            $selected_grade = null;
+                            foreach ($box_grades as $box_grade){
+                                if ($box_grade->num >= $grades_need_num[$box_grade->grade]){
+                                    $box_grade->num = 0;
+                                    $box_grade->save();
+                                    $selected_grade = $box_grade->grade;
+                                    break;
+                                }
                             }
+                            if ($selected_grade === null) {
+                                // 默认选择 grade 为 2 的等级
+                                $selected_grade = 2;
+                            }
+                            Log::info('本次抽中等级：'.$selected_grade);
+                            $prizes = $order->box->boxPrize()->where('grade', $selected_grade)->get();
                             // 计算总概率
                             $totalChance = $prizes->sum('chance');
                             // 生成一个介于 0 和总概率之间的随机数
                             $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
                             $currentChance = 0.0;
                             $prizes = $prizes->shuffle();
-
                             foreach ($prizes as $prize) {
                                 $currentChance += $prize->chance;
                                 if ($randomNumber <= $currentChance) {
@@ -262,7 +240,7 @@ class NotifyController extends BaseController
                         ]);
                     }else{
                         $winnerPrize = ['gt_n' => 0, 'list' => []];
-                        for ($i = 0; $i < $order->times; $i++) {
+                        for ($i = 1; $i <= $order->times; $i++) {
                             //每次循环都刷新盲盒
                             $order->refresh();
 
@@ -560,6 +538,7 @@ class NotifyController extends BaseController
             Log::error('支付回调错误');
             Log::error(json_encode($request->all()));
             Log::error($e->getMessage());
+            Log::error($e->getLine());
             throw new \Exception($e->getMessage());
         }
     }
