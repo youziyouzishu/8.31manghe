@@ -72,7 +72,7 @@ class BoxPrize extends Base
         return $list[$value] ?? '';
     }
 
-    public function getGradeList()
+    public static function getGradeList()
     {
         return ['1' => '通关赏', '2' => 'N级', '3' => 'S级', '4' => 'SS级', '5' => 'SSS级'];
     }

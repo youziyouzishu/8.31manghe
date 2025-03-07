@@ -29,13 +29,8 @@ class IndexController extends BaseController
     function index()
     {
 
-        $collection = collect([1, 2, 3, 4, 5]);
-        $collection->each(function ($item) {
-            if ($item > 3){
-                return;
-            }
-            dump($item);
-        });
 
     }
+
+
 }

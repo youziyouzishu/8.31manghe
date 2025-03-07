@@ -149,6 +149,7 @@ class NotifyController extends BaseController
                             $need_num = mt_rand($need_num_1 , $need_num_2);
                             $grades_need_num[$grade] = $need_num;
                         }
+                        Log::info(json_encode($grades_need_num));
                         $winnerPrize = ['gt_n' => 0, 'list' => []];
                         for ($i = 1; $i <= $order->times; $i++) {
                             Log::info('第'.$i .'抽');
@@ -159,10 +160,12 @@ class NotifyController extends BaseController
                             $box_grades = $order->box->grade()->whereIn('grade',$grades)->orderByDesc('grade')->get();
                             $selected_grade = null;
                             foreach ($box_grades as $box_grade){
+                                Log::info('当前等级'.$box_grade->grade.'抽奖次数'.$box_grade->num);
                                 if ($box_grade->num >= $grades_need_num[$box_grade->grade]){
                                     $box_grade->num = 0;
                                     $box_grade->save();
                                     $selected_grade = $box_grade->grade;
+                                    Log::info('本次抽中等级'.BoxPrize::getGradeList()[$selected_grade]);
                                     break;
                                 }
                             }
@@ -170,7 +173,7 @@ class NotifyController extends BaseController
                                 // 默认选择 grade 为 2 的等级
                                 $selected_grade = 2;
                             }
-                            Log::info('本次抽中等级：'.$selected_grade);
+                            Log::info('本次抽中等级：'.BoxPrize::getGradeList()[$selected_grade]);
                             $prizes = $order->box->boxPrize()->where('grade', $selected_grade)->get();
                             // 计算总概率
                             $totalChance = $prizes->sum('chance');
