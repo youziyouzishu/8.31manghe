@@ -130,7 +130,11 @@
 <!-- 表格顶部工具栏 -->
 <script type="text/html" id="table-toolbar">
     <button class="pear-btn pear-btn-success pear-btn-md" lay-event="importe" id="importe" permission="app.admin.user.importe">
-        <i class="layui-icon layui-icon-add"></i>批量增加余额
+        <i class="layui-icon layui-icon-add"></i>活动赠送
+    </button>
+
+    <button class="pear-btn pear-btn-success pear-btn-md" lay-event="subsidy" id="subsidy" permission="app.admin.user.subsidy">
+        <i class="layui-icon layui-icon-add"></i>补贴赠送
     </button>
 
     <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="editChance" permission="app.admin.user.editChance">
@@ -500,12 +504,22 @@
                 layui.upload.render({
                     elem: "#importe",
                     accept: "file",
-                    url: "/app/admin/user/importe",
+                    url: "/app/admin/user/importe?type=1",
                     field: "__file__",
                     done: function (res) {
                         return layui.layer.msg(res.msg);
                     }
                 });
+
+            layui.upload.render({
+                elem: "#subsidy",
+                accept: "file",
+                url: "/app/admin/user/importe?type=2",
+                field: "__file__",
+                done: function (res) {
+                    return layui.layer.msg(res.msg);
+                }
+            });
 
 
         }
@@ -573,6 +587,8 @@
             } else if (obj.event === "batchRemove") {
                 batchRemove(obj);
             } else if (obj.event === "importe") {
+
+            } else if (obj.event === "subsidy") {
 
             } else if (obj.event === "editChance") {
                 editChance(obj);
