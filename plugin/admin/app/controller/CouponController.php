@@ -56,17 +56,8 @@ class CouponController extends Crud
             if ($now->gte($expire_at)) {
                 return $this->fail('过期时间必须大于当前时间');
             }
-
             $data = $this->insertInput($request);
             $id = $this->doInsert($data);
-
-            // 输出差异的总秒数
-            $secondsDifference = $now->diffInSeconds($expire_at);
-
-            // 队列名
-            $queue = 'userCoupon-expire';
-            // 投递延迟消息，消息会在60秒后处理
-            Client::send($queue, ['id' => $id], $secondsDifference);
             return $this->success('ok', ['id' => $id]);
         }
         return view('coupon/insert');

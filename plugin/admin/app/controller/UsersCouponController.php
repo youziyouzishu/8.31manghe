@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\Coupon;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\UsersCoupon;
@@ -64,6 +65,10 @@ class UsersCouponController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
+            $user_id = $request->post('user_id');
+            $coupon_id = $request->post('coupon_id');
+            $coupon = Coupon::find($coupon_id);
+
             return parent::insert($request);
         }
         return view('users-coupon/insert');

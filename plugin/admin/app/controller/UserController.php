@@ -131,13 +131,8 @@ class UserController extends Crud
                 dump('微信支付的金额:'.$profit_sum_amount);
 
                 //用户选择发货的赏品价值
-                $deliver_amount = 0;
-                Deliver::where('user_id', $item->id)->whereIn('status', [1, 2, 3])
-                    ->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])
-                    ->get()
-                    ->each(function ($item) use (&$deliver_amount) {
-                        $deliver_amount += optional($item->userPrize())->withTrashed()->first()->price * $item->num;
-                    });
+                $deliver_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 4])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
+
                 dump('用户选择发货的赏品价值:'.$deliver_amount);
                 //赠送好友的赏品价值
                 $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
@@ -158,37 +153,37 @@ class UserController extends Crud
                 $system_money = UsersMoneyLog::where(['user_id' => $item->id,'memo' => '活动赠送'])->whereBetween('created_at', [$where['profit_created_at'][0], $where['profit_created_at'][1]])->sum('money') ?? 0;
             } else {
                 dump('没有限制日期');
+                dump('id:'.$item->id);
                 //线上支付的金额
                 $profit_sum_amount = UsersDisburse::where(['user_id' => $item->id])->whereIn('type', [1, 3])->sum('amount');
-                dump('线上支付的金额:'.$profit_sum_amount);
+                dump('支付金额:'.$profit_sum_amount);
+
                 //用户发货的赏品价值
-                $deliver_amount = 0;
-                Deliver::where('user_id', $item->id)
-                    ->whereIn('status', [1, 2, 3])
-                    ->get()
-                    ->each(function ($item) use (&$deliver_amount) {
-                        $deliver_amount += optional($item->userPrize())->withTrashed()->first()->price * $item->num;
-                    });
-                dump('用户选择发货的赏品价值:'.$deliver_amount);
+                $deliver_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 4])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
+                dump('发货'.$deliver_amount);
+
                 //赠送好友的赏品价值
-                $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->sum('price');
+                $give_amount = UsersPrizeLog::where(['user_id' => $item->id, 'type' => 1])->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
                 dump('赠送好友的赏品价值:'.$give_amount);
+
+
                 //水晶余额
                 $money = $item->money;
                 dump('水晶余额:'.$money);
-                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])
-                    ->select(DB::raw('SUM(price * num) as user_prize_sum_price'))
-                    ->value('user_prize_sum_price') ?? 0;
+
+                $user_prize_sum_price = UsersPrize::where(['user_id' => $item->id])->select(DB::raw('SUM(price * num) as user_prize_sum_price'))->value('user_prize_sum_price') ?? 0;
                 dump('赏袋和保险箱剩余商品价值:'.$user_prize_sum_price);
                 //系统赠送的奖品价值
                 $give_prize_price = UsersPrizeLog::where('user_id', $item->id)->where('type', 3)->selectRaw('SUM(num * price) as total_amount')->value('total_amount') ?? 0;
                 dump('系统赠送的奖品价值:'.$give_prize_price);
                 //系统增加的水晶
                 $system_money = UsersMoneyLog::where(['user_id' => $item->id,'memo' => '活动赠送'])->sum('money') ?? 0;
+
+
             }
-            dump('系统增加的水晶:'.$system_money);
-            $item->profit = round($profit_sum_amount - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $give_prize_price - $system_money, 2);
-            dump('盈亏计算:'.$item->profit);
+            dump('活动赠送增加的水晶:'.$system_money);
+            $item->profit = round($profit_sum_amount - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $system_money - $give_prize_price + $system_money + $give_prize_price, 2);
+            dump('亏损计算:'.$item->profit);
             $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {
                 return $userprize->price * $userprize->num;
             });
