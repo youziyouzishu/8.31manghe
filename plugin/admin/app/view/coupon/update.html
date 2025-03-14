@@ -63,14 +63,7 @@
                             <input type="text" name="mark" value="" required lay-verify="required" class="layui-input">
                         </div>
                     </div>
-                    
-                    <div class="layui-form-item">
-                        <label class="layui-form-label">失效日期</label>
-                        <div class="layui-input-block">
-                            <input type="text" name="expire_at" id="expire_at" autocomplete="off" class="layui-input">
-                        </div>
-                    </div>
-                    
+
                 </div>
             </div>
 
@@ -159,13 +152,6 @@
                         });
 
 
-                        // 字段 失效日期 expire_at
-                        layui.use(["laydate"], function() {
-                            layui.laydate.render({
-                                elem: "#expire_at",
-                                type: "datetime",
-                            });
-                        })
                         
                         
                         // ajax返回失败

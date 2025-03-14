@@ -475,21 +475,21 @@ class BoxController extends BaseController
             return $this->fail('所选盲盒不能为空');
         }
 
-        $prize_ids = BoxPrize::where(['box_id' => $box_id])
-            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+
+        $list = UsersPrizeLog::with(['user','boxPrize'])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {
+            $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
                 $builder->where('level_id', $level_id);
-            })
-            ->where('grade', $grade)
-            ->pluck('id');
-        $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereIn('box_prize_id', $prize_ids)
+            });
+        })
+            ->where('grade',$grade)
             ->where('type', 0)
             ->orderBy('id', 'desc')
             ->paginate()
             ->getCollection()
-            ->each(function ($item) use ($request, $grade,$box_id) {
+            ->each(function ($item) use ($request,$box_id) {
                 $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                     $query->where('box_id', $box_id);
-                })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $grade)->first();
+                })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $item->grade)->first();
                 if (!$last) {
                     $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                         $query->where('box_id', $box_id);

@@ -182,6 +182,7 @@ class UserController extends Crud
 
             }
             dump('活动赠送增加的水晶:'.$system_money);
+            dump('支付金额-发货-赠送-水晶余额-赏袋和保险箱价值-系统活动赠送的奖品价值-活动赠送增加的水晶+系统活动赠送的奖品价值+活动赠送增加的水晶');
             $item->profit = round($profit_sum_amount - $deliver_amount - $give_amount - $money - $user_prize_sum_price - $system_money - $give_prize_price + $system_money + $give_prize_price, 2);
             dump('亏损计算:'.$item->profit);
             $item->user_prize_sum_price = $item->userPrize->sum(function ($userprize) {

@@ -49,13 +49,6 @@ class CouponController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
-
-            $expire_at = $request->post('expire_at');
-            $now = Carbon::now();
-            // 判断当前时间是否早于特定日期
-            if ($now->gte($expire_at)) {
-                return $this->fail('过期时间必须大于当前时间');
-            }
             $data = $this->insertInput($request);
             $id = $this->doInsert($data);
             return $this->success('ok', ['id' => $id]);

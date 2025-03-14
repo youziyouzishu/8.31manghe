@@ -18,7 +18,6 @@ class CouponController extends BaseController
         $coupon_id = UsersCoupon::where(['user_id' => $request->user_id])->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
-            ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
             ->where('fuli',0)
             ->where('status',1)
             ->whereNotIn('id', $coupon_id)
@@ -32,7 +31,6 @@ class CouponController extends BaseController
         $coupon_id = UsersCoupon::where(['user_id' => $request->user_id])->pluck('coupon_id');
 
         $rows = Coupon::where('num', '>', 0)
-            ->where('expire_at', '>', Carbon::now()->format('Y-m-d H:i:s'))
             ->where('fuli',0)
             ->whereNotIn('id', $coupon_id)
             ->get();

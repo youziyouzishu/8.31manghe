@@ -16,7 +16,6 @@ use plugin\admin\app\model\Base;
  * @property string $with_amount 满足金额
  * @property integer $num 券数量
  * @property string $mark 备注
- * @property string $expire_at 失效日期
  * @method static \Illuminate\Database\Eloquent\Builder|Coupon newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Coupon newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Coupon query()
