@@ -164,6 +164,7 @@ class BoxController extends BaseController
 
     }
 
+    #todo
     #满足条件优惠券
     function canuseCoupon(Request $request)
     {
@@ -176,12 +177,11 @@ class BoxController extends BaseController
 
         $amount = $box->price * $times; #需要支付金额
 
-        $rows = UsersCoupon::with(['coupon'])->where(['user_id' => $request->user_id, 'status' => 1])
-            ->whereDoesntHave('coupon', function ($query) use ($amount) {
-                $query->where([
-                    ['type', '=', 2],
-                    ['with_amount', '>', $amount]
-                ]);
+        $rows = UsersCoupon::where(['user_id' => $request->user_id, 'status' => 1])
+            ->where(function ($query) use ($amount) {
+                $query->where('type',1)->orWhere(function ($query) use ($amount) {
+                        $query->where('type', 2)->where('with_amount', '<=', $amount);
+                    });
             })
             ->get();
 

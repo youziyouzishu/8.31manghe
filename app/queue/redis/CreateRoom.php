@@ -3,10 +3,8 @@
 namespace app\queue\redis;
 
 use plugin\admin\app\model\Room;
-use plugin\admin\app\model\RoomPrize;
 use plugin\admin\app\model\RoomUsers;
 use plugin\admin\app\model\RoomWinprize;
-use plugin\admin\app\model\UsersCoupon;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use Webman\RedisQueue\Client;

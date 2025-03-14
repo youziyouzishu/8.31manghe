@@ -52,7 +52,7 @@ class UsersCoupon extends Base
         'with_amount',
     ];
 
-    protected $appends = ['status_text'];
+    protected $appends = ['status_text','type_text'];
 
     protected $casts = [
         'expired_at' => 'datetime',
@@ -75,5 +75,16 @@ class UsersCoupon extends Base
         return $this->belongsTo(Coupon::class);
     }
 
+    function getTypeTextAttribute($value)
+    {
+        $value = $value ?: ($this->type ?? '');
+        $list = $this->getTypeList();
+        return $list[$value] ?? '';
+    }
+
+    public function getTypeList()
+    {
+        return ['1' => '无门槛', '2' => '满减'];
+    }
 
 }
