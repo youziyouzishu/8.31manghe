@@ -22,6 +22,7 @@ use plugin\admin\app\model\Base;
  * @property-read mixed $type_text
  * @property int $status 状态
  * @property int $fuli 是否福利:0=否,1=是
+ * @property int $expired_day 领取失效天数
  * @mixin \Eloquent
  */
 class Coupon extends Base

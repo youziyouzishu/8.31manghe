@@ -21,6 +21,7 @@ use plugin\admin\app\model\UsersPrizeLog;
 use support\Db;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
+use Webman\RedisQueue\Client;
 
 class UserController extends BaseController
 {
@@ -362,10 +363,21 @@ class UserController extends BaseController
         $user->save();
         $coupon = Coupon::where(['fuli' => 1])->get();
         foreach ($coupon as $item) {
-            UsersCoupon::create([
+
+            $expired_at = Carbon::now()->addDays($item->expired_day);
+
+            $user_coupon = UsersCoupon::create([
                 'user_id' => $request->user_id,
                 'coupon_id' => $item->id,
+                'name'=>$item->name,
+                'type'=>$item->type,
+                'amount'=>$item->amount,
+                'with_amount'=>$item->with_amount,
+                'expired_at'=>$expired_at->toDateTimeString()
             ]);
+
+            Client::send('coupon-expire',['event'=>'user_coupon_expire','id'=>$user_coupon->id],$expired_at->timestamp - time());
+
         }
         return $this->success();
     }

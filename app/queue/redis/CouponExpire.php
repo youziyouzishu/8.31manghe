@@ -19,10 +19,14 @@ class CouponExpire implements Consumer
     public function consume($data)
     {
         #优惠券过期
-        $events = UsersCoupon::where(['coupon_id' => $data['id'], 'status' => 1])->get();
-        foreach ($events as $event) {
-            $event->status = 3;
-            $event->save();
+        $event = $data['event'];
+        if ($event == 'user_coupon_expire') {
+            $id = $data['id'];
+            $user_coupon = UsersCoupon::find($id);
+            if ($user_coupon->status == 1){
+                $user_coupon->status = 3;
+                $user_coupon->save();
+            }
         }
     }
 

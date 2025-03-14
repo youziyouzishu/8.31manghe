@@ -18,6 +18,11 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|UsersCoupon query()
  * @property-read \plugin\admin\app\model\Coupon $coupon
  * @property-read mixed $status_text
+ * @property string $name 券名称
+ * @property int $type 券类型:1=无门槛,2=满减
+ * @property string $amount 优惠金额
+ * @property string $with_amount 满足金额
+ * @property \Illuminate\Support\Carbon|null $expired_at 过期时间
  * @mixin \Eloquent
  */
 class UsersCoupon extends Base
@@ -36,10 +41,22 @@ class UsersCoupon extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id', 'coupon_id', 'status'];
+    protected $fillable = [
+        'user_id',
+        'coupon_id',
+        'status',
+        'expired_at',
+        'name',
+        'type',
+        'amount',
+        'with_amount',
+    ];
 
     protected $appends = ['status_text'];
 
+    protected $casts = [
+        'expired_at' => 'datetime',
+    ];
 
     function getStatusTextAttribute($value)
     {

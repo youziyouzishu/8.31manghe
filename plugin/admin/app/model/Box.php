@@ -33,6 +33,10 @@ use plugin\admin\app\model\Base;
  * @property string $kol_rate KOL毛利率
  * @property string $inc_rate 增加系数
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\BoxGrade> $grade
+ * @property \Illuminate\Support\Carbon|null $deleted_at 删除时间
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Box onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Box withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Box withoutTrashed()
  * @mixin \Eloquent
  */
 class Box extends Base

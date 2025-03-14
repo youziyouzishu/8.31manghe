@@ -2,12 +2,14 @@
 
 namespace plugin\admin\app\controller;
 
+use Carbon\Carbon;
 use plugin\admin\app\model\Coupon;
 use support\Request;
 use support\Response;
 use plugin\admin\app\model\UsersCoupon;
 use plugin\admin\app\controller\Crud;
 use support\exception\BusinessException;
+use Webman\RedisQueue\Client;
 
 /**
  * 用户优惠券 
@@ -65,11 +67,21 @@ class UsersCouponController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
-            $user_id = $request->post('user_id');
             $coupon_id = $request->post('coupon_id');
             $coupon = Coupon::find($coupon_id);
+            $expired_at = Carbon::now()->addDays($coupon->expired_day);
+            $request->set('post',[
+                'name'=>$coupon->name,
+                'type'=>$coupon->type,
+                'amount'=>$coupon->amount,
+                'with_amount'=>$coupon->with_amount,
+                'expired_at'=>$expired_at->toDateTimeString(),
+            ]);
 
-            return parent::insert($request);
+            $data = $this->insertInput($request);
+            $id = $this->doInsert($data);
+            Client::send('coupon-expire',['event'=>'user_coupon_expire','id'=>$id],$expired_at->timestamp - time());
+            return $this->json(0, 'ok', ['id' => $id]);
         }
         return view('users-coupon/insert');
     }
