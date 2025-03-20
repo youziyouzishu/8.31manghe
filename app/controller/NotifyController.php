@@ -140,21 +140,24 @@ class NotifyController extends BaseController
                         'ordersn' => $out_trade_no,
                     ]); #创建抽奖记录
                     if (empty($order->level_id)){
-                        $grades_need_num = [];
-                        #这个盲盒中的等级
-                        $grades = $order->box->boxPrize()->where('grade','>',2)->distinct()->pluck('grade')->toArray();
-                        foreach ($grades as $grade){
-                            $total_chance = $order->box->boxPrize()->where('grade',$grade)->sum('chance');
-                            $need_num_1 =  round(100 / $total_chance);
-                            $need_num_2 =  round($need_num_1 * (1 + $order->box->inc_rate));
-                            $need_num = mt_rand($need_num_1 , $need_num_2);
-                            $grades_need_num[$grade] = $need_num;
-                            Log::info('等级'.BoxPrize::getGradeList()[$grade].'需要'.$need_num.'次');
-                        }
 
                         $winnerPrize = ['gt_n' => 0, 'list' => []];
                         for ($i = 1; $i <= $order->times; $i++) {
                             Log::info('第'.$i .'抽');
+                            $grades_need_num = [];
+                            #这个盲盒中的等级
+                            $grades = $order->box->boxPrize()->where('grade','>',2)->distinct()->pluck('grade')->toArray();
+                            foreach ($grades as $grade){
+                                $total_chance = $order->box->boxPrize()->where('grade',$grade)->sum('chance');
+                                $need_num_1 =  round(100 / $total_chance);
+                                $need_num_2 =  round($need_num_1 * (1 + $order->box->inc_rate));
+                                $need_num = mt_rand($need_num_1 , $need_num_2);
+                                $grades_need_num[$grade] = $need_num;
+                                Log::info('等级'.BoxPrize::getGradeList()[$grade].'需要'.$need_num.'次');
+                            }
+
+
+                            Log::info('增加这个盲盒抽奖次数 +1');
                             #增加盲盒所有等级抽奖次数
                             $order->box->grade()->whereIn('grade',$grades)->where(function ($query)use($order){
                                 if ($order->user->kol == 1){
@@ -165,7 +168,6 @@ class NotifyController extends BaseController
                             })->increment('num',1);
                             //每次循环都刷新盲盒
                             $order->refresh();
-                            Log::info('奖金池：'.$order->box->kol_pool_amount);
                             $box_grades = $order->box->grade()->whereIn('grade',$grades)->where(function ($query)use($order){
                                 if ($order->user->kol == 1){
                                     $query->where('type',2);
@@ -173,9 +175,13 @@ class NotifyController extends BaseController
                                     $query->where('type',1);
                                 }
                             })->orderByDesc('grade')->get();
+                            Log::info('开始按等级从大到小排查');
+                            Log::info('<<<<<<<  开始排查start  >>>>>>>');
                             $selected_grade = null;
                             foreach ($box_grades as $box_grade){
-                                Log::info('当前等级'.BoxPrize::getGradeList()[$box_grade->grade].'抽奖次数'.$box_grade->num);
+
+                                Log::info('当前等级'.BoxPrize::getGradeList()[$box_grade->grade].'抽奖次数'.$box_grade->num . '   出将需要的次数：'.$grades_need_num[$box_grade->grade].'   奖金池：'.$order->box->kol_pool_amount);
+
                                 if ($box_grade->num >= $grades_need_num[$box_grade->grade] && $order->box->boxPrize()->where('grade',$box_grade->grade)->where(function ($query)use($order){
                                         if ($order->user->kol == 1){
                                             $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
@@ -189,8 +195,10 @@ class NotifyController extends BaseController
                                     Log::info('本次抽中等级'.BoxPrize::getGradeList()[$box_grade->grade]);
                                     break;
                                 }
-                                Log::info('没抽中N赏以上'.'---'.BoxPrize::getGradeList()[$box_grade->grade].'最低奖品价格：'.$order->box->boxPrize()->where('grade',$box_grade->grade)->min('price').'抽奖次数:'.$box_grade->num);
+                                Log::info('没抽中N赏以上'.'---'.BoxPrize::getGradeList()[$box_grade->grade].'   最低奖品价格：'.$order->box->boxPrize()->where('grade',$box_grade->grade)->min('price').'   抽奖次数:'.$box_grade->num);
                             }
+                            Log::info('<<<<<<<  排查完毕end  >>>>>>>');
+
                             if ($selected_grade === null) {
                                 // 默认选择 grade 为 2 的等级
                                 $selected_grade = 2;

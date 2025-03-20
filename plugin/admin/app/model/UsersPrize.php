@@ -43,6 +43,16 @@ class UsersPrize extends Pivot
      */
     protected $table = 'wa_users_prize';
     protected $connection = 'plugin.admin.mysql';
+
+    /**
+     * 格式化日期
+     *
+     * @return string
+     */
+    public function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
     /**
      * The primary key associated with the table.
      *
@@ -54,15 +64,7 @@ class UsersPrize extends Pivot
 
 
 
-    /**
-     * 格式化日期
-     *
-     * @return string
-     */
-    public function serializeDate(DateTimeInterface $date)
-    {
-        return $date->format('Y-m-d H:i:s');
-    }
+
 
     public static function getUserPresentLevelTicketCount($level_box_id,$level_name,$user_id)
     {

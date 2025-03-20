@@ -38,10 +38,11 @@ class RoomUsers extends Pivot
 
     protected $fillable = ['room_id','user_id'];
 
+    protected $connection = 'plugin.admin.mysql';
+
     /**
      * 格式化日期
      *
-     * @param DateTimeInterface $date
      * @return string
      */
     public function serializeDate(DateTimeInterface $date)

@@ -487,15 +487,15 @@ class BoxController extends BaseController
             ->paginate()
             ->getCollection()
             ->each(function ($item) use ($request,$box_id) {
-                $last = UsersPrizeLog::where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                     $query->where('box_id', $box_id);
                 })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $item->grade)->first();
                 if (!$last) {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                         $query->where('box_id', $box_id);
                     })->where('id', '<', $item->id)->count();
                 } else {
-                    $prizes = UsersPrizeLog::with(['user', 'boxPrize'])->where(['user_id' => $item->user_id, 'type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
+                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                         $query->where('box_id', $box_id);
                     })->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }

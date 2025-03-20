@@ -275,7 +275,19 @@
                 title: "收货地址", align: "center",
                 field: "address_id",
                 templet: function (d) {
-                    return d.address.province + d.address.city + d.address.region + d.address.detail;
+                    return d.address? d.address.province + d.address.city + d.address.region + d.address.detail : '';
+                }
+            },{
+                title: "联系人", align: "center",
+                field: "address.name",
+                templet: function (d) {
+                    return d.address? d.address.name : '';
+                }
+            },{
+                title: "联系方式", align: "center",
+                field: "address.mobile",
+                templet: function (d) {
+                    return d.address? d.address.mobile : '';
                 }
             },{
                 title: "备注", align: "center",
@@ -309,6 +321,7 @@
                 url: SELECT_API,
                 page: true,
                 cols: [cols],
+                cellMinWidth:100,
                 skin: "line",
                 size: "lg",
                 toolbar: "#table-toolbar",

@@ -30,6 +30,9 @@ use plugin\admin\app\model\Base;
  */
 class RoomPrize extends Pivot
 {
+    protected $connection = 'plugin.admin.mysql';
+
+
     /**
      * 格式化日期
      *
@@ -39,6 +42,7 @@ class RoomPrize extends Pivot
     {
         return $date->format('Y-m-d H:i:s');
     }
+
     /**
      * The table associated with the model.
      *

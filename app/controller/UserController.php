@@ -331,8 +331,7 @@ class UserController extends BaseController
         $status = $request->post('status');# 状态:1=未使用,2=已使用,3=已过期
         $rows = UsersCoupon::where(['user_id' => $request->user_id, 'status' => $status])
             ->paginate()
-            ->getCollection()
-            ->pluck('coupon');
+            ->items();
         return $this->success('成功', $rows);
     }
 

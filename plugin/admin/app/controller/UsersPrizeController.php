@@ -102,4 +102,29 @@ class UsersPrizeController extends Crud
         return view('users-prize/update');
     }
 
+    /**
+     * 删除
+     * @param Request $request
+     * @return Response
+     * @throws BusinessException
+     */
+    public function delete(Request $request): Response
+    {
+        $ids = $this->deleteInput($request);
+        $primary_key = $this->model->getKeyName();
+        $this->model->whereIn($primary_key, $ids)->each(function ($model) {
+            UsersPrizeLog::create([
+                'user_id'=>$model->user_id,
+                'box_prize_id'=>$model->box_prize_id,
+                'num'=>$model->num,
+                'mark'=>'管理员删除',
+                'type'=>13,
+                'price'=>$model->price,
+                'grade'=>$model->grade,
+            ]);
+            $model->delete();
+        });
+        return $this->json(0);
+    }
+
 }

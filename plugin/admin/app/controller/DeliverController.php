@@ -38,7 +38,9 @@ class DeliverController extends Crud
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
         $query = $this->doSelect($where, $field, $order)
             ->where('status', '<>', 0)
-            ->with(['user', 'address','boxPrize'])
+            ->with(['user', 'address'=>function ($query) {
+                $query->withTrashed();
+            },'boxPrize'])
             ->selectRaw('*,num * price as total_price');
 
         return $this->doFormat($query, $format, $limit);

@@ -26,11 +26,10 @@ class Coupon
                 throw new BusinessException('优惠券不存在', 1);
 
             }
-            $coupon = $usercoupon->coupon;
-            if ($coupon->type == 2 && $coupon->with_amount > $amount) {
+            if ($usercoupon->type == 2 && $usercoupon->with_amount > $amount) {
                 throw new BusinessException('不满足满减条件', 1);
             }
-            $coupon_amount = $coupon->amount;
+            $coupon_amount = $usercoupon->amount;
         }
         return $coupon_amount;
     }
