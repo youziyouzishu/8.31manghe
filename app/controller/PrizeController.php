@@ -6,7 +6,6 @@ use app\service\Pay;
 use Illuminate\Support\Collection;
 use plugin\admin\app\common\Util;
 use plugin\admin\app\model\Deliver;
-use plugin\admin\app\model\DeliverDetail;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersGiveLog;

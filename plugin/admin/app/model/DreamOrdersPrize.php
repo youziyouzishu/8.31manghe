@@ -18,6 +18,8 @@ namespace plugin\admin\app\model;
  * @method static \Illuminate\Database\Eloquent\Builder|DreamOrdersPrize query()
  * @property-read \plugin\admin\app\model\BoxPrize|null $boxPrize
  * @property-read \plugin\admin\app\model\DreamOrders|null $orders
+ * @property string $price 市场价
+ * @property int $grade 评级:1=通关赏,2=N级,3=S级,4=SS级,5=SSS级
  * @mixin \Eloquent
  */
 class DreamOrdersPrize extends Base
@@ -36,7 +38,7 @@ class DreamOrdersPrize extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['order_id','box_prize_id','type'];
+    protected $fillable = ['order_id','box_prize_id','type','price','grade'];
 
     function boxPrize()
     {

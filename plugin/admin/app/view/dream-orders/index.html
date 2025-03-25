@@ -368,15 +368,10 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["user_id", "/app/admin/user/select?format=select"]);
-				apis.push(["big_prize_id", "/app/admin/box-prize/select?format=select"]);
-				apis.push(["small_prize_id", "/app/admin/box-prize/select?format=select"]);
+
 				let apiResults = {};
-				apiResults["user_id"] = [];
-				apiResults["big_prize_id"] = [];
-				apiResults["small_prize_id"] = [];
 				apiResults["status"] = {"1":"未支付","2":"已支付"};
-                apiResults["pay_type"] = {"1":"微信","2":"余额"};
+                apiResults["pay_type"] = ["无", "支付宝", "微信","云闪付"]
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;

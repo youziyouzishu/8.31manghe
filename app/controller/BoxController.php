@@ -34,7 +34,7 @@ class BoxController extends BaseController
     {
         $type = $request->post('type', 1);
         $sort = $request->post('sort', 'desc');
-        if (!in_array($sort,['desc','asc'])){
+        if (!in_array($sort, ['desc', 'asc'])) {
             return $this->fail('排序参数错误');
         }
         $rows = Box::where(['type' => $type, 'status' => 1])
@@ -164,7 +164,6 @@ class BoxController extends BaseController
 
     }
 
-    #todo
     #满足条件优惠券
     function canuseCoupon(Request $request)
     {
@@ -179,14 +178,13 @@ class BoxController extends BaseController
 
         $rows = UsersCoupon::where(['user_id' => $request->user_id, 'status' => 1])
             ->where(function ($query) use ($amount) {
-                $query->where('type',1)->orWhere(function ($query) use ($amount) {
-                        $query->where('type', 2)->where('with_amount', '<=', $amount);
-                    });
+                $query->where('type', 1)->orWhere(function ($query) use ($amount) {
+                    $query->where('type', 2)->where('with_amount', '<=', $amount);
+                });
             })
             ->get();
 
         return $this->success('成功', $rows);
-
     }
 
 
@@ -222,6 +220,9 @@ class BoxController extends BaseController
         $box = Box::find($box_id);
         if (empty($box)) {
             return $this->fail('盲盒不存在');
+        }
+        if ($request->user_id != 975526){
+            return $this->fail('系统正在维护中,请稍后再试');
         }
 
         try {
@@ -268,11 +269,11 @@ class BoxController extends BaseController
                         $level->refresh();
                         //开始抽奖
                         $prizes = BoxPrize::where(['level_id' => $level_id])
-                            ->when($endLevel->id == $level_id, function ($query) use ($level,$user) {
+                            ->when($endLevel->id == $level_id, function ($query) use ($level, $user) {
                                 //如果是普通用户才受奖金池限制
                                 if ($user->kol == 0) {
                                     $query->whereBetween('price', [0, $level->box->pool_amount]);
-                                }else{
+                                } else {
                                     $query->whereBetween('price', [0, $level->box->kol_pool_amount]);
                                 }
                             })
@@ -305,7 +306,7 @@ class BoxController extends BaseController
                                 // 减少奖金池金额
                                 if ($user->kol == 0) {
                                     $prize->box->decrement('pool_amount', $prize->price);
-                                }else{
+                                } else {
                                     $prize->box->decrement('kol_pool_amount', $prize->price);
                                 }
                                 //删除用户通关券
@@ -476,17 +477,17 @@ class BoxController extends BaseController
         }
 
 
-        $list = UsersPrizeLog::with(['user','boxPrize'])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {
+        $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereHas('boxPrize', function ($query) use ($box_id, $level_id) {
             $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
                 $builder->where('level_id', $level_id);
             });
         })
-            ->where('grade',$grade)
+            ->where('grade', $grade)
             ->where('type', 0)
             ->orderBy('id', 'desc')
             ->paginate()
             ->getCollection()
-            ->each(function ($item) use ($request,$box_id) {
+            ->each(function ($item) use ($request, $box_id) {
                 $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
                     $query->where('box_id', $box_id);
                 })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $item->grade)->first();

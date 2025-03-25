@@ -24,6 +24,9 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|Address query()
  * @property-read \plugin\admin\app\model\User|null $user
  * @property string|null $deleted_at 删除时间
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Address onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Address withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Address withoutTrashed()
  * @mixin \Eloquent
  */
 class Address extends Base

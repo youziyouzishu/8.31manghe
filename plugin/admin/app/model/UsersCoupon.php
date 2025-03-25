@@ -23,6 +23,7 @@ namespace plugin\admin\app\model;
  * @property string $amount 优惠金额
  * @property string $with_amount 满足金额
  * @property \Illuminate\Support\Carbon|null $expired_at 过期时间
+ * @property-read mixed $type_text
  * @mixin \Eloquent
  */
 class UsersCoupon extends Base

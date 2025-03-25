@@ -110,55 +110,8 @@
                 });
             })
 
-            // 字段 订单 order_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/dream-orders/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#order_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#order_id",
-                            name: "order_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data,
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-            
-            // 字段 奖品 box_prize_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box-prize/select?format=select",
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#box_prize_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#box_prize_id",
-                            name: "box_prize_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data, 
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
+
+
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -179,17 +132,38 @@
 						sort: true,
 					},{
 						title: "奖品",align: "center",
-						field: "box_prize_id",
+						field: "box_prize_name",
 						templet: function (d) {
-							let field = "box_prize_id";
-							if (typeof d[field] == "undefined") return "";
-							let items = [];
-							layui.each((d[field] + "").split(","), function (k , v) {
-								items.push(apiResults[field][v] || v);
-							});
-							return util.escape(items.join(","));
+							return d.box_prize? d.box_prize.name : '';
 						}
 					},{
+                        title: "市场价",align: "center",
+                        field: "price",
+                    },{
+                        title: "评级", align: "center",
+                        field: "grade",
+                        templet: function (d) {
+                            let field = "grade";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k, v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
+                        title: "奖品类型",align: "center",
+                        field: "type",
+                        templet: function (d) {
+                            let field = "type";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
                         title: "创建时间",align: "center",
                         field: "created_at",
                         sort: true,
@@ -230,11 +204,10 @@
 				
 				// 获取表格中下拉或树形组件数据
 				let apis = [];
-				apis.push(["order_id", "/app/admin/dream-orders/select?format=select"]);
-				apis.push(["box_prize_id", "/app/admin/box-prize/select?format=select"]);
+
 				let apiResults = {};
-				apiResults["order_id"] = [];
-				apiResults["box_prize_id"] = [];
+                apiResults['type'] = ["小奖","大奖"]
+                apiResults["grade"] = {"1": "通关赏", "2": "N", "3": "S级", "4": "SS级", "5": "SSS级"};
 				let count = apis.length;
 				layui.each(apis, function (k, item) {
 				    let [field, url] = item;
