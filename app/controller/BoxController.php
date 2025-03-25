@@ -221,9 +221,6 @@ class BoxController extends BaseController
         if (empty($box)) {
             return $this->fail('盲盒不存在');
         }
-        if ($request->user_id != 975526){
-            return $this->fail('系统正在维护中,请稍后再试');
-        }
 
         try {
             if (!empty($level_id)) {

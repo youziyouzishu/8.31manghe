@@ -153,11 +153,8 @@ class NotifyController extends BaseController
                                 $need_num_2 = round($need_num_1 * (1 + $order->box->inc_rate));
                                 $need_num = mt_rand($need_num_1, $need_num_2);
                                 $grades_need_num[$grade] = $need_num;
-                                Log::info('等级' . BoxPrize::getGradeList()[$grade] . '需要' . $need_num . '次');
                             }
 
-
-                            Log::info('增加这个盲盒抽奖次数 +1');
                             #增加盲盒所有等级抽奖次数
                             $order->box->grade()->whereIn('grade', $grades)->where(function ($query) use ($order) {
                                 if ($order->user->kol == 1) {
@@ -175,8 +172,8 @@ class NotifyController extends BaseController
                                     $query->where('type', 1);
                                 }
                             })->orderByDesc('grade')->get();
-                            Log::info('开始按等级从大到小排查');
-                            Log::info('<<<<<<<  开始排查start  >>>>>>>');
+
+
                             $selected_grade = null;
                             foreach ($box_grades as $box_grade) {
                                 Log::info('当前等级' . BoxPrize::getGradeList()[$box_grade->grade] . '抽奖次数' . $box_grade->num . '   出将需要的次数：' . $grades_need_num[$box_grade->grade] . '   奖金池：' . $order->box->kol_pool_amount);
@@ -188,12 +185,15 @@ class NotifyController extends BaseController
                                         }
                                     })->exists()) {
                                     Log::info('开始判定');
-                                    Lottery::odds(intval($box_grade->num / $grades_need_num[$box_grade->grade]), 10)
+
+                                    $odds = intval($box_grade->num / $grades_need_num[$box_grade->grade]);
+                                    Log::info('判定概率:'.$odds.'/'. 100);
+                                    Lottery::odds($odds, 100)
                                         ->winner(function () use ($box_grade, $grades_need_num, &$selected_grade) {
                                             $box_grade->num -= $grades_need_num[$box_grade->grade];
                                             $box_grade->save();
                                             $selected_grade = $box_grade->grade;
-                                            Log::info('本次抽中等级' . BoxPrize::getGradeList()[$box_grade->grade]);
+                                            Log::info('出奖');
                                         })
                                         ->loser(function (){
                                             Log::info('未抽中');
@@ -204,19 +204,14 @@ class NotifyController extends BaseController
                                 }
                                 Log::info('没抽中N赏以上' . '---' . BoxPrize::getGradeList()[$box_grade->grade] . '   最低奖品价格：' . $order->box->boxPrize()->where('grade', $box_grade->grade)->min('price') . '   抽奖次数:' . $box_grade->num);
                             }
-                            Log::info('<<<<<<<  排查完毕end  >>>>>>>');
-
                             if ($selected_grade === null) {
                                 // 默认选择 grade 为 2 的等级
                                 $selected_grade = 2;
                             }
-                            Log::info('本次抽中等级：' . BoxPrize::getGradeList()[$selected_grade]);
                             $prizes = $order->box->boxPrize()->where('grade', $selected_grade)->get();
-
-
                             // 计算总概率
                             $totalChance = $prizes->sum('chance');
-                            Log::info('总概率：' . $totalChance);
+
                             // 生成一个介于 0 和总概率之间的随机数
                             $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
 
@@ -225,9 +220,7 @@ class NotifyController extends BaseController
                             $currentChance += $order->user->chance;
                             foreach ($prizes as $prize) {
                                 $currentChance += $prize->chance;
-                                Log::info('当前概率：' . $currentChance . '---' . '增加的概率：' . $prize->chance . '---' . '0和总概率之间的随机数：' . $randomNumber);
                                 if ($randomNumber <= $currentChance) {
-                                    Log::info('抽中奖品价格：' . $prize->price);
                                     $winnerPrize['list'][] = $prize;
                                     if ($prize->grade == 5) {
                                         $winnerPrize['gt_n'] = 1;
