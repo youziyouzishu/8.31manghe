@@ -184,27 +184,30 @@
                     filterable: true,
                     //配置远程分页
                     clickClose: true,
+                    paging: true,
+                    pageRemote: true,
                     radio: true,
                     remoteSearch:true,
                     initValue: initValue,
                     template({ item, sels, name, value }){
-                        return item.value + '<span style="position: absolute; right: 10px; color: #8799a3">'+item.name+'</span>'
+                        return name + '<span style="position: absolute; right: 10px; color: #8799a3">'+value+'</span>'
                     },
                     prop: {
-                        name: 'name',
-                        value: 'value',
+                        name: 'nickname',
+                        value: 'id',
                     },
                     //数据处理
                     remoteMethod: function(val, cb, show, pageIndex){
                         layui.$.ajax({
-                            url: "/app/admin/user/select?format=select",
+                            url: "/app/admin/user/select",
                             dataType: "json",
                             data: {
-                                id: val
+                                id: val,
+                                page: pageIndex,
                             },
                             success: function (res) {
                                 //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
-                                cb(res.data)
+                                cb(res.data,res.count)
                             }
                         });
                     }

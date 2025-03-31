@@ -3,28 +3,7 @@
 namespace app\controller;
 
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Lottery;
-use plugin\admin\app\model\Box;
-use plugin\admin\app\model\BoxOrder;
-use plugin\admin\app\model\BoxPrize;
-use plugin\admin\app\model\Deliver;
-use plugin\admin\app\model\DreamOrdersPrize;
-use plugin\admin\app\model\Room;
-use plugin\admin\app\model\RoomWinprize;
-use plugin\admin\app\model\User;
-use plugin\admin\app\model\UsersCoupon;
-use plugin\admin\app\model\UsersDisburse;
-use plugin\admin\app\model\UsersGiveLog;
-use plugin\admin\app\model\UsersMoneyLog;
-use plugin\admin\app\model\UsersPrize;
-use plugin\admin\app\model\UsersPrizeLog;
-use support\Db;
-use support\Log;
 use support\Request;
-use Webman\Push\Api;
-use Webman\RedisQueue\Client;
 
 class IndexController extends BaseController
 {
@@ -33,8 +12,6 @@ class IndexController extends BaseController
 
     function index(Request $request)
     {
-
-
 
     }
 }

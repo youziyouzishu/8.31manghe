@@ -24,25 +24,37 @@ class PrizeController extends BaseController
         if (empty($prizes)) {
             return $this->fail('请选择要分解的奖品');
         }
-        foreach ($prizes as $prize) {
-            $res = UsersPrize::find($prize['id']);
-            if (!$res) {
-                return $this->fail('奖品不存在');
+        // 开启事务
+        Db::connection('plugin.admin.mysql')->beginTransaction();
+        try {
+            foreach ($prizes as $prize) {
+                $res = UsersPrize::with(['boxPrize' => function ($query) {
+                    $query->withTrashed();
+                }])->find($prize['id']);
+                if (!$res) {
+                    return $this->fail('奖品不存在');
+                }
+                if ($res->safe == 1) {
+                    return $this->fail('奖品已锁定，不能分解');
+                }
+                if ($prize['num'] <= 0) {
+                    return $this->fail('请输入正确的数量');
+                }
+                if ($res->num < $prize['num']) {
+                    return $this->fail('奖品数量不足');
+                }
+                $res->decrement('num', $prize['num']);
+                if ($res->num <= 0) {
+                    $res->delete();
+                }
+                User::money($res->price * $prize['num'], $request->user_id, '退货' . $res->boxPrize->name . '获得');
             }
-            if ($res->safe == 1) {
-                return $this->fail('奖品已锁定，不能分解');
-            }
-            if ($prize['num'] <= 0) {
-                return $this->fail('请输入正确的数量');
-            }
-            if ($res->num < $prize['num']) {
-                return $this->fail('奖品数量不足');
-            }
-            $res->decrement('num', $prize['num']);
-            if ($res->num <= 0) {
-                $res->delete();
-            }
-            User::money($res->price * $prize['num'], $request->user_id, '退货' . $res->boxPrize->name . '获得');
+            Db::connection('plugin.admin.mysql')->commit();
+        } catch (\Throwable $e) {
+            Db::connection('plugin.admin.mysql')->rollBack();
+            Log::error('分解失败');
+            Log::error($e->getMessage());
+            return $this->fail('分解失败');
         }
         return $this->success();
     }
@@ -70,8 +82,8 @@ class PrizeController extends BaseController
         Db::connection('plugin.admin.mysql')->beginTransaction();
         try {
             $give = UsersGiveLog::create([
-                'user_id'=>$request->user_id,
-                'to_user_id'=>$to_user_id,
+                'user_id' => $request->user_id,
+                'to_user_id' => $to_user_id,
             ]);
             foreach ($prizes as $prize) {
                 $res = UsersPrize::find($prize['id']);
@@ -101,7 +113,7 @@ class PrizeController extends BaseController
                 UsersPrizeLog::create([
                     'type' => 2,
                     'source_user_id' => $request->user_id,
-                    'draw_id'=>$give->id,
+                    'draw_id' => $give->id,
                     'user_id' => $to_user_id,
                     'box_prize_id' => $res->box_prize_id,
                     'mark' => $user->nickname . ' ' . $user->id . ' 赠送',
@@ -114,10 +126,10 @@ class PrizeController extends BaseController
                 UsersPrizeLog::create([
                     'type' => 1,
                     'source_user_id' => $to_user_id,
-                    'draw_id'=>$give->id,
+                    'draw_id' => $give->id,
                     'user_id' => $request->user_id,
                     'box_prize_id' => $res->box_prize_id,
-                    'mark' => '赠送给了'.$to_user->nickname.' '.$to_user->id,
+                    'mark' => '赠送给了' . $to_user->nickname . ' ' . $to_user->id,
                     'price' => $res->price,
                     'grade' => $res->boxPrize->grade,
                     'num' => $prize['num']
@@ -130,7 +142,7 @@ class PrizeController extends BaseController
             }
 
             Db::connection('plugin.admin.mysql')->commit();
-        }catch ( \Throwable $e){
+        } catch (\Throwable $e) {
             Db::connection('plugin.admin.mysql')->rollBack();
             Log::error('赠送失败');
             Log::error($e->getMessage());
@@ -171,7 +183,7 @@ class PrizeController extends BaseController
             $this_freight = 0;
         }
         $res->num = $prize['num'];
-        $res->setAttribute('freight',$this_freight);
+        $res->setAttribute('freight', $this_freight);
         $freight += $this_freight;
         $data['prizes'][] = $res;
         $data['freight'] = $freight;
@@ -254,7 +266,7 @@ class PrizeController extends BaseController
                     return $this->fail($res->msg);
                 }
             } else {
-                $ret = ['scene'=>'freight','ordersn'=>$ordersn];
+                $ret = ['scene' => 'freight', 'ordersn' => $ordersn];
                 $code = 4;
             }
         }

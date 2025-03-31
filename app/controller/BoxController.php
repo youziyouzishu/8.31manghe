@@ -19,6 +19,7 @@ use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
 use support\Cache;
 use support\Db;
+use support\Log;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
 use Webman\Push\Api;
@@ -468,7 +469,6 @@ class BoxController extends BaseController
         $box_id = $request->post('box_id');
         $level_id = $request->post('level_id', 0);
         $grade = $request->post('grade');
-
         if (empty($box_id)) {
             return $this->fail('所选盲盒不能为空');
         }
@@ -481,20 +481,26 @@ class BoxController extends BaseController
         })
             ->where('grade', $grade)
             ->where('type', 0)
-            ->orderBy('id', 'desc')
-            ->paginate()
-            ->getCollection()
-            ->each(function ($item) use ($request, $box_id) {
-                $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
-                    $query->where('box_id', $box_id);
+            ->latest()
+            ->take(15)
+            ->get()
+            ->each(function ($item) use ($request, $box_id,$level_id) {
+                $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {
+                    $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                        $builder->where('level_id', $level_id);
+                    });
                 })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $item->grade)->first();
                 if (!$last) {
-                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
-                        $query->where('box_id', $box_id);
+                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {
+                        $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                            $builder->where('level_id', $level_id);
+                        });
                     })->where('id', '<', $item->id)->count();
                 } else {
-                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id) {
-                        $query->where('box_id', $box_id);
+                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {
+                        $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                            $builder->where('level_id', $level_id);
+                        });
                     })->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }
                 $item->setAttribute('times', $prizes);

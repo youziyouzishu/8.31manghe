@@ -176,7 +176,8 @@ class NotifyController extends BaseController
 
                             $selected_grade = null;
                             foreach ($box_grades as $box_grade) {
-                                Log::info('当前等级' . BoxPrize::getGradeList()[$box_grade->grade] . '抽奖次数' . $box_grade->num . '   出将需要的次数：' . $grades_need_num[$box_grade->grade] . '   奖金池：' . $order->box->kol_pool_amount);
+                                Log::info('当前等级' . BoxPrize::getGradeList()[$box_grade->grade]. '   抽奖次数' . $box_grade->num . '   出奖需要的次数：' . $grades_need_num[$box_grade->grade] . '   奖金池：' . ($order->user->kol == 1?$order->box->kol_pool_amount:$order->box->pool_amount) .'   最低奖品价值：'.$order->box->boxPrize()->where('grade', $box_grade->grade)->min('price'));
+
                                 if ($box_grade->num >= $grades_need_num[$box_grade->grade] && $order->box->boxPrize()->where('grade', $box_grade->grade)->where(function ($query) use ($order) {
                                         if ($order->user->kol == 1) {
                                             $query->whereBetween('price', [0, $order->box->kol_pool_amount]);
@@ -185,15 +186,15 @@ class NotifyController extends BaseController
                                         }
                                     })->exists()) {
                                     Log::info('开始判定');
-
                                     $odds = intval($box_grade->num / $grades_need_num[$box_grade->grade]);
-                                    Log::info('判定概率:'.$odds.'/'. 100);
-                                    Lottery::odds($odds, 100)
+                                    $out_of = 90;
+                                    Log::info('判定概率:'.$odds.'/'. $out_of);
+                                    Lottery::odds($odds, $out_of)
                                         ->winner(function () use ($box_grade, $grades_need_num, &$selected_grade) {
                                             $box_grade->num -= $grades_need_num[$box_grade->grade];
                                             $box_grade->save();
                                             $selected_grade = $box_grade->grade;
-                                            Log::info('出奖');
+                                            Log::info('出奖---------------------------------------------------------------');
                                         })
                                         ->loser(function (){
                                             Log::info('未抽中');
@@ -202,7 +203,6 @@ class NotifyController extends BaseController
 
                                     break;
                                 }
-                                Log::info('没抽中N赏以上' . '---' . BoxPrize::getGradeList()[$box_grade->grade] . '   最低奖品价格：' . $order->box->boxPrize()->where('grade', $box_grade->grade)->min('price') . '   抽奖次数:' . $box_grade->num);
                             }
                             if ($selected_grade === null) {
                                 // 默认选择 grade 为 2 的等级

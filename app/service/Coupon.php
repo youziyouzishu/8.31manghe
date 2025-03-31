@@ -19,12 +19,8 @@ class Coupon
             if (empty($usercoupon)) {
                 throw new BusinessException('优惠券不存在', 1);
             }
-            if ($usercoupon->user_id != JwtToken::getUser()->id) {
-                throw new BusinessException('优惠券不正确', 1);
-            }
             if ($usercoupon->status != 1) {
                 throw new BusinessException('优惠券不存在', 1);
-
             }
             if ($usercoupon->type == 2 && $usercoupon->with_amount > $amount) {
                 throw new BusinessException('不满足满减条件', 1);

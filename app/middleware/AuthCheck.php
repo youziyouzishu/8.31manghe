@@ -15,6 +15,7 @@ class AuthCheck implements MiddlewareInterface
     public function process(\support\Request|\Webman\Http\Request $request, callable $handler): Response
     {
 
+
         // 通过反射获取控制器哪些方法不需要登录
         if (!empty($request->controller)) {  #路由中return无实际controller
             $controller = new ReflectionClass($request->controller);
