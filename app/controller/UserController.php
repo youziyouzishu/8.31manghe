@@ -349,8 +349,10 @@ class UserController extends BaseController
         if (!$row) {
             return $this->fail('邀请码不存在');
         }
+
+
         $user = User::find($request->user_id);
-        if ($row->fuli == 1) {
+        if ($user->fuli == 1) {
             return $this->fail('不能重复领取');
         }
 
@@ -360,7 +362,8 @@ class UserController extends BaseController
         $user->parent_id = $row->id;
         $user->fuli = 1;
         $user->save();
-        $coupon = Coupon::where(['fuli' => 1])->get();
+        $coupon_id = UsersCoupon::where(['user_id' => $request->user_id])->distinct()->pluck('coupon_id');
+        $coupon = Coupon::where(['fuli' => 1])->whereNotIn('id', $coupon_id)->get();
         foreach ($coupon as $item) {
 
             $expired_at = Carbon::now()->addDays($item->expired_day);

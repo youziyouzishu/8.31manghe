@@ -1,6 +1,6 @@
 <?php
 return [
-    'enable' => false,
+    'enable' => true,
     'exception' => [
         // 是否记录异常到日志
         'enable' => true,

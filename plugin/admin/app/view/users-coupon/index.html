@@ -20,6 +20,13 @@
                             <input type="number" name="id" value="" class="layui-input">
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">用户</label>
+                        <div class="layui-input-block">
+                            <div name="user_id" id="user_id" value="" ></div>
+                        </div>
+                    </div>
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">创建时间</label>
@@ -56,21 +63,7 @@
             </div>
         </div>
 
-        <!-- 表格顶部工具栏 -->
-        <script type="text/html" id="table-toolbar">
-            <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add" permission="app.admin.userscoupon.insert">
-                <i class="layui-icon layui-icon-add-1"></i>新增
-            </button>
-            <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove" permission="app.admin.userscoupon.delete">
-                <i class="layui-icon layui-icon-delete"></i>删除
-            </button>
-        </script>
 
-        <!-- 表格行工具栏 -->
-        <script type="text/html" id="table-bar">
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.userscoupon.update">编辑</button>
-            <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.userscoupon.delete">删除</button>
-        </script>
 
         <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
         <script src="/app/admin/component/pear/pear.js"></script>
@@ -95,6 +88,47 @@
                     type: "datetime",
                 });
             })
+
+            // 字段 用户 user_id
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                let value = layui.$("#user_id").attr("value");
+                let initValue = value ? value.split(",") : [];
+                layui.xmSelect.render({
+                    el: '#user_id',
+                    name: "user_id",
+                    //配置搜索
+                    filterable: true,
+                    //配置远程分页
+                    clickClose: true,
+                    paging: true,
+                    pageRemote: true,
+                    radio: true,
+                    remoteSearch:true,
+                    initValue: initValue,
+                    template({ item, sels, name, value }){
+                        return name + '<span style="position: absolute; right: 10px; color: #8799a3">'+value+'</span>'
+                    },
+                    prop: {
+                        name: 'nickname',
+                        value: 'id',
+                    },
+                    //数据处理
+                    remoteMethod: function(val, cb, show, pageIndex){
+                        layui.$.ajax({
+                            url: "/app/admin/user/select",
+                            dataType: "json",
+                            data: {
+                                id: val,
+                                page: pageIndex,
+                            },
+                            success: function (res) {
+                                //回调需要两个参数, 第一个: 数据数组, 第二个: 总页码
+                                cb(res.data,res.count)
+                            }
+                        });
+                    }
+                })
+            });
             
             // 表格渲染
             layui.use(["table", "form", "common", "popup", "util"], function() {
@@ -114,28 +148,55 @@
 						field: "id",
 						sort: true,
 					},{
-						title: "创建时间",align: "center",
-						field: "created_at",
-						sort: true,
-					},{
-						title: "更新时间",align: "center",
-						field: "updated_at",
-					},{
-						title: "用户",align: "center",
-						field: "user_id",
-					},{
-						title: "优惠券",align: "center",
-						field: "coupon_id",
-					},{
-						title: "状态:1=未使用,2=已使用,3=已过期",align: "center",
+                        title: "用户",align: "center",
+                        field: "user_id",
+                        templet: function (d) {
+                            return d.user? d.user.nickname : "";
+                        }
+                    },{
+                        title: "券名称",align: "center",
+                        field: "name",
+                    },{
+                        title: "券类型",align: "center",
+                        field: "type",
+                        templet: function (d) {
+                            let field = "type";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
+                    },{
+                        title: "优惠金额",align: "center",
+                        field: "amount",
+                    },{
+                        title: "满足金额",align: "center",
+                        field: "with_amount",
+                    },{
+                        title: "过期时间",align: "center",
+                        field: "expired_at",
+                    },{
+						title: "状态",align: "center",
 						field: "status",
+                        templet: function (d) {
+                            let field = "status";
+                            if (typeof d[field] == "undefined") return "";
+                            let items = [];
+                            layui.each((d[field] + "").split(","), function (k , v) {
+                                items.push(apiResults[field][v] || v);
+                            });
+                            return util.escape(items.join(","));
+                        }
 					},{
-						title: "操作",
-						toolbar: "#table-bar",
-						align: "center",
-						fixed: "right",
-						width: 120,
-					}
+                        title: "创建时间",align: "center",
+                        field: "created_at",
+                        sort: true,
+                    },{
+                        title: "更新时间",align: "center",
+                        field: "updated_at",
+                    }
 				];
 				
 				// 渲染表格
@@ -157,8 +218,11 @@
 				        layer.photos({photos: 'div[lay-id="data-table"]', anim: 5});
 				    }
 				});
-				
-				
+
+                // 获取表格中下拉或树形组件数据
+                let apiResults = {};
+                apiResults["status"] = {'1':'未使用', '2':'已使用', '3':'已过期'};
+                apiResults["type"] = {'1':'无门槛', '2':'满减'};
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {
                     if (obj.event === "remove") {

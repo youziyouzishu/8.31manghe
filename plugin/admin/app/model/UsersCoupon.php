@@ -88,4 +88,9 @@ class UsersCoupon extends Base
         return ['1' => '无门槛', '2' => '满减'];
     }
 
+    function user()
+    {
+        return $this->belongsTo(User::class,'user_id','id');
+    }
+
 }
