@@ -3,6 +3,7 @@
 namespace app\controller;
 
 use plugin\admin\app\model\Address;
+use support\Db;
 use support\Request;
 
 class AddressController extends BaseController
@@ -12,22 +13,26 @@ class AddressController extends BaseController
      */
     function add(Request $request)
     {
-        $requiredFields = ['name', 'mobile', 'province', 'city', 'region', 'detail'];
-        foreach ($requiredFields as $field) {
-            if (!$request->post($field)) {
-                return $this->fail('参数错误');
-            }
-        }
-
+        $name = $request->post('name');
+        $mobile = $request->post('mobile');
+        $province = $request->post('province');
+        $city = $request->post('city');
+        $region = $request->post('region');
+        $detail = $request->post('detail');
+        $default = $request->post('default', 0);
+        $lat = $request->post('lat');
+        $lng = $request->post('lng');
         $data = [
-            'name' => $request->post('name'),
-            'mobile' => $request->post('mobile'),
-            'province' => $request->post('province'),
-            'city' => $request->post('city'),
-            'region' => $request->post('region'),
-            'detail' => $request->post('detail'),
             'user_id' => $request->user_id,
-            'default' => $request->post('default', 0),
+            'name' => $name,
+            'mobile' => $mobile,
+            'province' => $province,
+            'city' => $city,
+            'region' => $region,
+            'detail' => $detail,
+            'default' => $default,
+            'lat' => $lat,
+            'lng' => $lng,
         ];
 
         if ($data['default'] == 0) {
@@ -49,7 +54,7 @@ class AddressController extends BaseController
     function setDefault(Request $request)
     {
         $id = $request->post('id');
-        Address::where(['user_id' => $request->user_id])->update(['default' => 0]);
+        Address::where(['user_id' => $request->user_id, 'default' => 1])->where('id','<>',$id)->update(['default' => 0]);
         Address::where(['id' => $id])->update(['default' => 1]);
         return $this->success();
     }
@@ -77,32 +82,62 @@ class AddressController extends BaseController
     }
 
     /**
+     * 详情
+     */
+    function detail(Request $request)
+    {
+        $id = $request->post('id');
+        $row = Address::find($id);
+        if (!$row) {
+            return $this->fail('地址不存在');
+        }
+        return $this->success('成功', $row);
+    }
+
+
+    /**
      * 编辑地址
      */
     function edit(Request $request)
     {
-        $address_id = $request->post('address_id');
-        $row = Address::find($address_id);
+
+        $id = $request->post('id');
+        $name = $request->post('name');
+        $mobile = $request->post('mobile');
+        $province = $request->post('province');
+        $city = $request->post('city');
+        $region = $request->post('region');
+        $detail = $request->post('detail');
+        $default = $request->post('default', 0);
+
+        $row = Address::find($id);
         if (!$row) {
             return $this->fail('地址不存在');
         }
 
-        $fieldsToUpdate = [
-            'name' => $request->post('name'),
-            'mobile' => $request->post('mobile'),
-            'province' => $request->post('province'),
-            'city' => $request->post('city'),
-            'region' => $request->post('region'),
-            'detail' => $request->post('detail'),
-            'default' => $request->post('default', 0),
-        ];
-
-        if ($fieldsToUpdate['default'] == 1) {
-            Address::where(['user_id' => $request->user_id])->update(['default' => 0]);
-        }
-
-        $row->fill($fieldsToUpdate);
-        $row->save();
+        // 使用事务管理
+        Db::connection('plugin.admin.mysql')->transaction(function () use ($request, $row, $name, $mobile, $province, $city, $region, $detail, $default) {
+            // 删除旧记录并创建新记录
+            $row->delete();
+            $newRow = Address::create([
+                'user_id' => $request->user_id,
+                'name' => $name,
+                'mobile' => $mobile,
+                'province' => $province,
+                'city' => $city,
+                'region' => $region,
+                'detail' => $detail,
+                'default' => $default,
+            ]);
+            // 如果设置为默认地址，则将其他默认地址取消
+            if ($default == 1) {
+                Address::where([
+                    ['user_id', $request->user_id],
+                    ['default', 1],
+                    ['id', '<>', $newRow->id]
+                ])->update(['default' => 0]);
+            }
+        }, 3); // 设置重试次数以应对死锁等异常情况
         return $this->success();
     }
 

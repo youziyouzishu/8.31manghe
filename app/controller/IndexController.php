@@ -3,6 +3,7 @@
 namespace app\controller;
 
 
+use plugin\admin\app\model\BoxPrize;
 use support\Request;
 
 class IndexController extends BaseController
@@ -10,8 +11,5 @@ class IndexController extends BaseController
     protected array $noNeedLogin = ['*'];
 
 
-    function index(Request $request)
-    {
 
-    }
 }

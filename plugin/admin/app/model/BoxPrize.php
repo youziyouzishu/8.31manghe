@@ -20,7 +20,8 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder|BoxPrize query()
  * @property-read mixed $grade_text
  * @property int $level_id 所属关卡
- * @property string $price 市场价
+ * @property string $price 实际价格
+ * @property string $show_price 展示价格
  * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\UsersPrize> $userPrizes
  * @property string $created_at 创建时间

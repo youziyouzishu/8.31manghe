@@ -28,20 +28,22 @@ class PrizeController extends BaseController
         Db::connection('plugin.admin.mysql')->beginTransaction();
         try {
             foreach ($prizes as $prize) {
+
                 $res = UsersPrize::with(['boxPrize' => function ($query) {
                     $query->withTrashed();
                 }])->find($prize['id']);
                 if (!$res) {
-                    return $this->fail('奖品不存在');
+                    throw new \Exception('奖品不存在');
                 }
                 if ($res->safe == 1) {
-                    return $this->fail('奖品已锁定，不能分解');
+                    throw new \Exception('奖品已锁定,不能分解');
+
                 }
                 if ($prize['num'] <= 0) {
-                    return $this->fail('请输入正确的数量');
+                    throw new \Exception('请输入正确的数量');
                 }
                 if ($res->num < $prize['num']) {
-                    return $this->fail('奖品数量不足');
+                    throw new \Exception('奖品数量不足');
                 }
                 $res->decrement('num', $prize['num']);
                 if ($res->num <= 0) {
@@ -176,8 +178,8 @@ class PrizeController extends BaseController
         if (!$res) {
             return $this->fail('奖品不存在');
         }
-        if ($res->price < 30) {
-            $this_freight = 10 * $prize['num'];
+        if ($res->price < 20) {
+            $this_freight = 8 * $prize['num'];
 
         } else {
             $this_freight = 0;
@@ -220,8 +222,8 @@ class PrizeController extends BaseController
         if ($prize['num'] <= 0 || $prize['num'] > $res->num) {
             return $this->fail('请输入正确的数量');
         }
-        if ($res->price < 30) {
-            $freight = 10 * $prize['num'];
+        if ($res->price < 20) {
+            $freight = 8 * $prize['num'];
         } else {
             $freight = 0;
         }

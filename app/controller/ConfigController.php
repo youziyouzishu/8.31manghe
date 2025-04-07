@@ -23,6 +23,7 @@ class ConfigController extends BaseController
             'buy_explain' => $config->logo->buy_explain,
             'newfuli' => $config->logo->newfuli,
             'start_page'=>$config->logo->start_page,
+            'deliver_rule'=>$config->logo->deliver_rule,
         ]);
     }
 

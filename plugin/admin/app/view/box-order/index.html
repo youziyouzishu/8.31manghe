@@ -175,7 +175,7 @@
                     radio: true,
                 })
             });
-
+            //"0":"无","1":"支付宝","2":"水晶","3":"云闪付"
             layui.use(["jquery", "xmSelect"], function() {
                 let value = layui.$("#pay_type").attr("value");
                 let initValue = value ? value.split(",") : [];
@@ -184,7 +184,7 @@
                     name: "pay_type",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"微信"},{"value":"2","name":"余额"}],
+                    data: [{"value":"0","name":"无"},{"value":"1","name":"支付宝"},{"value":"2","name":"水晶"},{"value":"3","name":"云闪付"}],
                     value: "1",
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,

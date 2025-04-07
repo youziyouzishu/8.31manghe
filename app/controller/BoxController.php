@@ -482,7 +482,7 @@ class BoxController extends BaseController
             ->where('grade', $grade)
             ->where('type', 0)
             ->latest()
-            ->take(15)
+            ->take(30)
             ->get()
             ->each(function ($item) use ($request, $box_id,$level_id) {
                 $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id,$level_id) {

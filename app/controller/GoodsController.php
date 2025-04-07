@@ -16,7 +16,7 @@ use Tinywan\Jwt\JwtToken;
 
 class GoodsController extends BaseController
 {
-    protected array $noNeedLogin = ['class'];
+    protected array $noNeedLogin = ['class','index','detail'];
     
     function class()
     {

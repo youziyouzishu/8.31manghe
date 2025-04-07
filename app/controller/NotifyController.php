@@ -187,7 +187,7 @@ class NotifyController extends BaseController
                                     })->exists()) {
                                     Log::info('开始判定');
                                     $odds = intval($box_grade->num / $grades_need_num[$box_grade->grade]);
-                                    $out_of = 90;
+                                    $out_of = 100;
                                     Log::info('判定概率:'.$odds.'/'. $out_of);
                                     Lottery::odds($odds, $out_of)
                                         ->winner(function () use ($box_grade, $grades_need_num, &$selected_grade) {
@@ -498,7 +498,6 @@ class NotifyController extends BaseController
                     $order->pay_at = date('Y-m-d H:i:s');
                     $order->save();
                     $probability = $order->probability;
-                    $probability = $probability / 2;
 
                     if ($order->user->new == 1 && ($paytype == 'unipay' || $paytype == 'alipay')) {
                         $order->user->new = 0;
