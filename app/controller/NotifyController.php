@@ -187,7 +187,7 @@ class NotifyController extends BaseController
                                     })->exists()) {
                                     Log::info('开始判定');
                                     $odds = intval($box_grade->num / $grades_need_num[$box_grade->grade]);
-                                    $out_of = 100;
+                                    $out_of = 120;
                                     Log::info('判定概率:'.$odds.'/'. $out_of);
                                     Lottery::odds($odds, $out_of)
                                         ->winner(function () use ($box_grade, $grades_need_num, &$selected_grade) {

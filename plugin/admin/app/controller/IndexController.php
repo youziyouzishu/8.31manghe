@@ -91,11 +91,11 @@ class IndexController
         // 今日支付
         $today_recharge_pay = UsersDisburse::where('created_at', '>=', $today)->whereHas('user',function ($query){
             $query->where('kol',0);
-        })->where('created_at', '<', $tomorrow)->where('scene','<>',2)->where('type','<>',2)->sum('amount');
+        })->where('created_at', '<', $tomorrow)->where('type','<>',2)->sum('amount');
         // 昨日支付
         $yesterday_recharge_pay = UsersDisburse::where('created_at', '>=', $yesterday)->whereHas('user',function ($query){
             $query->where('kol',0);
-        })->where('created_at', '<', $today)->where('scene','<>',2)->where('type','<>',2)->sum('amount');
+        })->where('created_at', '<', $today)->where('type','<>',2)->sum('amount');
         // 总支付
         $recharge_pay = UsersDisburse::whereHas('user',function ($query){
             $query->where('kol',0);

@@ -62,6 +62,13 @@
                             <input type="text" lay-verify="required" name="name" value="" class="layui-input">
                         </div>
                     </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">一番赏宝箱数量</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="num" lay-verify="required" value="" class="layui-input">
+                        </div>
+                    </div>
                     
                     <div class="layui-form-item">
                         <label class="layui-form-label">单价</label>
@@ -192,7 +199,7 @@
                                 name: "type",
                                 filterable: true,
                                 initValue: initValue,
-                                data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"}],
+                                data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"},{"value":"5","name":"一番赏"}],
                                 value: "1",
                                 model: {"icon":"hidden","label":{"type":"text"}},
                                 clickClose: true,

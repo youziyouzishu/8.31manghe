@@ -123,7 +123,7 @@
                     name: "type",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"}],
+                    data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"},{"value":"5","name":"一番赏"}],
                     value: "",
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,
@@ -291,7 +291,7 @@
 
 				// 获取表格中下拉或树形组件数据
 				let apiResults = {};
-				apiResults["type"] = {"1":"福利赏","2":"高爆赏","3":"无限赏","4":"闯关赏"};
+				apiResults["type"] = {"1":"福利赏","2":"高爆赏","3":"无限赏","4":"闯关赏","5":"一番赏"};
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {
                     if (obj.event === "remove") {
@@ -368,7 +368,7 @@
                         title: "新增",
                         shade: 0.1,
                         maxmin: true,
-                        area: [common.isModile()?"100%":"500px", common.isModile()?"100%":"450px"],
+                        area: [common.isModile()?"100%":"700px", common.isModile()?"100%":"650px"],
                         content: INSERT_URL
                     });
                 }

@@ -90,6 +90,7 @@ class ConfigController extends Base
                     $data[$section]['diy_explain'] = $items['diy_explain'] ?? '';
                     $data[$section]['newfuli'] = htmlspecialchars($items['newfuli'] ?? '');
                     $data[$section]['start_page'] = htmlspecialchars($items['start_page'] ?? '');
+                    $data[$section]['deliver_rule'] = $items['deliver_rule'] ?? '';
                     break;
                 case 'menu':
                     $data[$section]['data'] = Util::filterUrlPath($items['data'] ?? '');
