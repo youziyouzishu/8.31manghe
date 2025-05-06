@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use plugin\admin\app\model\BoxChest;
 use plugin\admin\app\model\BoxGrade;
 use support\Request;
 use support\Response;
@@ -91,13 +92,14 @@ class BoxController extends Crud
     public function insert(Request $request): Response
     {
         if ($request->method() === 'POST') {
-            $params = $request->post();
-            if (!empty($params['rate']) && ($params['rate'] < 0 || $params['rate'] > 1)) {
+            $rate = $request->post('rate');
+            $type = $request->post('type');
+            $num = $request->post('num');
+            if (!empty($rate) && ($rate < 0 || $rate > 1)) {
                 return $this->fail('毛利率必须大于0且小于1');
             }
             $data = $this->insertInput($request);
             $id = $this->doInsert($data);
-
             //用户
             BoxGrade::create([
                 'box_id' => $id,
@@ -151,6 +153,23 @@ class BoxController extends Crud
                 'grade' => 5,
                 'type'=>2,
             ]);
+            BoxChest::create([
+                'box_id' => $id,
+                'index' => 1,
+            ]);
+
+            if ($type == 5){
+                if (empty($num) || $num < 1){
+                    return $this->fail('请输入正确的番赏宝箱数量');
+                }
+                for ($i = 1; $i <= $num; $i++){
+                    BoxChest::create([
+                        'box_id' => $id,
+                        'index' => $i,
+                    ]);
+                }
+            }
+
             return $this->json(0, 'ok', ['id' => $id]);
         }
         return view('box/insert');

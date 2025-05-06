@@ -24,6 +24,7 @@ namespace plugin\admin\app\model;
  * @property string $with_amount 满足金额
  * @property \Illuminate\Support\Carbon|null $expired_at 过期时间
  * @property-read mixed $type_text
+ * @property-read \plugin\admin\app\model\User|null $user
  * @mixin \Eloquent
  */
 class UsersCoupon extends Base

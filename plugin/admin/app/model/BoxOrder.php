@@ -29,6 +29,8 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\User|null $user
  * @property int $pay_type 支付类型
  * @property-read \plugin\admin\app\model\BoxLevel|null $level
+ * @property int|null $chest_id 所属宝箱
+ * @property-read \plugin\admin\app\model\BoxChest|null $chest
  * @mixin \Eloquent
  */
 class BoxOrder extends Base
@@ -64,7 +66,8 @@ class BoxOrder extends Base
         'times',
         'pay_type',
         'level_id',
-        'user_coupon_id'
+        'user_coupon_id',
+        'chest_id',
     ];
 
     function userCoupon()
@@ -75,6 +78,11 @@ class BoxOrder extends Base
     function box()
     {
         return $this->belongsTo(Box::class);
+    }
+
+    function chest()
+    {
+        return $this->belongsTo(BoxChest::class,'chest_id','id');
     }
 
     function user()

@@ -30,6 +30,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withoutTrashed()
+ * @property int|null $num 奖品数量
  * @mixin \Eloquent
  */
 class BoxPrize extends Base

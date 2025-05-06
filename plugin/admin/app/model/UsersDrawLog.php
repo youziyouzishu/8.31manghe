@@ -22,6 +22,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\Box|null $box
  * @property string $ordersn 订单编号
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \plugin\admin\app\model\GoodsOrder> $orders
+ * @property int|null $chest_id 所属宝箱
  * @mixin \Eloquent
  */
 class UsersDrawLog extends Base
@@ -40,11 +41,11 @@ class UsersDrawLog extends Base
      */
     protected $primaryKey = 'id';
 
-    protected $fillable = ['user_id', 'times', 'box_id', 'level_id','ordersn'];
+    protected $fillable = ['user_id', 'times', 'box_id', 'level_id', 'ordersn', 'chest_id'];
 
     function prizeLog()
     {
-        return $this->hasMany(UsersPrizeLog::class, 'draw_id', 'id')->where('type',0);
+        return $this->hasMany(UsersPrizeLog::class, 'draw_id', 'id')->where('type', 0);
     }
 
     function box()

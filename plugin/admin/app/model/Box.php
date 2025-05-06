@@ -37,6 +37,7 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Box onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Box withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Box withoutTrashed()
+ * @property int|null $num 一番赏宝箱数量
  * @mixin \Eloquent
  */
 class Box extends Base

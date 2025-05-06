@@ -14,7 +14,8 @@ class IndexController extends BaseController
 
     function index()
     {
-
+        $a = [3,4];
+        dump(array_random_keys($a));
     }
 
 
