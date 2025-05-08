@@ -40,7 +40,7 @@ class BoxPrizeController extends Crud
     public function select(Request $request): Response
     {
         [$where, $format, $limit, $field, $order] = $this->selectInput($request);
-        $query = $this->doSelect($where, $field, $order)->with(['level']);
+        $query = $this->doSelect($where, $field, $order)->with(['level','gaine']);
         return $this->doFormat($query, $format, $limit);
     }
 
@@ -134,12 +134,12 @@ class BoxPrizeController extends Crud
             }
             $row = $this->model->find($params['id']);
             if ($row->box->type == 4) {
-                $chance = $this->model->where(['level_id' => $params['level_id'], 'box_id' => $params['box_id'], ['id', '<>', $row->id]])->sum('chance');
+                $chance = $this->model->where(['level_id' => $params['level_id'], 'box_id' => $row->box_id, ['id', '<>', $row->id]])->sum('chance');
             } else {
                 if ($params['grade'] == 2 && $params['price'] > $row->box->price) {
                     return $this->fail('市场价不能大于等于盲盒单抽价格');
                 }
-                $chance = $this->model->where(['box_id' => $params['box_id'], ['id', '<>', $row->id]])->sum('chance');
+                $chance = $this->model->where(['box_id' => $row->box_id, ['id', '<>', $row->id]])->sum('chance');
             }
             if ($row->chance != $params['chance'] && $chance + $params['chance'] > 100) {
                 return $this->fail('概率不能超过100%');

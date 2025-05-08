@@ -21,7 +21,7 @@
                         </div>
                     </div>
 
-                    <div class="layui-form-item">
+                    <div class="layui-form-item num">
                         <label class="layui-form-label">数量</label>
                         <div class="layui-input-block">
                             <input type="text" name="num" value="" class="layui-input">
@@ -35,18 +35,17 @@
                         </div>
                     </div>
 
-
-                    <div class="layui-form-item">
-                        <label class="layui-form-label required">所属盲盒</label>
-                        <div class="layui-input-block">
-                            <div name="box_id"  id="box_id" value="0" ></div>
-                        </div>
-                    </div>
-
                     <div class="layui-form-item level_id">
                         <label class="layui-form-label">所属关卡</label>
                         <div class="layui-input-block">
                             <div  name="level_id" id="level_id" value="0" ></div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item gaine_id">
+                        <label class="layui-form-label">所属箱子</label>
+                        <div class="layui-input-block">
+                            <div  name="gaine_id" id="gaine_id" value="0" ></div>
                         </div>
                     </div>
 
@@ -123,6 +122,12 @@
             if (type !== "4"){
                 layui.$(".level_id").hide();
             }
+            if (type !== "6"){
+                layui.$(".gaine_id").hide();
+            }
+            if (type !== "5"){
+                layui.$(".num").hide();
+            }
 
             // 字段 评级 grade
             layui.use(["jquery", "xmSelect"], function() {
@@ -142,31 +147,6 @@
             });
 
 
-            // 字段 所属盲盒 box_id
-            layui.use(["jquery", "xmSelect", "popup"], function() {
-                layui.$.ajax({
-                    url: "/app/admin/box/select?format=select&id="+box_id,
-                    dataType: "json",
-                    success: function (res) {
-                        let value = layui.$("#box_id").attr("value");
-                        let initValue = value ? value.split(",") : [];
-                        layui.xmSelect.render({
-                            el: "#box_id",
-                            name: "box_id",
-                            initValue: initValue,
-                            filterable: true,
-                            data: res.data,
-                            model: {"icon":"hidden","label":{"type":"text"}},
-                            clickClose: true,
-                            radio: true,
-                        });
-                        if (res.code) {
-                            layui.popup.failure(res.msg);
-                        }
-                    }
-                });
-            });
-
             // 字段 所属盲盒 level_id
             layui.use(["jquery", "xmSelect", "popup"], function() {
                 layui.$.ajax({
@@ -181,6 +161,31 @@
                         layui.xmSelect.render({
                             el: "#level_id",
                             name: "level_id",
+                            initValue: initValue,
+                            filterable: true,
+                            data: res.data,
+                            model: {"icon":"hidden","label":{"type":"text"}},
+                            clickClose: true,
+                            radio: true,
+                            value: value,
+                        });
+                        if (res.code) {
+                            layui.popup.failure(res.msg);
+                        }
+                    }
+                });
+            });
+
+            layui.use(["jquery", "xmSelect", "popup"], function() {
+                layui.$.ajax({
+                    url: "/app/admin/box-gaine/select?format=select&box_id="+box_id,
+                    dataType: "json",
+                    success: function (res) {
+                        let value = layui.$("#gaine_id").attr("value");
+                        let initValue = value ? value.split(",") : [];
+                        layui.xmSelect.render({
+                            el: "#gaine_id",
+                            name: "gaine_id",
                             initValue: initValue,
                             filterable: true,
                             data: res.data,
@@ -250,7 +255,7 @@
                         // 如果没有选择任何值，可以在这里进行其他处理
                         data.field.level_id = 0;
                     }
-
+                    data.field.box_id = box_id;
                     layui.$.ajax({
                         url: INSERT_API,
                         type: "POST",

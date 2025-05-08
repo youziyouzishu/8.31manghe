@@ -36,12 +36,6 @@
                 </div>
             </div>
 
-            <div class="layui-form-item">
-                <label class="layui-form-label">所属盲盒</label>
-                <div class="layui-input-block">
-                    <div name="box_id" id="box_id" value=""></div>
-                </div>
-            </div>
 
             <div class="layui-form-item level_id">
                 <label class="layui-form-label">所属关卡</label>
@@ -163,30 +157,6 @@
                     })
                 });
 
-                // 字段 所属盲盒 box_id
-                layui.use(["jquery", "xmSelect", "popup"], function () {
-                    layui.$.ajax({
-                        url: "/app/admin/box/select?format=select&id=" + box_id,
-                        dataType: "json",
-                        success: function (res) {
-                            let value = layui.$("#box_id").attr("value");
-                            let initValue = value ? value.split(",") : [];
-                            layui.xmSelect.render({
-                                el: "#box_id",
-                                name: "box_id",
-                                initValue: initValue,
-                                filterable: true,
-                                data: res.data,
-                                model: {"icon": "hidden", "label": {"type": "text"}},
-                                clickClose: true,
-                                radio: true,
-                            });
-                            if (res.code) {
-                                layui.popup.failure(res.msg);
-                            }
-                        }
-                    });
-                });
 
                 // 字段 所属关卡 level_id
                 layui.use(["jquery", "xmSelect", "popup"], function () {

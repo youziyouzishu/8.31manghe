@@ -12,15 +12,20 @@ use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\GoodsOrder;
 use plugin\admin\app\model\User;
 use plugin\admin\app\model\UsersCoupon;
+use plugin\admin\app\model\UsersDisburse;
 use plugin\admin\app\model\UsersDrawLog;
+use plugin\admin\app\model\UsersGaine;
 use plugin\admin\app\model\UsersGiveLog;
 use plugin\admin\app\model\UsersLayer;
 use plugin\admin\app\model\UsersMoneyLog;
 use plugin\admin\app\model\UsersPrize;
 use plugin\admin\app\model\UsersPrizeLog;
+use support\Cache;
 use support\Db;
+use support\Log;
 use support\Request;
 use Tinywan\Jwt\JwtToken;
+use Webman\Push\Api;
 use Webman\RedisQueue\Client;
 
 class UserController extends BaseController
@@ -420,5 +425,106 @@ class UserController extends BaseController
         return $this->success('成功');
     }
 
+    /**
+     * 获取宝箱
+     */
+    function getGaine(Request $request)
+    {
+        $rows = UsersGaine::where(['user_id'=>$request->user_id])->get();
+        return $this->success('成功',$rows);
+    }
+
+    function openGaine(Request $request)
+    {
+        $gaine_id = $request->post('gaine_id');
+        $row = UsersGaine::find($gaine_id);
+        if (!$row) {
+            return $this->fail('宝箱不存在');
+        }
+
+        $prizes = $row->gaine->boxPrize()->get();
+        $box = $row->gaine->box;
+        if ($prizes->isEmpty()) {
+            return $this->fail('宝箱内没有奖品');
+        }
+
+        $user = User::find($request->user_id);
+        // 计算总概率
+        $totalChance = $prizes->sum('chance');
+        // 生成一个介于 0 和总概率之间的随机数
+        $randomNumber = mt_rand() / mt_getrandmax() * $totalChance;
+        // 累加概率，确定中奖奖品
+        $currentChance = 0.0;
+        // 用户可能单独增加额外的概率
+        $currentChance += $user->chance;
+
+        // 对奖品列表进行随机排序
+        $prizes = $prizes->shuffle();
+        $winnerPrize = ['gt_n' => 0, 'list' => []];
+        foreach ($prizes as $prize) {
+            $currentChance += $prize->chance;
+            if ($randomNumber <= $currentChance) {
+                $winnerPrize['list'][] = $prize;
+                if ($prize->grade == 5) {
+                    $winnerPrize['gt_n'] = 1;
+                }
+                if ($user->kol == 0) {
+                    //普通用户才增加奖金池
+                    // 增加奖金池金额
+                    $box->decrement('pool_amount', $prize->price);
+                } else {
+                    $box->decrement('kol_pool_amount', $prize->price);
+                }
+                break;
+            }
+        }
+
+        $online = Cache::has("private-user-{$user->id}");
+        if (!$online) {
+            Cache::set("private-user-{$user->id}-winner_prize", $winnerPrize);
+        } else {
+            $api = new Api(
+                'http://127.0.0.1:3232',
+                config('plugin.webman.push.app.app_key'),
+                config('plugin.webman.push.app.app_secret')
+            );
+            // 给客户端推送私有 prize_draw 事件的消息
+            $api->trigger("private-user-{$user->id}", 'prize_draw', [
+                'winner_prize' => $winnerPrize
+            ]);
+            Log::info("推送消息成功:private-user-{$user->id}-winner_prize");
+        }
+
+
+        foreach ($winnerPrize['list'] as $item) {
+            // 发放奖品并且记录
+            if ($userPrize = UsersPrize::where(['user_id' => $user->id, 'box_prize_id' => $item->id, 'price' => $item->price])->first()) {
+                $userPrize->increment('num');
+            } else {
+                UsersPrize::create([
+                    'user_id' => $user->id,
+                    'box_prize_id' => $item->id,
+                    'price' => $item->price,
+                    'num' => 1,
+                    'mark' => '宝箱抽奖获得',
+                    'grade' => $item->grade,
+                ]);
+            }
+
+            UsersPrizeLog::create([
+                'draw_id' => $row->draw_id,
+                'user_id' => $user->id,
+                'box_prize_id' => $item->id,
+                'mark' => '宝箱抽奖获得',
+                'price' => $item->price,
+                'type' => 14,
+                'grade' => $item->grade,
+                'num' => 1,
+            ]);
+        }
+
+        $row->delete();
+        return $this->success('成功');
+    }
 
 }

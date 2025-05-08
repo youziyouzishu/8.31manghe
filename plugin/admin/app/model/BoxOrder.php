@@ -31,6 +31,7 @@ use plugin\admin\app\model\Base;
  * @property-read \plugin\admin\app\model\BoxLevel|null $level
  * @property int|null $chest_id 所属宝箱
  * @property-read \plugin\admin\app\model\BoxChest|null $chest
+ * @property int|null $gaine_id 所属箱子
  * @mixin \Eloquent
  */
 class BoxOrder extends Base

@@ -82,6 +82,7 @@
         <!-- 表格行工具栏 -->
         <script type="text/html" id="table-bar">
             <button class="pear-btn pear-btn-xs tool-btn {{ d.type == 4 ? '' : 'layui-hide' }}" lay-event="level" permission="app.admin.box.level">关卡</button>
+            <button class="pear-btn pear-btn-xs tool-btn {{ d.type == 6 ? '' : 'layui-hide' }}" lay-event="gaine" permission="app.admin.box.gaine">箱子</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="prize" permission="app.admin.box.prize">奖品</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="edit" permission="app.admin.box.update">编辑</button>
             <button class="pear-btn pear-btn-xs tool-btn" lay-event="remove" permission="app.admin.box.delete">删除</button>
@@ -105,6 +106,7 @@
             const UPDATE_URL = "/app/admin/box/update";
             const PRIZE_URL = "/app/admin/box-prize/index";
             const LEVEL_URL = "/app/admin/box-level/index";
+            const GAINE_URL = "/app/admin/box-gaine/index";
 
             // 字段 创建时间 created_at
             layui.use(["laydate"], function() {
@@ -123,7 +125,7 @@
                     name: "type",
                     filterable: true,
                     initValue: initValue,
-                    data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"},{"value":"5","name":"一番赏"}],
+                    data: [{"value":"1","name":"福利赏"},{"value":"2","name":"高爆赏"},{"value":"3","name":"无限赏"},{"value":"4","name":"闯关赏"},{"value":"5","name":"一番赏"},{"value":"6","name":"开箱赏"}],
                     value: "",
                     model: {"icon":"hidden","label":{"type":"text"}},
                     clickClose: true,
@@ -291,7 +293,7 @@
 
 				// 获取表格中下拉或树形组件数据
 				let apiResults = {};
-				apiResults["type"] = {"1":"福利赏","2":"高爆赏","3":"无限赏","4":"闯关赏","5":"一番赏"};
+				apiResults["type"] = {"1":"福利赏","2":"高爆赏","3":"无限赏","4":"闯关赏","5":"一番赏","6":"开箱赏"};
                 // 编辑或删除行事件
                 table.on("tool(data-table)", function(obj) {
                     if (obj.event === "remove") {
@@ -302,6 +304,8 @@
                         prize(obj);
                     }else if (obj.event === "level") {
                         level(obj)
+                    }else if (obj.event === "gaine") {
+                        gaine(obj)
                     }
                 });
 
@@ -409,6 +413,18 @@
                         maxmin: true,
                         area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
                         content: LEVEL_URL + "?" + "box_id" + "=" + value
+                    });
+                }
+
+                let gaine = function(obj) {
+                    let value = obj.data[PRIMARY_KEY];
+                    layer.open({
+                        type: 2,
+                        title: "箱子",
+                        shade: 0.1,
+                        maxmin: true,
+                        area: [common.isModile()?"100%":"90%", common.isModile()?"100%":"90%"],
+                        content: GAINE_URL + "?" + "box_id" + "=" + value
                     });
                 }
 

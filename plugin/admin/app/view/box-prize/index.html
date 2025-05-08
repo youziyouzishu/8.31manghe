@@ -191,12 +191,19 @@
                     });
                     return util.escape(items.join(","));
                 }
-            }, {
+            },{
                 title: "所属关卡", align: "center",
                 templet: function (d) {
                     return d.level? d.level.name : "";
-                }
-            }, {
+                },
+                hide:type !== '4'
+            },{
+                title: "所属盒子", align: "center",
+                templet: function (d) {
+                    return d.gaine? d.gaine.name : "";
+                },
+                hide:type !== '6'
+            },{
                 title: "概率", align: "center",
                 field: "chance",
             },{
@@ -205,6 +212,7 @@
             },{
                 title: "数量", align: "center",
                 field: "num",
+                hide:type !== '5'
             },{
                 title: "展示价格", align: "center",
                 field: "show_price",

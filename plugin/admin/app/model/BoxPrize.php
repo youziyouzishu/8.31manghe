@@ -31,6 +31,8 @@ use plugin\admin\app\model\Base;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BoxPrize withoutTrashed()
  * @property int|null $num 奖品数量
+ * @property int|null $gaine_id 所属箱子
+ * @property-read \plugin\admin\app\model\BoxGaine|null $gaine
  * @mixin \Eloquent
  */
 class BoxPrize extends Base
@@ -80,7 +82,12 @@ class BoxPrize extends Base
 
     function level()
     {
-        return $this->belongsTo(BoxLevel::class,'level_id');
+        return $this->belongsTo(BoxLevel::class,'level_id','id');
+    }
+
+    function gaine()
+    {
+        return $this->belongsTo(BoxGaine::class,'gaine_id','id');
     }
 
     public function userPrizes()

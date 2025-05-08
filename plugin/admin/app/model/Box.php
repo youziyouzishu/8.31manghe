@@ -73,7 +73,7 @@ class Box extends Base
     function getTypeTextAttribute($value)
     {
         $value = $value ?: ($this->type ?? '');
-        $list = ['1' => '福利赏', '2' => '高爆赏', '3' => '无限赏', '4' => '闯关赏'];
+        $list = ['1' => '福利赏', '2' => '高爆赏', '3' => '无限赏', '4' => '闯关赏', '5' => '一番赏', '6' => '开箱赏'];
         return $list[$value] ?? '';
     }
 

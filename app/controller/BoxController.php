@@ -68,6 +68,36 @@ class BoxController extends BaseController
         return $this->success('成功', $rows);
     }
 
+    function gainePrize(Request $request)
+    {
+        $box_id = $request->post('box_id');
+        $box = Box::with(['gaine','boxPrize'=>function ($query) {
+            $query->whereNull('gaine_id');
+        }])->find($box_id);
+        return $this->success('成功',$box);
+    }
+
+    function getGaineDetail(Request $request)
+    {
+        $gaine_id = $request->post('gaine_id');
+        $grades = BoxPrize::where('gaine_id',$gaine_id)
+            ->whereNot('grade', 1)
+            ->orderByDesc('grade')
+            ->distinct()
+            ->pluck('grade')
+            ->values();
+        $prizeData = [];
+        $grades->each(function ($grade) use ($gaine_id, &$prizeData) {
+            $prizes = BoxPrize::where(['gaine_id' => $gaine_id, 'grade' => $grade])->get();
+            $prizeData[] = [
+                'name' => $grade,
+                'chance' => round($prizes->sum('chance'), 3),
+                'boxPrize' => $prizes,
+            ];
+        });
+        return $this->success('成功',$prizeData);
+    }
+
     function boxPrize(Request $request)
     {
         $box_id = $request->post('box_id');

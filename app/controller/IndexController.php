@@ -4,6 +4,7 @@ namespace app\controller;
 
 
 use Carbon\Carbon;
+use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\UsersDisburse;
 use support\Request;
@@ -14,8 +15,8 @@ class IndexController extends BaseController
 
     function index()
     {
-        $a = [3,4];
-        dump(array_random_keys($a));
+        $order = BoxOrder::find(44167);
+        $order->box()->increment('kol_consume_amount');
     }
 
 
