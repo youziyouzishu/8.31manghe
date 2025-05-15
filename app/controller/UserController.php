@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use EasyWeChat\MiniApp\Application;
 use Illuminate\Database\Eloquent\Builder;
 use plugin\admin\app\common\Util;
+use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\Coupon;
 use plugin\admin\app\model\Deliver;
 use plugin\admin\app\model\GoodsOrder;
@@ -430,7 +431,9 @@ class UserController extends BaseController
      */
     function getGaine(Request $request)
     {
-        $rows = UsersGaine::where(['user_id'=>$request->user_id])->get();
+        $rows = UsersGaine::with(['gaine'=>function ($query) {
+            $query->with(['boxPrize']);
+        }])->where(['user_id'=>$request->user_id])->get();
         return $this->success('成功',$rows);
     }
 
@@ -441,14 +444,28 @@ class UserController extends BaseController
         if (!$row) {
             return $this->fail('宝箱不存在');
         }
-
-        $prizes = $row->gaine->boxPrize()->get();
+        $user = User::find($request->user_id);
         $box = $row->gaine->box;
+        $prizes = $row->gaine->boxPrize()
+            ->where(function ($query)use($user,$box){
+                //如果是普通用户才受奖金池限制
+                if ($user->kol == 0) {
+                    $query->whereBetween('price', [0, $box->pool_amount]);
+                } else {
+                    $query->whereBetween('price', [0, $box->kol_pool_amount]);
+                }
+            })
+            ->get();
+
+
+
         if ($prizes->isEmpty()) {
-            return $this->fail('宝箱内没有奖品');
+            $prizes = $row->gaine->boxPrize()->orderBy('price')->limit(3)->get();
+            if ($prizes->isEmpty()) {
+                return $this->fail('奖品不足');
+            }
         }
 
-        $user = User::find($request->user_id);
         // 计算总概率
         $totalChance = $prizes->sum('chance');
         // 生成一个介于 0 和总概率之间的随机数
@@ -480,6 +497,7 @@ class UserController extends BaseController
         }
 
         $online = Cache::has("private-user-{$user->id}");
+        dump('在线状态：'.$online);
         if (!$online) {
             Cache::set("private-user-{$user->id}-winner_prize", $winnerPrize);
         } else {
@@ -492,6 +510,7 @@ class UserController extends BaseController
             $api->trigger("private-user-{$user->id}", 'prize_draw', [
                 'winner_prize' => $winnerPrize
             ]);
+            dump("推送消息成功:private-user-{$user->id}-winner_prize");
             Log::info("推送消息成功:private-user-{$user->id}-winner_prize");
         }
 
@@ -510,7 +529,6 @@ class UserController extends BaseController
                     'grade' => $item->grade,
                 ]);
             }
-
             UsersPrizeLog::create([
                 'draw_id' => $row->draw_id,
                 'user_id' => $user->id,
@@ -522,7 +540,9 @@ class UserController extends BaseController
                 'num' => 1,
             ]);
         }
-
+        dump($winnerPrize['list'][0]['id']);
+        dump($winnerPrize['list'][0]['grade']);
+        dump($winnerPrize['list'][0]['name']);
         $row->delete();
         return $this->success('成功');
     }

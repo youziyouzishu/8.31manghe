@@ -24,7 +24,7 @@ class RoomController extends BaseController
     {
         $name = $request->post('name');
         $content = $request->post('content');
-        $type = $request->post('type');#房间类型:1=密码,2=流水
+        $type = $request->post('type');#房间类型:1=密码,2=流水,3=支付
         $min = $request->post('min');
         $password = $request->post('password');
         $start_at = $request->post('start_at');
@@ -34,8 +34,16 @@ class RoomController extends BaseController
         if (empty($prizes)) {
             return $this->fail('奖品不能为空');
         }
-        if ($type == 2 && (empty($min) || $min < 0)) {
-            return $this->fail('流水不能小于0');
+        if ($type == 2) {
+            if (empty($min) || $min < 0){
+                return $this->fail('流水不能小于0');
+            }
+        }
+
+        if ($type == 3) {
+            if (empty($min) || $min < 0){
+                return $this->fail('金额不能小于0');
+            }
         }
         $start_time = strtotime($start_at);
         $end_time = strtotime($end_at);
@@ -176,18 +184,21 @@ class RoomController extends BaseController
     {
         $room_id = $request->post('room_id');
         $password = $request->post('password');
-        $rooms = Room::find($room_id);
-        if ($rooms->type == 1 && $rooms->password != $password) {
+        $room = Room::find($room_id);
+        if ($room->type == 1 && $room->password != $password) {
             return $this->fail('密码错误');
         }
 
-        if ($rooms->type == 2 && UsersDisburse::where(['user_id' => $request->user_id])->whereBetween('created_at', [$rooms->start_at, $rooms->end_at])->sum('amount') < $rooms->min) {
+        if ($room->type == 2 && UsersDisburse::where(['user_id' => $request->user_id])->whereBetween('created_at', [$room->start_at, $room->end_at])->sum('amount') < $room->min) {
             return $this->fail('流水不足');
+        }
+        if ($room->type == 3 && UsersDisburse::where(['user_id' => $request->user_id])->whereIn('type',[1,3])->whereBetween('created_at', [$room->start_at, $room->end_at])->sum('amount') < $room->min) {
+            return $this->fail('支付金额不足');
         }
         if (RoomUsers::where(['room_id' => $room_id, 'user_id' => $request->user_id])->exists()) {
             return $this->fail('不能重复参与');
         }
-        if (RoomUsers::where(['room_id' => $room_id])->count() >= $rooms->num) {
+        if (RoomUsers::where(['room_id' => $room_id])->count() >= $room->num) {
             return $this->fail('房间已满');
         }
         RoomUsers::create([

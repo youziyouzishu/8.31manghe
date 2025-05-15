@@ -80,12 +80,17 @@ class Box extends Base
 
     function level()
     {
-        return $this->hasMany(BoxLevel::class,'box_id');
+        return $this->hasMany(BoxLevel::class,'box_id','id');
     }
 
     function grade()
     {
-        return $this->hasMany(BoxGrade::class,'box_id');
+        return $this->hasMany(BoxGrade::class,'box_id','id');
+    }
+
+    function gaine()
+    {
+        return $this->hasMany(BoxGaine::class,'box_id','id');
     }
 
 

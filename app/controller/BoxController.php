@@ -46,6 +46,11 @@ class BoxController extends BaseController
         return $this->success('成功', $rows);
     }
 
+    /**
+     * 一番赏详情
+     * @param Request $request
+     * @return \support\Response
+     */
     function yifanPrize(Request $request)
     {
         $box_id = $request->post('box_id');
@@ -55,32 +60,104 @@ class BoxController extends BaseController
         return $this->success('成功', $rows);
     }
 
+    /**
+     * 一番赏宝箱列表
+     * @param Request $request
+     * @return \support\Response
+     */
     function yifanChestList(Request $request)
     {
         $box_id = $request->post('box_id');
-        $rows = BoxChest::where(['box_id' => $box_id])->orderBy('index','asc')->get();
-        $total = BoxPrize::where(['box_id' => $box_id])->where('grade',2)->sum('num');
-        foreach ($rows as $row){
-            $row->setAttribute('total',$total);
-            $num = $total - $row->orders()->where('status',2)->count();
-            $row->setAttribute('num',$num);
+        $chest_id = $request->post('chest_id');
+        $rows = BoxChest::where(['box_id' => $box_id])->orderBy('index')->get();
+        $total = BoxPrize::where(['box_id' => $box_id])->where('grade', 2)->sum('num');
+        $choose_chest = false;
+        $current = false;
+        foreach ($rows as $row) {
+            $row->setAttribute('total', $total);
+            $num = $total - $row->orders()->where('status', 2)->count();
+            $row->setAttribute('num', $num);
+
+            if (empty($chest_id)) {
+                if ($num >= 1 && empty($choose_chest)) {
+                    $choose_chest = true;
+                    $current = $row;
+                    $row->setAttribute('choose_chest', true);
+                } else {
+                    $row->setAttribute('choose_chest', false);
+                }
+            } else {
+                if ($chest_id == $row->id) {
+                    $choose_chest = true;
+                    $current = $row;
+                    $row->setAttribute('choose_chest', true);
+                } else {
+                    $row->setAttribute('choose_chest', false);
+                }
+            }
         }
-        return $this->success('成功', $rows);
+        if (!$choose_chest) {
+            $rows->last()->setAttribute('choose_chest', true);
+            $current = $rows->last();
+        }
+        return $this->success('成功', ['num' => $current->index, 'total' => $rows->last()->index, 'list' => $rows]);
     }
 
+    /**
+     * 详情
+     * @param Request $request
+     * @return \support\Response
+     */
+    function yifanChestDetail(Request $request)
+    {
+        $box_id = $request->post('box_id');
+        $chest_id = $request->post('chest_id');
+        $total = BoxPrize::where(['box_id' => $box_id])->where('grade', 2)->sum('num');
+        if (empty($chest_id)) {
+            //使用默认箱子
+            $chests = BoxChest::where(['box_id' => $box_id])->orderBy('index', 'asc')->get();
+            $choose_chest = null;
+            foreach ($chests as $chest) {
+                $num = $total - $chest->orders()->where('status', 2)->count();
+                if ($num >= 1) {
+                    $choose_chest = $chest;
+                    break;
+                }
+            }
+        } else {
+            //选择箱子
+            $choose_chest = BoxChest::find($chest_id);
+        }
+        $num = $total - $choose_chest->orders()->where('status', 2)->count();
+
+        return $this->success('成功', ['num' => $num, 'total' => $total]);
+    }
+
+
+    /**
+     * 开箱赏详情
+     * @param Request $request
+     * @return \support\Response
+     */
     function gainePrize(Request $request)
     {
         $box_id = $request->post('box_id');
-        $box = Box::with(['gaine','boxPrize'=>function ($query) {
+        $box = Box::with(['gaine', 'boxPrize' => function ($query) {
             $query->whereNull('gaine_id');
         }])->find($box_id);
-        return $this->success('成功',$box);
+        return $this->success('成功', $box);
     }
 
+
+    /**
+     * 开箱赏箱子详情
+     * @param Request $request
+     * @return \support\Response
+     */
     function getGaineDetail(Request $request)
     {
         $gaine_id = $request->post('gaine_id');
-        $grades = BoxPrize::where('gaine_id',$gaine_id)
+        $grades = BoxPrize::where('gaine_id', $gaine_id)
             ->whereNot('grade', 1)
             ->orderByDesc('grade')
             ->distinct()
@@ -95,7 +172,7 @@ class BoxController extends BaseController
                 'boxPrize' => $prizes,
             ];
         });
-        return $this->success('成功',$prizeData);
+        return $this->success('成功', $prizeData);
     }
 
     function boxPrize(Request $request)
@@ -276,6 +353,12 @@ class BoxController extends BaseController
         if (empty($box)) {
             return $this->fail('盲盒不存在');
         }
+        if (empty($times)) {
+            return $this->fail('请选择抽奖次数');
+        }
+        if ($box->type == 5 && $times != 1) {
+            return $this->fail('一番赏只能单抽');
+        }
 
         try {
             if (!empty($level_id)) {
@@ -423,30 +506,34 @@ class BoxController extends BaseController
                 }
             }
 
-            if ($box->type == 5){
+            if ($box->type == 5) {
                 // 一番赏
-                $total = BoxPrize::where(['box_id' => $box->id])->where('grade',2)->sum('num');
-                if (empty($chest_id)){
+                $total = BoxPrize::where(['box_id' => $box->id])->where('grade', 2)->sum('num');
+                if (empty($chest_id)) {
                     //使用默认箱子
-                    $chests = BoxChest::where(['box_id' => $box->id])->orderBy('index','asc')->get();
+                    $chests = BoxChest::where(['box_id' => $box->id])->orderBy('index', 'asc')->get();
                     $choose_chest = null;
-                    foreach ($chests as $chest){
-                        $num = $total - $chest->orders()->where('status',2)->count();
-                        if ($num >= 1){
+                    foreach ($chests as $chest) {
+                        $num = $total - $chest->orders()->where('status', 2)->count();
+                        if ($num >= 1) {
                             $choose_chest = $chest;
                             break;
                         }
                     }
-                    if (!$choose_chest){
+                    if (!$choose_chest) {
                         return $this->fail('宝箱已被抽完');
                     }
-                }else{
+
+                } else {
                     //选择箱子
                     $choose_chest = BoxChest::find($chest_id);
-                    $num = $total - $choose_chest->orders()->where('status',2)->count();
-                    if ($num < 1){
+                    $num = $total - $choose_chest->orders()->where('status', 2)->count();
+                    if ($num < 1) {
                         return $this->fail('宝箱已被抽完');
                     }
+                }
+                if ($choose_chest->orders()->where('status', 2)->where('user_id', $request->user_id)->exists()) {
+                    return $this->fail('此宝箱不能重复购买');
                 }
             }
 
@@ -519,6 +606,7 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $level_id = $request->post('level_id', 0);
+        $chest_id = $request->post('chest_id', 0);
         $box = Box::find($box_id);
         if (!$box) {
             return $this->fail('盲盒不存在');
@@ -532,15 +620,30 @@ class BoxController extends BaseController
                 return $this->fail('盲盒关卡不存在');
             }
             $prize_ids = $level->boxPrize()->pluck('id');
+            $list = UsersPrizeLog::with(['boxPrize', 'user'])
+                ->whereIn('box_prize_id', $prize_ids)
+                ->where('type', 0)
+                ->orderBy('id', 'desc')
+                ->paginate()
+                ->items();
+        } elseif (!empty($chest_id)) {
+            $draw_ids = UsersDrawLog::where(['chest_id' => $chest_id])->pluck('id');
+            $list = UsersPrizeLog::with(['boxPrize', 'user'])
+                ->whereIn('draw_id', $draw_ids)
+                ->where('type', 0)
+                ->orderBy('id', 'desc')
+                ->paginate()
+                ->items();
         } else {
             $prize_ids = $box->boxPrize()->pluck('id');
+            $list = UsersPrizeLog::with(['boxPrize', 'user'])
+                ->whereIn('box_prize_id', $prize_ids)
+                ->where('type', 0)
+                ->orderBy('id', 'desc')
+                ->paginate()
+                ->items();
         }
-        $list = UsersPrizeLog::with(['boxPrize', 'user'])
-            ->whereIn('box_prize_id', $prize_ids)
-            ->where('type', 0)
-            ->orderBy('id', 'desc')
-            ->paginate()
-            ->items();
+
         return $this->success('成功', $list);
     }
 
@@ -550,39 +653,56 @@ class BoxController extends BaseController
     {
         $box_id = $request->post('box_id');
         $level_id = $request->post('level_id', 0);
+        $chest_id = $request->post('chest_id', 0);
         $grade = $request->post('grade');
         if (empty($box_id)) {
             return $this->fail('所选盲盒不能为空');
         }
+        $draw_ids = UsersDrawLog::where(['chest_id' => $chest_id])->pluck('id');
 
-
-        $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereHas('boxPrize', function ($query) use ($box_id, $level_id) {
-            $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
-                $builder->where('level_id', $level_id);
-            });
+        $list = UsersPrizeLog::with(['user', 'boxPrize'])->whereHas('boxPrize', function ($query) use ($box_id, $level_id, $draw_ids) {
+            $query->where('box_id', $box_id)
+                ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                    $builder->where('level_id', $level_id);
+                })
+                ->when(!empty($draw_ids), function (Builder $builder) use ($draw_ids) {
+                    $builder->whereIn('draw_id', $draw_ids);
+                });
         })
             ->where('grade', $grade)
-            ->where('type', 0)
+            ->whereIn('type', [0,14])
             ->latest()
             ->take(30)
             ->get()
-            ->each(function ($item) use ($request, $box_id, $level_id) {
-                $last = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id, $level_id) {
-                    $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
-                        $builder->where('level_id', $level_id);
-                    });
+            ->each(function ($item) use ($request, $box_id, $level_id, $draw_ids) {
+                $last = UsersPrizeLog::whereIn('type', [0,14])->whereHas('boxPrize', function ($query) use ($box_id, $level_id, $draw_ids) {
+                    $query->where('box_id', $box_id)
+                        ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                            $builder->where('level_id', $level_id);
+                        })
+                        ->when(!empty($draw_ids), function (Builder $builder) use ($draw_ids) {
+                            $builder->whereIn('draw_id', $draw_ids);
+                        });
                 })->where('id', '<', $item->id)->orderByDesc('id')->where('grade', $item->grade)->first();
                 if (!$last) {
-                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id, $level_id) {
-                        $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
-                            $builder->where('level_id', $level_id);
-                        });
+                    $prizes = UsersPrizeLog::whereIn('type', [0,14])->whereHas('boxPrize', function ($query) use ($box_id, $level_id, $draw_ids) {
+                        $query->where('box_id', $box_id)
+                            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                                $builder->where('level_id', $level_id);
+                            })
+                            ->when(!empty($draw_ids), function (Builder $builder) use ($draw_ids) {
+                                $builder->whereIn('draw_id', $draw_ids);
+                            });
                     })->where('id', '<', $item->id)->count();
                 } else {
-                    $prizes = UsersPrizeLog::where(['type' => 0])->whereHas('boxPrize', function ($query) use ($box_id, $level_id) {
-                        $query->where('box_id', $box_id)->when(!empty($level_id), function (Builder $builder) use ($level_id) {
-                            $builder->where('level_id', $level_id);
-                        });
+                    $prizes = UsersPrizeLog::whereIn('type', [0,14])->whereHas('boxPrize', function ($query) use ($box_id, $level_id, $draw_ids) {
+                        $query->where('box_id', $box_id)
+                            ->when(!empty($level_id), function (Builder $builder) use ($level_id) {
+                                $builder->where('level_id', $level_id);
+                            })
+                            ->when(!empty($draw_ids), function (Builder $builder) use ($draw_ids) {
+                                $builder->whereIn('draw_id', $draw_ids);
+                            });
                     })->where('id', '<', $item->id)->where('id', '>', $last->id)->count();
                 }
                 $item->setAttribute('times', $prizes);
@@ -608,7 +728,6 @@ class BoxController extends BaseController
             ->pluck('grade')
             ->unique()
             ->values();
-
         return $this->success('成功', $grade);
     }
 

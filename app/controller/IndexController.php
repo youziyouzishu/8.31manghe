@@ -8,6 +8,7 @@ use plugin\admin\app\model\BoxOrder;
 use plugin\admin\app\model\BoxPrize;
 use plugin\admin\app\model\UsersDisburse;
 use support\Request;
+use Webman\Push\Api;
 
 class IndexController extends BaseController
 {
@@ -15,8 +16,7 @@ class IndexController extends BaseController
 
     function index()
     {
-        $order = BoxOrder::find(44167);
-        $order->box()->increment('kol_consume_amount');
+
     }
 
 

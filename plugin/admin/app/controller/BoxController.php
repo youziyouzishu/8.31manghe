@@ -3,6 +3,7 @@
 namespace plugin\admin\app\controller;
 
 use plugin\admin\app\model\BoxChest;
+use plugin\admin\app\model\BoxGaine;
 use plugin\admin\app\model\BoxGrade;
 use support\Request;
 use support\Response;
@@ -66,6 +67,10 @@ class BoxController extends Crud
         $items = $paginator->items();
         foreach ($items as $item) {
             $item['box_original_prize'] = empty($item['box_prize_count']) || empty($item['box_prize_sum_price']) ? 0 : round($item['box_prize_sum_price'] / $item['box_prize_count'], 2);
+            if ($item['type'] == 6){
+                $item['box_prize_sum_chance'] = $item['box_prize_sum_chance'] + BoxGaine::where(['box_id'=>$item['id']])->sum('chance');
+            }
+
         }
         if (method_exists($this, "afterQuery")) {
             $items = call_user_func([$this, "afterQuery"], $items);
@@ -153,11 +158,6 @@ class BoxController extends Crud
                 'grade' => 5,
                 'type'=>2,
             ]);
-            BoxChest::create([
-                'box_id' => $id,
-                'index' => 1,
-            ]);
-
             if ($type == 5){
                 if (empty($num) || $num < 1){
                     return $this->fail('请输入正确的番赏宝箱数量');
