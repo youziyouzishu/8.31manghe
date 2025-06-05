@@ -364,6 +364,7 @@ class NotifyController extends BaseController
                                 'image' => $item->image,
                                 'grade' => 0,
                                 'price' => 0,
+                                'show_price' => 0,
                             ];
                         }
 
@@ -377,6 +378,7 @@ class NotifyController extends BaseController
                                 'image' => $normalPrize->image,
                                 'grade' => $normalPrize->grade,
                                 'price' => $normalPrize->price,
+                                'show_price' => $normalPrize->show_price,
                             ];
                         }
 

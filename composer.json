@@ -42,7 +42,10 @@
     "tinywan/validate": "^1.0",
     "kriss/webman-eloquent-ide-helper": "^1.2",
     "webman/log": "^1.2",
-    "webman/event": "^1.0"
+    "webman/event": "^1.0",
+    "illuminate/redis": "^11.44",
+    "illuminate/events": "^11.44",
+    "overtrue/easy-sms": "^3.1"
   },
   "autoload": {
     "psr-4": {

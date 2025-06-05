@@ -69,7 +69,7 @@ class UserController extends BaseController
             $nextId = User::max('id') + 1;
             $userData = [
                 'nickname' => '新用户' . $nextId,
-                'avatar' => '/app/admin/upload/files/20241205/675118b32fcb.jpg',
+                'avatar' => '/app/admin/upload/files/20250516/6826f3fc06c2.jpg',
                 'openid' => $openid ?? '',
                 'mobile' => $mobile ?? '',
                 'join_time' => date('Y-m-d H:i:s'),
@@ -440,6 +440,7 @@ class UserController extends BaseController
     function openGaine(Request $request)
     {
         $gaine_id = $request->post('gaine_id');
+        dump($gaine_id);
         $row = UsersGaine::find($gaine_id);
         if (!$row) {
             return $this->fail('宝箱不存在');

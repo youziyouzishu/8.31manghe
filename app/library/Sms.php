@@ -47,30 +47,12 @@ class Sms
     {
         $code = is_null($code) ? Util::numeric() : $code;
         $ip = request()->getRealIp();
-        $client = new Client();
-        // 定义请求的 URL 和数据
-        $url = 'http://sms.lifala.com.cn/api/KehuSms/send';
-        $data = [
-            'appid' => 'apsms7193292067',
-            'key' => 'itmqkuN5UfHbQO8n0IGFT9oqJnWhGh7n',
-            'mobile' => $mobile,
-            'code' => $code,
-        ];
-        try {
-            // 发送 POST 请求
-            $response = $client->post($url, [
-                'headers' => [
-                    'Content-Type' => 'application/json'
-                ],
-                'json' => $data
-            ]);
-            // 获取响应体
-            $ret = $response->getBody()->getContents();
-            $ret = json_decode($ret);
 
-            if ($ret->code != 1) {
-                return false;
-            }
+        try {
+            $tagName = 'captcha';
+            \plugin\sms\api\Sms::sendByTag($mobile, $tagName, [
+                'code' => $code
+            ]);
             \plugin\admin\app\model\Sms::create([
                 'event' => $event,
                 'mobile' => $mobile,

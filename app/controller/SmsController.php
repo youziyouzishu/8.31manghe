@@ -6,8 +6,10 @@ use app\library\Sms;
 use Carbon\Carbon;
 use plugin\admin\app\model\User;
 use Respect\Validation\Validator;
+use support\Log;
 use support\Request;
 use support\Response;
+use Tinywan\Validate\Facade\Validate;
 
 class SmsController extends BaseController
 {
@@ -21,11 +23,12 @@ class SmsController extends BaseController
      */
     public function send(Request $request):Response
     {
+        Log::info('发送验证码', $request->all());
         $mobile = $request->post("mobile");
         $event = $request->post("event");
         $event = $event ?: 'register';
 
-        if (!$mobile || !Validator::mobile()->validate($mobile)) {
+        if (!$mobile || !Validate::checkRule($mobile, 'mobile')) {
             return $this->fail('手机号不正确');
         }
         $last = Sms::get($mobile, $event);

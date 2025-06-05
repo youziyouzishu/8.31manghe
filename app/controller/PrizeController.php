@@ -37,7 +37,9 @@ class PrizeController extends BaseController
                 }
                 if ($res->safe == 1) {
                     throw new \Exception('奖品已锁定,不能分解');
-
+                }
+                if ($res->grade == 1) {
+                    throw new \Exception('通关赏不能分解');
                 }
                 if ($prize['num'] <= 0) {
                     throw new \Exception('请输入正确的数量');
